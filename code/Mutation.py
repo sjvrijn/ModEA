@@ -16,17 +16,33 @@ def N(x, C):
 def x1(x, sigma):
     # def adaptBaseWithParameter(base, parameter):
     """
-    Mutation 1: x = x + sigma*z
+    Mutation 1: x = x + sigma*N(0,I)
 
     :param x:
     :param sigma:
-    :param z:
     :return:
     """
 
     # I = identityMatrix(n)
 
     # new_x = x + (sigma*N(0, I))
+    # return new_x
+    pass
+
+
+def x2(x, parameter):
+    # def adaptBaseWithParameter(base, parameter):
+    """
+    Mutation 2: x = x + tensorProduct(parameter, N(0,I))
+
+    :param x:
+    :param parameter:
+    :return:
+    """
+
+    # I = identityMatrix(n)
+
+    # new_x = x + tensorProduct(parameter, N(0, I))
     # return new_x
     pass
 
@@ -86,3 +102,10 @@ def calculateRotationMatrix(rotations):
     """
 
     pass
+
+
+def getXi():
+    if bool(randbit()):
+        return 5/7
+    else:
+        return 7/5
