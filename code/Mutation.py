@@ -1,7 +1,7 @@
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 
-def normalDistribution(x, C):
+def N(x, C):
     """
     Generate a vector sampled according to the normal distribution with the given parameters
 
@@ -13,7 +13,8 @@ def normalDistribution(x, C):
     pass
 
 
-def x1(x, sigma, z):
+def x1(x, sigma):
+    # def adaptBaseWithParameter(base, parameter):
     """
     Mutation 1: x = x + sigma*z
 
@@ -23,8 +24,11 @@ def x1(x, sigma, z):
     :return:
     """
 
-    new_x = x + (sigma*z)
-    return new_x
+    # I = identityMatrix(n)
+
+    # new_x = x + (sigma*N(0, I))
+    # return new_x
+    pass
 
 
 def adaptSigma(sigma, p_s, c=0.817):
@@ -56,3 +60,29 @@ def calculateP_S(num_successes, num_failures):
 
     return num_successes / (num_failures + num_successes)
 
+
+def calculateSigma_i(avgSigma, eta, tau):
+    """
+    Calculate separate sigma_i's for each i
+
+    :param avgSigma:
+    :param eta:
+    :param tau:
+    :return:
+    """
+
+    # I = identityMatrix(n)
+
+    # sigma_i = avgSigma * exp(eta + (tau * N(0, I)))
+    pass
+
+
+def calculateRotationMatrix(rotations):
+    """
+    Given a list of rotation matrices (R_ij), calculate the final matrix C
+
+    :param rotations:
+    :return:
+    """
+
+    pass
