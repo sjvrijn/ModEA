@@ -1,4 +1,4 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
+
+import numpy as np
 
