@@ -15,3 +15,8 @@ class Parameters(object):
         self.n = n
         self.mu = mu
         self.labda = labda
+
+        ''' (1+1)-ES '''
+        self.success_history = np.zeros((10*n, ), dtype=np.int)
+        self.sigma = 1
+        self.c = 0.817

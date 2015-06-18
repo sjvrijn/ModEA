@@ -11,3 +11,5 @@ class Individual(object):
 
     def __init__(self, n):
         self.n = n
+
+        self.fitness = None  # Default 'unset' value
