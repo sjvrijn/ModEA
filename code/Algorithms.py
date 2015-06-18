@@ -23,7 +23,7 @@ def onePlusOneES(n, fitnessFunction, budget):
         'mutateParameters': lambda t: parameters.oneFifthRule(t),
     }
 
-    baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+    return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
 
 
 
@@ -35,6 +35,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
 
     # Parameter tracking
     sigma_over_time = []
+    best_fitness_over_time = []
 
     # Initialization
     used_budget = 0
@@ -63,6 +64,6 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
 
         # Track parameters
         sigma_over_time.append(parameters.sigma)
+        best_fitness_over_time.append(population[0].fitness)
 
-    print(sigma_over_time)
-    return population
+    return population, sigma_over_time, best_fitness_over_time
