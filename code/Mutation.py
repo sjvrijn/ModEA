@@ -1,15 +1,12 @@
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
+from random import getrandbits
 
 
 def N(x, C):
     """
-    Generate a vector sampled according to the normal distribution with the given parameters
-
-    :param x:
-    :param C:
-    :return:
+        Generate a vector sampled according to the normal distribution with the given parameters
     """
 
     pass
@@ -18,11 +15,7 @@ def N(x, C):
 def x1(x, sigma):
     # def adaptBaseWithParameter(base, parameter):
     """
-    Mutation 1: x = x + sigma*N(0,I)
-
-    :param x:
-    :param sigma:
-    :return:
+        Mutation 1: x = x + sigma*N(0,I)
     """
 
     # I = identityMatrix(n)
@@ -35,11 +28,7 @@ def x1(x, sigma):
 def x2(x, parameter):
     # def adaptBaseWithParameter(base, parameter):
     """
-    Mutation 2: x = x + tensorProduct(parameter, N(0,I))
-
-    :param x:
-    :param parameter:
-    :return:
+        Mutation 2: x = x + tensorProduct(parameter, N(0,I))
     """
 
     # I = identityMatrix(n)
@@ -51,12 +40,7 @@ def x2(x, parameter):
 
 def adaptSigma(sigma, p_s, c=0.817):
     """
-    Adapt parameter sigma based on the 1/5th success rule
-
-    :param sigma:
-    :param p_s:
-    :param c:
-    :return:
+        Adapt parameter sigma based on the 1/5th success rule
     """
 
     if p_s < 1/5:
@@ -69,11 +53,7 @@ def adaptSigma(sigma, p_s, c=0.817):
 
 def calculateP_S(num_successes, num_failures):
     """
-    Calculate the recent success rate
-
-    :param num_successes:
-    :param num_failures:
-    :return:
+        Calculate the recent success rate
     """
 
     return num_successes / (num_failures + num_successes)
@@ -81,12 +61,7 @@ def calculateP_S(num_successes, num_failures):
 
 def calculateSigma_i(avgSigma, eta, tau):
     """
-    Calculate separate sigma_i's for each i
-
-    :param avgSigma:
-    :param eta:
-    :param tau:
-    :return:
+        Calculate separate sigma_i's for each i
     """
 
     # I = identityMatrix(n)
@@ -97,17 +72,14 @@ def calculateSigma_i(avgSigma, eta, tau):
 
 def calculateRotationMatrix(rotations):
     """
-    Given a list of rotation matrices (R_ij), calculate the final matrix C
-
-    :param rotations:
-    :return:
+        Given a list of rotation matrices (R_ij), calculate the final matrix C
     """
 
     pass
 
 
 def getXi():
-    if bool(randbit()):
+    if bool(getrandbits(1)):
         return 5/7
     else:
         return 7/5

@@ -5,11 +5,7 @@ import numpy as np
 
 def best(mu, population):
     """
-    Given the population, return the mu best
-
-    :param mu:
-    :param population:
-    :return:
+        Given the population, return the mu best
     """
 
     pass
@@ -17,10 +13,7 @@ def best(mu, population):
 
 def singleBest(population):
     """
-    Given the population, return the single best
-
-    :param population:
-    :return:
+        Given the population, return the single best
     """
 
     pass
