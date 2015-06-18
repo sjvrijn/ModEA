@@ -12,17 +12,12 @@ def N(x, C):
     pass
 
 
-def x1(x, sigma):
-    # def adaptBaseWithParameter(base, parameter):
+def x1(individual, sigma):
     """
         Mutation 1: x = x + sigma*N(0,I)
     """
 
-    # I = identityMatrix(n)
-
-    # new_x = x + (sigma*N(0, I))
-    # return new_x
-    pass
+    individual.dna += sigma * np.random.random(individual.n)
 
 
 def x2(x, parameter):

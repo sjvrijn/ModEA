@@ -24,7 +24,10 @@ def onePlusOneSelection(population, new_population, t, parameters):
         (1+1)-selection (with success history)
     """
 
-    if new_population.fitness < population.fitness:
+    new_individual = new_population[0]
+    individual = population[0]
+
+    if new_individual.fitness < individual.fitness:
         best = new_population
         parameters.addToSuccessHistory(t, True)
     else:
