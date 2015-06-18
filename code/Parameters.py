@@ -20,3 +20,24 @@ class Parameters(object):
         self.success_history = np.zeros((10*n, ), dtype=np.int)
         self.sigma = 1
         self.c = 0.817
+
+
+    def oneFifthRule(self, t):
+        """
+            Adapts sigma based on the 1/5-th success rule
+        """
+
+        # Only adapt every n evaluations
+        if t % self.n != 0:
+            return
+
+
+        if t < 10*self.n:
+            success = np.mean(self.success_history[:t])
+        else:
+            success = np.mean(self.success_history)
+
+        if success < 1/5:
+            self.sigma *= self.c
+        elif success > 1/5:
+            self.sigma /= self.c

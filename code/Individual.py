@@ -8,8 +8,7 @@ class Individual(object):
         Data holder class for ES individuals.
     """
 
-
     def __init__(self, n):
         self.n = n
-
+        self.dna = np.random.random(n)
         self.fitness = None  # Default 'unset' value

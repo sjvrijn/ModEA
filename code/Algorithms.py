@@ -1,7 +1,8 @@
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
-
+from .Individual import Individual
+from .Parameters import Parameters
 
 def onePlusOneES(n, fitnessFunction, budget):
     """
@@ -9,7 +10,18 @@ def onePlusOneES(n, fitnessFunction, budget):
         Requires the length of the vector to be optimized, the handle of a fitness function to use and the budget
     """
 
-    pass
+    parameters = Parameters(n, 1, 1)
+    population = Individual(n)
+
+    functions = {
+        'recombination': lambda x: x,
+        'mutation': lambda x: x,
+        'selection:': lambda x: x,
+        'mutateParameters': lambda t: parameters.oneFifthRule(t),
+    }
+
+    baseAlgorithm(population, fitnessFunction, budget, functions)
+
 
 
 def baseAlgorithm(population, fitnessFunction, budget, functions):
@@ -18,19 +30,28 @@ def baseAlgorithm(population, fitnessFunction, budget, functions):
         Requires a population, fitness function handle, evaluation budget and the algorithm-specific functions
     """
 
+    # Initialization
     used_budget = 0
-    recombination = functions['recombination']
-    mutation = functions['mutation']
-    selection = functions['selection']
+    recombine = functions['recombination']
+    mutate = functions['mutation']
+    select = functions['select']
+    mutateParameters = functions['mutateParameters']
 
+    # The main evaluation loop
     while used_budget < budget:
 
-        new_population = recombination(population)
-        new_population = mutation(new_population)
+        # Recombination
+        new_population = recombine(population)
+        # Mutation
+        new_population = mutate(new_population)
 
+        # Evaluation
         for individual in new_population:
             fitnessFunction(individual)
 
-        population = selection(new_population)
+        # Selection
+        population = select(new_population)
+        # Parameter mutation
+        mutateParameters(used_budget)
 
     return population
