@@ -12,12 +12,19 @@ class Parameters(object):
 
 
     def __init__(self, n, mu, labda):
+        """
+            Setup the set of parameters
+        """
+        ''' Basic parameters '''
         self.n = n
         self.mu = mu
         self.labda = labda
 
+        ''' Meta-parameters '''
+        self.N = 10 * self.n
+
         ''' (1+1)-ES '''
-        self.success_history = np.zeros((10*n, ), dtype=np.int)
+        self.success_history = np.zeros((self.N, ), dtype=np.int)
         self.sigma = 1
         self.c = 0.817
 
@@ -32,7 +39,7 @@ class Parameters(object):
             return
 
 
-        if t < 10*self.n:
+        if t < self.N:
             success = np.mean(self.success_history[:t])
         else:
             success = np.mean(self.success_history)
@@ -41,3 +48,12 @@ class Parameters(object):
             self.sigma *= self.c
         elif success > 1/5:
             self.sigma /= self.c
+
+
+    def addToSuccessHistory(self, t, success):
+        """
+            Record the (boolean) 'success' value at time 't'
+        """
+
+        t %= self.N
+        self.success_history[t] = 1 if success else 0

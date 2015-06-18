@@ -17,3 +17,18 @@ def singleBest(population):
     """
 
     pass
+
+
+def onePlusOneSelection(population, new_population, t, parameters):
+    """
+        (1+1)-selection (with success history)
+    """
+
+    if new_population.fitness < population.fitness:
+        best = new_population
+        parameters.addToSuccessHistory(t, True)
+    else:
+        best = population
+        parameters.addToSuccessHistory(t, False)
+
+    return best

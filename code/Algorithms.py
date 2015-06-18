@@ -3,6 +3,7 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 import numpy as np
 from .Individual import Individual
 from .Parameters import Parameters
+from .Selection import onePlusOneSelection
 
 def onePlusOneES(n, fitnessFunction, budget):
     """
@@ -16,7 +17,7 @@ def onePlusOneES(n, fitnessFunction, budget):
     functions = {
         'recombination': lambda x: x,
         'mutation': lambda x: x,
-        'selection:': lambda x: x,
+        'selection:': lambda pop, new_pop, t: onePlusOneSelection(pop, new_pop, t, parameters),
         'mutateParameters': lambda t: parameters.oneFifthRule(t),
     }
 
