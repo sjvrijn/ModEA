@@ -18,7 +18,7 @@ def sumFitness(individual):
 
 # Sphere fitness function
 def sphereFitness(individual):
-    individual.fitness = np.sum(np.square(individual.dna))
+    individual.fitness = np.sqrt(np.sum(np.square(individual.dna)))
 
 
 fitnes_functions = {'const': constantFitness, 'random': randomFitness, 'sum': sumFitness, 'sphere': sphereFitness}
@@ -30,7 +30,8 @@ def run_tests():
     n = 10
     budget = 1000
     num_runs = 30
-    fitnesses_to_test = ['const', 'random', 'sum', 'sphere']
+    # fitnesses_to_test = ['const', 'random', 'sum', 'sphere']
+    fitnesses_to_test = ['const', 'sphere']
 
     # 'Catch' results
     results = {}
@@ -58,17 +59,29 @@ def run_tests():
     nil_line = np.zeros(budget)
 
     fig = plt.figure()
-    for i, name in enumerate(fitnesses_to_test):
 
-        sub_plot = fig.add_subplot(len(fitnesses_to_test), 2, (2*i) + 1)
-        sub_plot.plot(x_range, sigmas[name])
-        sub_plot.plot(x_range, nil_line)
-        sub_plot.set_title("{}: sigma".format(name))
+    sigma_plot = fig.add_subplot(1, 2, 1)
+    sigma_plot.set_title('Sigma')
+    fitness_plot = fig.add_subplot(1, 2, 2)
+    fitness_plot.set_title('Fitness')
 
-        sub_plot = fig.add_subplot(len(fitnesses_to_test), 2, (2*i) + 2)
-        sub_plot.plot(x_range, fitnesses[name])
-        sub_plot.plot(x_range, nil_line)
-        sub_plot.set_title("{}: fitness".format(name))
+    for name in fitnesses_to_test:
+
+        sigma_plot.plot(x_range, sigmas[name])
+        sigma_plot.set_title("{}: sigma".format(name))
+
+        fitness_plot.plot(x_range, fitnesses[name])
+        fitness_plot.set_title("{}: fitness".format(name))
+
+        # sub_plot = fig.add_subplot(len(fitnesses_to_test), 2, (2*i) + 1)
+        # sub_plot.plot(x_range, sigmas[name])
+        # sub_plot.plot(x_range, nil_line)
+        # sub_plot.set_title("{}: sigma".format(name))
+        #
+        # sub_plot = fig.add_subplot(len(fitnesses_to_test), 2, (2*i) + 2)
+        # sub_plot.plot(x_range, fitnesses[name])
+        # sub_plot.plot(x_range, nil_line)
+        # sub_plot.set_title("{}: fitness".format(name))
 
     fig.show()
     input("done")
