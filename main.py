@@ -20,8 +20,13 @@ def sumFitness(individual):
 def sphereFitness(individual):
     individual.fitness = np.sqrt(np.sum(np.square(individual.dna)))
 
+# Rastrigin fitness function
+def rastriginFitness(individual):
+    individual.fitness = np.sum(np.square(individual.dna) + 10*np.cos(2*np.pi*individual.dna) + 10)
 
-fitnes_functions = {'const': constantFitness, 'random': randomFitness, 'sum': sumFitness, 'sphere': sphereFitness}
+
+fitnes_functions = {'const': constantFitness, 'random': randomFitness, 'sum': sumFitness,
+                    'sphere': sphereFitness, 'rastrigin': rastriginFitness, }
 
 
 def run_tests():
@@ -30,7 +35,7 @@ def run_tests():
     n = 10
     budget = 100
     num_runs = 3
-    fitnesses_to_test = ['const', 'random', 'sum', 'sphere']
+    fitnesses_to_test = ['const', 'random', 'sum', 'sphere', 'rastrigin']
     # fitnesses_to_test = ['const', 'sphere']
 
     # 'Catch' results
