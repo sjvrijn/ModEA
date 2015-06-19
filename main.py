@@ -30,8 +30,8 @@ def run_tests():
     n = 10
     budget = 100
     num_runs = 3
-    # fitnesses_to_test = ['const', 'random', 'sum', 'sphere']
-    fitnesses_to_test = ['const', 'sphere']
+    fitnesses_to_test = ['const', 'random', 'sum', 'sphere']
+    # fitnesses_to_test = ['const', 'sphere']
 
     # 'Catch' results
     results = {}
@@ -68,16 +68,6 @@ def run_tests():
     for name in fitnesses_to_test:
         sigma_plot.plot(x_range, sigmas[name], label=name)
         fitness_plot.plot(x_range, fitnesses[name], label=name)
-
-        # sub_plot = fig.add_subplot(len(fitnesses_to_test), 2, (2*i) + 1)
-        # sub_plot.plot(x_range, sigmas[name])
-        # sub_plot.plot(x_range, nil_line)
-        # sub_plot.set_title("{}: sigma".format(name))
-        #
-        # sub_plot = fig.add_subplot(len(fitnesses_to_test), 2, (2*i) + 2)
-        # sub_plot.plot(x_range, fitnesses[name])
-        # sub_plot.plot(x_range, nil_line)
-        # sub_plot.set_title("{}: fitness".format(name))
 
     sigma_plot.legend(loc=0, fontsize='small')
     sigma_plot.set_title("Sigma over time")
