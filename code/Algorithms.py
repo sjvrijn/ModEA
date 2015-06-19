@@ -28,6 +28,27 @@ def onePlusOneES(n, fitnessFunction, budget):
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
 
 
+def CMA_ES(n, mu, labda, fitnessFunction, budget):
+    """
+        Implementation of a default (mu +/, lambda)-CMA-ES
+        Requires the length of the vector to be optimized, the handle of a fitness function to use and the budget
+    """
+
+    parameters = Parameters(n, mu, labda)
+    population = [Individual(n)]
+    fitnessFunction(population[0])
+
+    # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
+    functions = {
+        'recombine': lambda x: [x[0].getCopy()],  # simply copy the only existing individual and return as a list
+        'mutate': lambda x: x1(x, parameters.sigma),
+        'select': lambda pop, new_pop, t: onePlusOneSelection(pop, new_pop, t, parameters),
+        'mutateParameters': lambda t: parameters.oneFifthRule(t),
+    }
+
+    return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+
+
 
 def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
     """
