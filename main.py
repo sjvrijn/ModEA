@@ -28,8 +28,8 @@ def run_tests():
 
     # Set parameters
     n = 10
-    budget = 1000
-    num_runs = 30
+    budget = 100
+    num_runs = 3
     # fitnesses_to_test = ['const', 'random', 'sum', 'sphere']
     fitnesses_to_test = ['const', 'sphere']
 
@@ -58,20 +58,16 @@ def run_tests():
     x_range = np.array(range(budget))
     nil_line = np.zeros(budget)
 
-    fig = plt.figure()
+    fig = plt.figure(figsize=(12, 8))
 
-    sigma_plot = fig.add_subplot(1, 2, 1)
+    sigma_plot = fig.add_subplot(2, 1, 1)
     sigma_plot.set_title('Sigma')
-    fitness_plot = fig.add_subplot(1, 2, 2)
+    fitness_plot = fig.add_subplot(2, 1, 2)
     fitness_plot.set_title('Fitness')
 
     for name in fitnesses_to_test:
-
-        sigma_plot.plot(x_range, sigmas[name])
-        sigma_plot.set_title("{}: sigma".format(name))
-
-        fitness_plot.plot(x_range, fitnesses[name])
-        fitness_plot.set_title("{}: fitness".format(name))
+        sigma_plot.plot(x_range, sigmas[name], label=name)
+        fitness_plot.plot(x_range, fitnesses[name], label=name)
 
         # sub_plot = fig.add_subplot(len(fitnesses_to_test), 2, (2*i) + 1)
         # sub_plot.plot(x_range, sigmas[name])
@@ -83,6 +79,19 @@ def run_tests():
         # sub_plot.plot(x_range, nil_line)
         # sub_plot.set_title("{}: fitness".format(name))
 
+    sigma_plot.legend(loc=0, fontsize='small')
+    sigma_plot.set_title("Sigma over time")
+    sigma_plot.set_xlabel('Evaluations')
+    sigma_plot.set_ylabel('Sigma')
+    sigma_plot.set_yscale('log')
+
+    fitness_plot.legend(loc=0, fontsize='small')
+    fitness_plot.set_title("Fitness over time")
+    fitness_plot.set_xlabel('Evaluations')
+    fitness_plot.set_ylabel('Fitness value')
+    fitness_plot.set_yscale('log')
+
+    fig.tight_layout()
     fig.show()
     input("done")
 
