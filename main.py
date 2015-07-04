@@ -88,7 +88,7 @@ def run_tests():
 
     fig.tight_layout()
     fig.show()
-    input("done")
+    input("Done, press enter to close")
 
 
 

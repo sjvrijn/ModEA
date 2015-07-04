@@ -10,8 +10,9 @@ class Individual(object):
 
     def __init__(self, n):
         self.n = n
-        self.dna = np.random.random(n)
+        self.dna = np.random.random(n).reshape((n,1))  # Column vector
         self.fitness = None  # Default 'unset' value
+        self.sigma = 1
 
 
     def getCopy(self):
@@ -21,5 +22,6 @@ class Individual(object):
         return_copy = Individual(self.n)
         return_copy.dna = copy.copy(self.dna)
         return_copy.fitness = self.fitness
+        return_copy.sigma = self.sigma
 
         return return_copy

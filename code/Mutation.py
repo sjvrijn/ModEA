@@ -17,7 +17,8 @@ def x1(individual, sigma):
         Mutation 1: x = x + sigma*N(0,I)
     """
 
-    individual.dna += sigma * (np.random.random(individual.n) - 0.5)
+    n = individual.n
+    individual.dna += sigma * (np.random.random(n).reshape((n,1)) - 0.5)
 
 
 def x2(x, parameter):
