@@ -4,6 +4,7 @@ import numpy as np
 from .Individual import Individual
 from .Mutation import x1
 from .Parameters import Parameters
+from .Recombination import average
 from .Selection import onePlusOneSelection
 
 
@@ -41,6 +42,29 @@ def CMA_ES(n, mu, labda, fitnessFunction, budget):
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
         'recombine': lambda x: [x[0].getCopy()],  # simply copy the only existing individual and return as a list
+        'mutate': lambda x: x1(x, parameters.sigma),
+        'select': lambda pop, new_pop, t: onePlusOneSelection(pop, new_pop, t, parameters),
+        'mutateParameters': lambda t: parameters.oneFifthRule(t),
+    }
+
+    return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+
+
+def CMAES(n, fitnessFunction, budget):
+    """
+        Implementation of the default (1+1)-ES
+        Requires the length of the vector to be optimized, the handle of a fitness function to use and the budget
+    """
+    mu = 2
+    labda = 8
+
+    parameters = Parameters(n, mu, labda)
+    population = [Individual(n) for _ in range(mu)]
+    for individual in population:
+        fitnessFunction(individual)
+
+    functions = {
+        'recombine': lambda x: average(labda, x),
         'mutate': lambda x: x1(x, parameters.sigma),
         'select': lambda pop, new_pop, t: onePlusOneSelection(pop, new_pop, t, parameters),
         'mutateParameters': lambda t: parameters.oneFifthRule(t),

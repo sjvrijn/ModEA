@@ -1,5 +1,6 @@
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
+from math import sqrt
 import numpy as np
 
 
@@ -19,14 +20,23 @@ class Parameters(object):
         self.n = n
         self.mu = mu
         self.labda = labda
+        self.sigma = 1
 
         ''' Meta-parameters '''
         self.N = 10 * self.n
 
         ''' (1+1)-ES '''
         self.success_history = np.zeros((self.N, ), dtype=np.int)
-        self.sigma = 1
-        self.c = 0.817
+        self.c = 0.817  # Sigma adaptation factor
+
+        ''' CMA-ES '''
+        self.C = np.eye(n)  # Covariance matrix
+        self.B = np.eye(n)  # Eigenvectors of C
+        self.D = np.eye(n)  # Diagonal eigenvalues of C
+
+        ''' CMSA-ES '''
+        self.tau = 1 / sqrt(2*n)
+        self.tau_c = 1 + ((n**2 + n) / (2*mu))
 
 
     def oneFifthRule(self, t):
