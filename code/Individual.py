@@ -9,6 +9,10 @@ class Individual(object):
     """
 
     def __init__(self, n):
+        """
+            Create an Individual. Stores the DNA column vector and all individual-specific parameters
+            :param n: dimensionality of the problem to be solved
+        """
         self.n = n
         self.dna = np.random.random(n).reshape((n,1))  # Column vector
         self.fitness = None  # Default 'unset' value

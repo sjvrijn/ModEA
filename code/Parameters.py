@@ -8,7 +8,7 @@ class Parameters(object):
     """
         Data holder class that initializes *all* possible parameters, regardless of what functions/algorithm are used
         If multiple functions/algorithms use the same parameter name, but differently, these will be split into
-            separate parameters.
+        separate parameters.
     """
 
 
