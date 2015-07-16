@@ -44,7 +44,7 @@ def CMA_ES(n, mu, labda, fitnessFunction, budget):
         'recombine': lambda x: average(labda, x),
         'mutate': lambda x: x1(x, parameters.sigma),
         'select': lambda pop, new_pop, t: onePlusOneSelection(pop, new_pop, t, parameters),
-        'mutateParameters': lambda t: parameters.oneFifthRule(t),
+        'mutateParameters': lambda t: parameters.adaptCovarianceMatrix(),
     }
 
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)

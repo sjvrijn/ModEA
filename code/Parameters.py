@@ -34,6 +34,8 @@ class Parameters(object):
         self.B = np.eye(n)  # Eigenvectors of C
         self.D = np.eye(n)  # Diagonal eigenvalues of C
 
+        self.s_mean = None
+
         ''' CMSA-ES '''
         self.tau = 1 / sqrt(2*n)
         self.tau_c = 1 + ((n**2 + n) / (2*mu))
@@ -67,3 +69,11 @@ class Parameters(object):
 
         t %= self.N
         self.success_history[t] = 1 if success else 0
+
+
+    def adaptCovarianceMatrix(self):
+
+        tau_c_inv = 1/self.tau_c
+
+        self.C *= (1 - tau_c_inv)
+        self.C += tau_c_inv * (self.s_mean.T * self.s_mean)
