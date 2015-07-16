@@ -72,8 +72,40 @@ class Parameters(object):
 
 
     def adaptCovarianceMatrix(self):
+        """
+            Adapt the covariance matrix according to the CMSA-ES
+        """
 
         tau_c_inv = 1/self.tau_c
 
         self.C *= (1 - tau_c_inv)
         self.C += tau_c_inv * (self.s_mean.T * self.s_mean)
+
+
+    def checkDegenerated(self):
+        """
+            Check if the parameters (C, s_mean, etc) have degenerated and need to be reset
+        """
+
+        degenerated = False
+
+        if np.min(np.min(np.isfinite(self.C))) == 0:
+            degenerated = True
+
+        elif not ((10**(-16)) < self.s_mean < (10**16)):
+            degenerated = True
+
+        else:
+            self.D, self.B = np.linalg.eig(self.C)
+            self.D = np.sqrt(self.D)
+            if not np.isreal(self.D):
+                degenerated = True
+
+
+        if degenerated:
+            self.C = np.eye(self.n)
+            self.B = np.eye(self.n)
+            self.D = np.eye(self.n)
+            self.s_mean = 1          # TODO: make this depend on any input default sigma value
+
+            # TODO: add feedback of resetting sigma to the sigma per individual
