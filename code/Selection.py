@@ -1,7 +1,7 @@
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 """
-This file contains a collection of Selection operators to be used in the ES-Framework
+This Module contains a collection of Selection operators to be used in the ES-Framework
 
 A Selection operator accepts (mu + lambda) individuals and returns (mu) individuals
 that are chosen to be the best of this generation
@@ -10,20 +10,16 @@ that are chosen to be the best of this generation
 import numpy as np
 
 
-def best(mu, population):
+def best(population, mu=1):
     """
-        Given the population, return the mu best
+        Given the population, return the (mu) best
     """
+    if mu < 1:
+        raise Exception("best() has to return at least one individual")
 
-    pass
+    population.sort(key=lambda individual: individual.fitness, reverse=True)  # sort descending
 
-
-def singleBest(population):
-    """
-        Given the population, return the single best
-    """
-
-    pass
+    return population[:mu]
 
 
 def onePlusOneSelection(population, new_population, t, parameters):
