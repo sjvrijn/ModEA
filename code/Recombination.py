@@ -10,16 +10,16 @@ that are to form the new population
 import numpy as np
 
 
-def average(labda, population):
+def average(population, parameters):
     """
         Given the new population, return the average of the mu best individuals
     """
 
     avg = population[0].getCopy()
-    avg.dna = np.mean([individual.dna for individual in population])
+    avg.dna, parameters.s_mean = np.mean([(i.dna, i.last_s) for i in population], axis=0)
 
     new_population = [avg]
-    for _ in range(labda-1):
+    for _ in range(parameters.labda-1):
         new_population.append(avg.getCopy())
 
     return new_population

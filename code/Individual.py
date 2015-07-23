@@ -18,6 +18,9 @@ class Individual(object):
         self.fitness = None  # Default 'unset' value
         self.sigma = 1
 
+        self.last_z = None
+        self.last_s = None
+
 
     def getCopy(self):
         """
