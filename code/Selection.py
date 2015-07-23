@@ -7,19 +7,22 @@ A Selection operator accepts (mu + lambda) individuals and returns (mu) individu
 that are chosen to be the best of this generation
 """
 
-import numpy as np
+# import numpy as np
 
 
-def best(population, mu=1):
+def best(population, new_population, mu=1, plus_selection=False):
     """
         Given the population, return the (mu) best
     """
     if mu < 1:
         raise Exception("best() has to return at least one individual")
 
-    population.sort(key=lambda individual: individual.fitness, reverse=True)  # sort descending
+    if plus_selection:
+        new_population.extend(population)
 
-    return population[:mu]
+    new_population.sort(key=lambda individual: individual.fitness, reverse=True)  # sort descending
+
+    return new_population[:mu]
 
 
 def onePlusOneSelection(population, new_population, t, parameters):
@@ -31,10 +34,10 @@ def onePlusOneSelection(population, new_population, t, parameters):
     individual = population[0]
 
     if new_individual.fitness < individual.fitness:
-        best = new_population
+        result = new_population
         parameters.addToSuccessHistory(t, True)
     else:
-        best = population
+        result = population
         parameters.addToSuccessHistory(t, False)
 
-    return best
+    return result
