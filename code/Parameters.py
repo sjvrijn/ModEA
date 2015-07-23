@@ -64,6 +64,8 @@ class Parameters(object):
         elif success > 1/5:
             self.sigma /= self.c
 
+        self.sigma_mean = self.sigma
+
 
     def addToSuccessHistory(self, t, success):
         """

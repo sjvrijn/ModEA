@@ -16,7 +16,7 @@ def average(population, parameters):
     """
 
     avg = population[0].getCopy()
-    avg.dna, parameters.s_mean = np.mean([(i.dna, i.last_s) for i in population], axis=0)
+    avg.dna, parameters.s_mean, parameters.sigma_mean = np.mean([(i.dna, i.last_s, i.sigma) for i in population], axis=0)
 
     new_population = [avg]
     for _ in range(parameters.labda-1):
