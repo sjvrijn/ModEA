@@ -1,6 +1,6 @@
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 # External libraries
-import numpy as np
+# import numpy as np
 # Internal classes
 from .Individual import Individual
 from .Parameters import Parameters
@@ -43,8 +43,8 @@ def CMA_ES(n, mu, labda, fitnessFunction, budget):
         fitnessFunction(individual)
 
     functions = {
-        'recombine': lambda x: Rec.average(labda, x),
-        'mutate': lambda x: Mut.x1(x, parameters.sigma),
+        'recombine': lambda pop: Rec.average(labda, pop),
+        'mutate': lambda ind: Mut.cmaMutation(ind, parameters),
         'select': lambda pop, new_pop: Sel.best(pop, new_pop, parameters),
         'mutateParameters': lambda t: parameters.adaptCovarianceMatrix(),
     }

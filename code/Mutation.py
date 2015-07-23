@@ -11,27 +11,27 @@ def N(x, C):
 
     pass
 
-
+# TODO: come up with a better name for this mutation function
 def x1(individual, sigma):
     """
         Mutation 1: x = x + sigma*N(0,I)
     """
 
     n = individual.n
-    individual.dna += sigma * (np.random.random(n).reshape((n,1)) - 0.5)
+    individual.dna += sigma * np.random.randn(n,1)
 
 
-def x2(x, parameter):
-    # def adaptBaseWithParameter(base, parameter):
+def cmaMutation(individual, parameters):
     """
-        Mutation 2: x = x + tensorProduct(parameter, N(0,I))
+        CMA based mutation: x = x + ((sigma_mean*tau*N(0,1)) * (B*D*N(0,I)))
     """
 
-    # I = identityMatrix(n)
+    n = individual.n
+    individual.sigma = parameters.sigma_mean * np.exp(parameters.tau * np.random.randn(1,1))
+    individual.last_s = parameters.B * parameters.D * np.random.randn(n,1)
+    individual.last_z = individual.sigma * individual.last_s
 
-    # new_x = x + tensorProduct(parameter, N(0, I))
-    # return new_x
-    pass
+    individual.dna += individual.last_z
 
 
 def adaptSigma(sigma, p_s, c=0.817):
