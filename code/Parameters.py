@@ -12,7 +12,7 @@ class Parameters(object):
     """
 
 
-    def __init__(self, n, mu, labda):
+    def __init__(self, n, mu, labda, plus_selection=False):
         """
             Setup the set of parameters
         """
@@ -21,6 +21,7 @@ class Parameters(object):
         self.mu = mu
         self.labda = labda
         self.sigma = 1
+        self.plus_selection = plus_selection
 
         ''' Meta-parameters '''
         self.N = 10 * self.n
