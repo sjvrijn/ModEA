@@ -4,13 +4,6 @@ import numpy as np
 from random import getrandbits
 
 
-def N(x, C):
-    """
-        Generate a vector sampled according to the normal distribution with the given parameters
-    """
-
-    pass
-
 # TODO: come up with a better name for this mutation function
 def x1(individual, sigma):
     """
@@ -45,25 +38,6 @@ def adaptSigma(sigma, p_s, c=0.817):
         sigma /= c
 
     return sigma
-
-
-def calculateP_S(num_successes, num_failures):
-    """
-        Calculate the recent success rate
-    """
-
-    return num_successes / (num_failures + num_successes)
-
-
-def calculateSigma_i(avgSigma, eta, tau):
-    """
-        Calculate separate sigma_i's for each i
-    """
-
-    # I = identityMatrix(n)
-
-    # sigma_i = avgSigma * exp(eta + (tau * N(0, I)))
-    pass
 
 
 def calculateRotationMatrix(rotations):
