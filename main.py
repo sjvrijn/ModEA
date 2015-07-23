@@ -2,7 +2,7 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
 import matplotlib.pyplot as plt
-from code.Algorithms import onePlusOneES
+from code.Algorithms import onePlusOneES, CMSA_ES
 
 # Constant fitness function
 def constantFitness(individual):
@@ -27,16 +27,21 @@ def rastriginFitness(individual):
 
 fitnes_functions = {'const': constantFitness, 'random': randomFitness, 'sum': sumFitness,
                     'sphere': sphereFitness, 'rastrigin': rastriginFitness, }
+algorithms = {'1+1': onePlusOneES, 'CMSA': CMSA_ES}
 
 
 def run_tests():
 
     # Set parameters
     n = 10
-    budget = 100
+    budget = 1000
     num_runs = 3
     fitnesses_to_test = ['const', 'random', 'sum', 'sphere', 'rastrigin']
     # fitnesses_to_test = ['const', 'sphere']
+
+    # algorithms_to_test = ['1+1']
+    algorithms_to_test = ['CMSA']
+    # algorithms_to_test = ['1+1', 'CMSA']
 
     # 'Catch' results
     results = {}
@@ -44,23 +49,27 @@ def run_tests():
     fitnesses = {}
 
     # Run algorithms
-    for name in fitnesses_to_test:
+    for alg_name in algorithms_to_test:
 
-        results[name] = []
-        sigmas[name] = None
-        fitnesses[name] = None
+        algorithm = algorithms[alg_name]
 
-        for i in range(num_runs):
-            results[name].append(onePlusOneES(n, fitnes_functions[name], budget))
+        for fitness_name in fitnesses_to_test:
 
-        # Preprocess/unpack results
-        _, sigmas[name], fitnesses[name] = (list(x) for x in zip(*results[name]))
-        sigmas[name] = np.mean(np.array(sigmas[name]), axis=0)
-        fitnesses[name] = np.mean(np.array(fitnesses[name]), axis=0)
+            results[fitness_name] = []
+            sigmas[fitness_name] = None
+            fitnesses[fitness_name] = None
+
+            for i in range(num_runs):
+                results[fitness_name].append(algorithm(n, fitnes_functions[fitness_name], budget))
+
+            # Preprocess/unpack results
+            _, sigmas[fitness_name], fitnesses[fitness_name] = (list(x) for x in zip(*results[fitness_name]))
+            sigmas[fitness_name] = np.mean(np.array(sigmas[fitness_name]), axis=0)
+            fitnesses[fitness_name] = np.mean(np.array(fitnesses[fitness_name]), axis=0)
 
 
-    # Plot results
-    x_range = np.array(range(budget))
+    # Plot results for this algorithm
+    x_range = np.array(range(len(sigmas[fitnesses_to_test[0]])))
     nil_line = np.zeros(budget)
 
     fig = plt.figure(figsize=(12, 8))
@@ -70,9 +79,9 @@ def run_tests():
     fitness_plot = fig.add_subplot(2, 1, 2)
     fitness_plot.set_title('Fitness')
 
-    for name in fitnesses_to_test:
-        sigma_plot.plot(x_range, sigmas[name], label=name)
-        fitness_plot.plot(x_range, fitnesses[name], label=name)
+    for fitness_name in fitnesses_to_test:
+        sigma_plot.plot(x_range, sigmas[fitness_name], label=fitness_name)
+        fitness_plot.plot(x_range, fitnesses[fitness_name], label=fitness_name)
 
     sigma_plot.legend(loc=0, fontsize='small')
     sigma_plot.set_title("Sigma over time")
