@@ -31,4 +31,7 @@ class Individual(object):
         return_copy.fitness = self.fitness
         return_copy.sigma = self.sigma
 
+        return_copy.last_z = self.last_z
+        return_copy.last_s = self.last_s
+
         return return_copy
