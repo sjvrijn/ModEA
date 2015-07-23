@@ -20,7 +20,7 @@ def best(population, new_population, parameters):
     if parameters.plus_selection:
         new_population.extend(population)
 
-    new_population.sort(key=lambda individual: individual.fitness, reverse=True)  # sort descending
+    new_population.sort(key=lambda individual: individual.fitness)  # sort descending
 
     return new_population[:parameters.mu]
 

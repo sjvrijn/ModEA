@@ -18,8 +18,8 @@ class Individual(object):
         self.fitness = None  # Default 'unset' value
         self.sigma = 1
 
-        self.last_z = None
-        self.last_s = None
+        self.last_z = np.zeros((n,1))
+        self.last_s = np.zeros((n,1))
 
 
     def getCopy(self):

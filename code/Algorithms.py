@@ -31,7 +31,7 @@ def onePlusOneES(n, fitnessFunction, budget):
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
 
 
-def CMA_ES(n, mu, labda, fitnessFunction, budget):
+def CMSA_ES(n, fitnessFunction, budget, mu=4, labda=15):
     """
         Implementation of a default (mu +/, lambda)-CMA-ES
         Requires the length of the vector to be optimized, the handle of a fitness function to use and the budget
@@ -43,9 +43,9 @@ def CMA_ES(n, mu, labda, fitnessFunction, budget):
         fitnessFunction(individual)
 
     functions = {
-        'recombine': lambda pop: Rec.average(labda, pop),
+        'recombine': lambda pop: Rec.average(pop, parameters),
         'mutate': lambda ind: Mut.cmaMutation(ind, parameters),
-        'select': lambda pop, new_pop: Sel.best(pop, new_pop, parameters),
+        'select': lambda pop, new_pop, _: Sel.best(pop, new_pop, parameters),
         'mutateParameters': lambda t: parameters.adaptCovarianceMatrix(),
     }
 
@@ -104,7 +104,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
         mutateParameters(used_budget)
 
         # Track parameters
-        sigma_over_time.append(parameters.sigma)
+        sigma_over_time.append(parameters.sigma_mean)
         best_fitness_over_time.append(population[0].fitness)
 
     return population, sigma_over_time, best_fitness_over_time
