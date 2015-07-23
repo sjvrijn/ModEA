@@ -1,11 +1,13 @@
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
-
+# External libraries
 import numpy as np
+# Internal classes
 from .Individual import Individual
-from .Mutation import x1
 from .Parameters import Parameters
-from .Recombination import average
-from .Selection import onePlusOneSelection
+# Internal modules
+import code.Mutation as Mut
+import code.Recombination as Rec
+import code.Selection as Sel
 
 
 def onePlusOneES(n, fitnessFunction, budget):
@@ -21,8 +23,8 @@ def onePlusOneES(n, fitnessFunction, budget):
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
         'recombine': lambda x: [x[0].getCopy()],  # simply copy the only existing individual and return as a list
-        'mutate': lambda x: x1(x, parameters.sigma),
-        'select': lambda pop, new_pop, t: onePlusOneSelection(pop, new_pop, t, parameters),
+        'mutate': lambda x: Mut.x1(x, parameters.sigma),
+        'select': lambda pop, new_pop, t: Sel.onePlusOneSelection(pop, new_pop, t, parameters),
         'mutateParameters': lambda t: parameters.oneFifthRule(t),
     }
 
@@ -41,9 +43,9 @@ def CMA_ES(n, mu, labda, fitnessFunction, budget):
         fitnessFunction(individual)
 
     functions = {
-        'recombine': lambda x: average(labda, x),
-        'mutate': lambda x: x1(x, parameters.sigma),
-        'select': lambda pop, new_pop, t: onePlusOneSelection(pop, new_pop, t, parameters),
+        'recombine': lambda x: Rec.average(labda, x),
+        'mutate': lambda x: Mut.x1(x, parameters.sigma),
+        'select': lambda pop, new_pop: Sel.best(pop, new_pop, parameters),
         'mutateParameters': lambda t: parameters.adaptCovarianceMatrix(),
     }
 
