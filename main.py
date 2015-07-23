@@ -36,20 +36,25 @@ def run_tests():
     n = 10
     budget = 1000
     num_runs = 3
-    fitnesses_to_test = ['const', 'random', 'sum', 'sphere', 'rastrigin']
+    # fitnesses_to_test = ['const', 'random', 'sum', 'sphere', 'rastrigin']
+    fitnesses_to_test = ['const', 'random', 'sphere', 'rastrigin']
     # fitnesses_to_test = ['const', 'sphere']
 
     # algorithms_to_test = ['1+1']
-    algorithms_to_test = ['CMSA']
-    # algorithms_to_test = ['1+1', 'CMSA']
+    # algorithms_to_test = ['CMSA']
+    algorithms_to_test = ['1+1', 'CMSA']
 
     # 'Catch' results
     results = {}
     sigmas = {}
     fitnesses = {}
 
+    fig = plt.figure(figsize=(12, 8))
+    num_rows = len(algorithms_to_test)  # One row per algorithm
+    num_colums = 2  # Fitness and Sigma
+
     # Run algorithms
-    for alg_name in algorithms_to_test:
+    for i, alg_name in enumerate(algorithms_to_test):
 
         algorithm = algorithms[alg_name]
 
@@ -59,7 +64,7 @@ def run_tests():
             sigmas[fitness_name] = None
             fitnesses[fitness_name] = None
 
-            for i in range(num_runs):
+            for _ in range(num_runs):
                 results[fitness_name].append(algorithm(n, fitnes_functions[fitness_name], budget))
 
             # Preprocess/unpack results
@@ -68,32 +73,30 @@ def run_tests():
             fitnesses[fitness_name] = np.mean(np.array(fitnesses[fitness_name]), axis=0)
 
 
-    # Plot results for this algorithm
-    x_range = np.array(range(len(sigmas[fitnesses_to_test[0]])))
-    nil_line = np.zeros(budget)
+        # Plot results for this algorithm
+        x_range = np.array(range(len(sigmas[fitnesses_to_test[0]])))
+        nil_line = np.zeros(budget)
 
-    fig = plt.figure(figsize=(12, 8))
+        sigma_plot = fig.add_subplot(num_colums, num_rows, num_colums*i + 1)
+        sigma_plot.set_title('Sigma')
+        fitness_plot = fig.add_subplot(num_colums, num_rows, num_colums*i + 2)
+        fitness_plot.set_title('Fitness')
 
-    sigma_plot = fig.add_subplot(2, 1, 1)
-    sigma_plot.set_title('Sigma')
-    fitness_plot = fig.add_subplot(2, 1, 2)
-    fitness_plot.set_title('Fitness')
+        for fitness_name in fitnesses_to_test:
+            sigma_plot.plot(x_range, sigmas[fitness_name], label=fitness_name)
+            fitness_plot.plot(x_range, fitnesses[fitness_name], label=fitness_name)
 
-    for fitness_name in fitnesses_to_test:
-        sigma_plot.plot(x_range, sigmas[fitness_name], label=fitness_name)
-        fitness_plot.plot(x_range, fitnesses[fitness_name], label=fitness_name)
+        sigma_plot.legend(loc=0, fontsize='small')
+        sigma_plot.set_title("Sigma over time")
+        sigma_plot.set_xlabel('Evaluations')
+        sigma_plot.set_ylabel('Sigma')
+        sigma_plot.set_yscale('log')
 
-    sigma_plot.legend(loc=0, fontsize='small')
-    sigma_plot.set_title("Sigma over time")
-    sigma_plot.set_xlabel('Evaluations')
-    sigma_plot.set_ylabel('Sigma')
-    sigma_plot.set_yscale('log')
-
-    fitness_plot.legend(loc=0, fontsize='small')
-    fitness_plot.set_title("Fitness over time")
-    fitness_plot.set_xlabel('Evaluations')
-    fitness_plot.set_ylabel('Fitness value')
-    fitness_plot.set_yscale('log')
+        fitness_plot.legend(loc=0, fontsize='small')
+        fitness_plot.set_title("Fitness over time")
+        fitness_plot.set_xlabel('Evaluations')
+        fitness_plot.set_ylabel('Fitness value')
+        fitness_plot.set_yscale('log')
 
     fig.tight_layout()
     fig.show()
