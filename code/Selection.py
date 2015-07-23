@@ -10,19 +10,19 @@ that are chosen to be the best of this generation
 # import numpy as np
 
 
-def best(population, new_population, mu=1, plus_selection=False):
+def best(population, new_population, parameters):
     """
         Given the population, return the (mu) best
     """
-    if mu < 1:
+    if parameters.mu < 1:
         raise Exception("best() has to return at least one individual")
 
-    if plus_selection:
+    if parameters.plus_selection:
         new_population.extend(population)
 
     new_population.sort(key=lambda individual: individual.fitness, reverse=True)  # sort descending
 
-    return new_population[:mu]
+    return new_population[:parameters.mu]
 
 
 def onePlusOneSelection(population, new_population, t, parameters):
