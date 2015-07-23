@@ -40,6 +40,8 @@ class Parameters(object):
         self.tau = 1 / sqrt(2*n)
         self.tau_c = 1 + ((n**2 + n) / (2*mu))
 
+        self.sigma_mean = self.sigma
+
 
     def oneFifthRule(self, t):
         """
@@ -92,7 +94,7 @@ class Parameters(object):
         if np.min(np.min(np.isfinite(self.C))) == 0:
             degenerated = True
 
-        elif not ((10**(-16)) < self.s_mean < (10**16)):
+        elif not ((10**(-16)) < self.sigma_mean < (10**16)):
             degenerated = True
 
         else:
@@ -106,6 +108,6 @@ class Parameters(object):
             self.C = np.eye(self.n)
             self.B = np.eye(self.n)
             self.D = np.eye(self.n)
-            self.s_mean = 1          # TODO: make this depend on any input default sigma value
+            self.sigma_mean = 1          # TODO: make this depend on any input default sigma value
 
             # TODO: add feedback of resetting sigma to the sigma per individual
