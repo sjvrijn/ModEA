@@ -12,14 +12,14 @@ class Parameters(object):
     """
 
 
-    def __init__(self, n, mu, labda, plus_selection=False):
+    def __init__(self, n, mu, lambda_, plus_selection=False):
         """
             Setup the set of parameters
         """
         ''' Basic parameters '''
         self.n = n
         self.mu = mu
-        self.labda = labda
+        self.lambda_ = lambda_
         self.sigma = 1
         self.plus_selection = plus_selection
 

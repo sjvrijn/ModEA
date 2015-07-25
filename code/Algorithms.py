@@ -31,13 +31,13 @@ def onePlusOneES(n, fitnessFunction, budget):
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
 
 
-def CMSA_ES(n, fitnessFunction, budget, mu=4, labda=15, plus_selection=False):
+def CMSA_ES(n, fitnessFunction, budget, mu=4, lambda_=15, plus_selection=False):
     """
         Implementation of a default (mu +/, lambda)-CMA-ES
         Requires the length of the vector to be optimized, the handle of a fitness function to use and the budget
     """
 
-    parameters = Parameters(n, mu, labda, plus_selection)
+    parameters = Parameters(n, mu, lambda_, plus_selection)
     population = [Individual(n) for _ in range(mu)]
     for individual in population:
         fitnessFunction(individual)

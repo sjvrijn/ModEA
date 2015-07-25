@@ -16,16 +16,16 @@ def average(population, parameters):
     """
 
     avg = population[0].getCopy()
-    avg.dna, parameters.s_mean, parameters.sigma_mean = np.mean([(i.dna, i.last_s, i.sigma) for i in population], axis=0)
+    avg.dna, parameters.s_mean, parameters.sigma_mean = np.mean([(i.dna, i.last_s, i.sigma) for i in population],axis=0)
 
     new_population = [avg]
-    for _ in range(parameters.labda-1):
+    for _ in range(parameters.lambda_-1):
         new_population.append(avg.getCopy())
 
     return new_population
 
 
-def weighted(labda, weights, population):
+def weighted(lambda_, weights, population):
     """
         Given the population and weights, return the weighted average of the mu best
     """
@@ -35,7 +35,7 @@ def weighted(labda, weights, population):
     avg.dna = np.mean([population[i].dna * weights[i] for i in range(mu)])
 
     new_population = [avg]
-    for _ in range(labda-1):
+    for _ in range(lambda_-1):
         new_population.append(avg.getCopy())
 
     return new_population
