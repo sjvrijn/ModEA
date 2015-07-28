@@ -31,6 +31,27 @@ def onePlusOneES(n, fitnessFunction, budget):
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
 
 
+def onePlusOneCholeskyCMAES(n, fitnessFunction, budget):
+    """
+        Implementation of the default (1+1)-ES
+        Requires the length of the vector to be optimized, the handle of a fitness function to use and the budget
+    """
+
+    parameters = Parameters(n, 1, 1)
+    population = [Individual(n)]
+    fitnessFunction(population[0])
+
+    # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
+    functions = {
+        'recombine': lambda pop: Rec.onePlusOne(pop),  # simply copy the only existing individual and return as a list
+        'mutate': lambda ind: Mut.x1(ind, parameters),
+        'select': lambda pop, new_pop, t: Sel.onePlusOneSelection(pop, new_pop, t, parameters),
+        'mutateParameters': lambda t: parameters.oneFifthRule(t),
+    }
+
+    return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+
+
 def CMSA_ES(n, fitnessFunction, budget, mu=4, lambda_=15, plus_selection=False):
     """
         Implementation of a default (mu +/, lambda)-CMA-ES
