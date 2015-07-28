@@ -2,7 +2,7 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
 import matplotlib.pyplot as plt
-from code.Algorithms import onePlusOneES, CMSA_ES
+from code.Algorithms import onePlusOneES, CMSA_ES, onePlusOneCholeskyCMAES
 
 # Constant fitness function
 def constantFitness(individual):
@@ -27,7 +27,7 @@ def rastriginFitness(individual):
 
 fitnes_functions = {'const': constantFitness, 'random': randomFitness, 'sum': sumFitness,
                     'sphere': sphereFitness, 'rastrigin': rastriginFitness, }
-algorithms = {'1+1': onePlusOneES, 'CMSA': CMSA_ES}
+algorithms = {'1+1': onePlusOneES, 'CMSA': CMSA_ES, 'Cholesky': onePlusOneCholeskyCMAES}
 
 
 def run_tests():
@@ -42,7 +42,7 @@ def run_tests():
 
     # algorithms_to_test = ['1+1']
     # algorithms_to_test = ['CMSA']
-    algorithms_to_test = ['1+1', 'CMSA']
+    algorithms_to_test = ['1+1', 'CMSA', 'Cholesky']
 
     # 'Catch' results
     results = {}
@@ -77,9 +77,9 @@ def run_tests():
         x_range = np.array(range(len(sigmas[fitnesses_to_test[0]])))
         nil_line = np.zeros(budget)
 
-        sigma_plot = fig.add_subplot(num_colums, num_rows, num_colums*i + 1)
+        sigma_plot = fig.add_subplot(num_rows, num_colums, num_colums*i + 1)
         sigma_plot.set_title('Sigma')
-        fitness_plot = fig.add_subplot(num_colums, num_rows, num_colums*i + 2)
+        fitness_plot = fig.add_subplot(num_rows, num_colums, num_colums*i + 2)
         fitness_plot.set_title('Fitness')
 
         for fitness_name in fitnesses_to_test:
