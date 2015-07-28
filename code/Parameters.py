@@ -132,7 +132,13 @@ class Parameters(object):
 
         degenerated = False
 
-        if np.min(np.min(np.isfinite(self.C))) == 0:
+        if np.min(np.isfinite(self.C)) == 0:
+            degenerated = True
+
+        elif np.min(np.isfinite(self.A)) == 0:
+            degenerated = True
+
+        elif not ((10**(-16)) < np.linalg.cond(self.A) < (10**16)):
             degenerated = True
 
         elif not ((10**(-16)) < self.sigma_mean < (10**16)):
@@ -146,9 +152,15 @@ class Parameters(object):
 
 
         if degenerated:
-            self.C = np.eye(self.n)
-            self.B = np.eye(self.n)
-            self.D = np.eye(self.n)
+            n = self.n
+
+            self.C = np.eye(n)
+            self.B = np.eye(n)
+            self.D = np.eye(n)
             self.sigma_mean = 1          # TODO: make this depend on any input default sigma value
+
+            self.p_success = self.p_target
+            self.A = np.eye(n)
+            self.p_c = np.zeros((1,n))
 
             # TODO: add feedback of resetting sigma to the sigma per individual
