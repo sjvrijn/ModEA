@@ -108,6 +108,7 @@ class Parameters(object):
 
         self.p_success = (1 - self.c_p)*self.p_success + self.c_p*int(self.lambda_success)
         self.sigma *= np.exp((self.p_success - (self.p_target/(1-self.p_target))*(1-self.p_success))/self.d)
+        self.sigma_mean = self.sigma
 
         if self.lambda_success and self.p_success < self.p_thresh:
             # Helper variables
@@ -140,7 +141,7 @@ class Parameters(object):
         else:
             self.D, self.B = np.linalg.eig(self.C)
             self.D = np.sqrt(self.D)
-            if not np.isreal(self.D):
+            if not np.isreal(self.D).all():
                 degenerated = True
 
 

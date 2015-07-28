@@ -29,12 +29,12 @@ def CMAMutation(individual, parameters):
 
 def choleskyCMAMutation(individual, parameters):
     """
-        CMA based mutation: x = x + ((sigma_mean*tau*N(0,1)) * (B*D*N(0,I)))
+        Cholesky CMA based mutation
     """
 
     n = individual.n
     parameters.last_z = np.random.randn(1,n)
-    mutation_vector = parameters.sigma * np.dot(parameters.A, parameters.last_z.T).T
+    mutation_vector = parameters.sigma * np.dot(parameters.A, parameters.last_z.T)
 
     individual.dna += mutation_vector
 
