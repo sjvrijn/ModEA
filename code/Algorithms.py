@@ -44,7 +44,7 @@ def onePlusOneCholeskyCMAES(n, fitnessFunction, budget):
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
         'recombine': lambda pop: Rec.onePlusOne(pop),  # simply copy the only existing individual and return as a list
-        'mutate': lambda ind: Mut.x1(ind, parameters),
+        'mutate': lambda ind: Mut.choleskyCMAMutation(ind, parameters),
         'select': lambda pop, new_pop, t: Sel.onePlusOneSelection(pop, new_pop, t, parameters),
         'mutateParameters': lambda t: parameters.adaptCholeskyCovarianceMatrix(),
     }
@@ -66,7 +66,7 @@ def CMSA_ES(n, fitnessFunction, budget, mu=4, lambda_=15, plus_selection=False):
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
         'recombine': lambda pop: Rec.average(pop, parameters),
-        'mutate': lambda ind: Mut.cmaMutation(ind, parameters),
+        'mutate': lambda ind: Mut.CMAMutation(ind, parameters),
         'select': lambda pop, new_pop, _: Sel.best(pop, new_pop, parameters),
         'mutateParameters': lambda t: parameters.adaptCovarianceMatrix(),
     }

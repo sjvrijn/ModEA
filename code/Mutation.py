@@ -14,7 +14,7 @@ def x1(individual, parameters):
     individual.dna += parameters.sigma * np.random.randn(n,1)
 
 
-def cmaMutation(individual, parameters):
+def CMAMutation(individual, parameters):
     """
         CMA based mutation: x = x + ((sigma_mean*tau*N(0,1)) * (B*D*N(0,I)))
     """
@@ -25,6 +25,18 @@ def cmaMutation(individual, parameters):
     individual.last_z = individual.sigma * individual.last_s
 
     individual.dna += individual.last_z
+
+
+def choleskyCMAMutation(individual, parameters):
+    """
+        CMA based mutation: x = x + ((sigma_mean*tau*N(0,1)) * (B*D*N(0,I)))
+    """
+
+    n = individual.n
+    parameters.last_z = np.random.randn(1,n)
+    mutation_vector = parameters.sigma * np.dot(parameters.A, parameters.last_z.T).T
+
+    individual.dna += mutation_vector
 
 
 def adaptSigma(sigma, p_s, c=0.817):
