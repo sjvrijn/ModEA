@@ -1,5 +1,11 @@
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
+"""
+This Module contains a collection of Mutation operators to be used in the ES-Framework
+
+A Mutation operator mutates an Individual's DNA inline, thus returning nothing.
+"""
+
 import numpy as np
 from random import getrandbits
 
