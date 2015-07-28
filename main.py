@@ -100,7 +100,7 @@ def run_tests():
 
     fig.tight_layout()
     fig.show()
-    input("Done, press enter to close")
+    input("Done, press enter to close")  # Prevents the plot from closing prematurely
 
 
 

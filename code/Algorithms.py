@@ -23,7 +23,7 @@ def onePlusOneES(n, fitnessFunction, budget):
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
         'recombine': lambda x: [x[0].getCopy()],  # simply copy the only existing individual and return as a list
-        'mutate': lambda x: Mut.x1(x, parameters.sigma),
+        'mutate': lambda x: Mut.x1(x, parameters),
         'select': lambda pop, new_pop, t: Sel.onePlusOneSelection(pop, new_pop, t, parameters),
         'mutateParameters': lambda t: parameters.oneFifthRule(t),
     }
@@ -42,6 +42,7 @@ def CMSA_ES(n, fitnessFunction, budget, mu=4, lambda_=15, plus_selection=False):
     for individual in population:
         fitnessFunction(individual)
 
+    # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
         'recombine': lambda pop: Rec.average(pop, parameters),
         'mutate': lambda ind: Mut.cmaMutation(ind, parameters),
