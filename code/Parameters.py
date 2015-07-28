@@ -1,6 +1,5 @@
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
-from math import sqrt
 import numpy as np
 
 
@@ -37,7 +36,7 @@ class Parameters(object):
         self.s_mean = None
 
         ### CMSA-ES ###
-        self.tau = 1 / sqrt(2*n)
+        self.tau = 1 / np.sqrt(2*n)
         self.tau_c = 1 + ((n**2 + n) / (2*mu))
         self.sigma_mean = self.sigma
 
