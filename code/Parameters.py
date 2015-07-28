@@ -16,32 +16,43 @@ class Parameters(object):
         """
             Setup the set of parameters
         """
-        ''' Basic parameters '''
+        ### Basic parameters ###
         self.n = n
         self.mu = mu
         self.lambda_ = lambda_
         self.sigma = 1
         self.plus_selection = plus_selection
 
-        ''' Meta-parameters '''
+        ### Meta-parameters ###
         self.N = 10 * self.n
 
-        ''' (1+1)-ES '''
+        ### (1+1)-ES ###
         self.success_history = np.zeros((self.N, ), dtype=np.int)
         self.c = 0.817  # Sigma adaptation factor
 
-        ''' CMA-ES '''
+        ### CMA-ES ###
         self.C = np.eye(n)  # Covariance matrix
         self.B = np.eye(n)  # Eigenvectors of C
         self.D = np.eye(n)  # Diagonal eigenvalues of C
-
         self.s_mean = None
 
-        ''' CMSA-ES '''
+        ### CMSA-ES ###
         self.tau = 1 / sqrt(2*n)
         self.tau_c = 1 + ((n**2 + n) / (2*mu))
-
         self.sigma_mean = self.sigma
+
+        ### (1+1)-Cholesky ES ###
+        self.A = np.eye(n)
+        self.d = 1 + n/2
+        self.p_target = 2/11
+        self.p_success = self.p_target
+        self.p_c = np.zeros((1,n))
+        self.c_p = 1/12
+        self.c_cov = 2 / (n**2 + 6)
+        self.p_thresh = 0.44
+        self.c_a = np.sqrt(1 - self.c_cov)
+        self.lambda_success = False
+        self.last_z = np.zeros((1,n))  # To be recorded by the mutation
 
 
     def oneFifthRule(self, t):
@@ -85,6 +96,31 @@ class Parameters(object):
 
         self.C *= (1 - tau_c_inv)
         self.C += tau_c_inv * (self.s_mean.T * self.s_mean)
+
+        self.checkDegenerated()
+
+
+    def adaptCholeskyCovarianceMatrix(self):
+        """
+            Adapt the covariance matrix according to the Cholesky CMA-ES
+        """
+
+        self.p_success = (1 - self.c_p)*self.p_success + self.c_p*int(self.lambda_success)
+        self.sigma *= np.exp((self.p_success - (self.p_target/(1-self.p_target))*(1-self.p_success))/self.d)
+
+        if self.lambda_success and self.p_success < self.p_thresh:
+            # Helper variables
+            z_squared = np.linalg.norm(self.last_z) ** 2
+            c_a_squared = self.c_a ** 2
+
+            part_1 = self.c_a / z_squared
+            part_2 = np.sqrt(1 + (((1 - c_a_squared)*z_squared) / c_a_squared)) - 1
+            part_3 = np.dot(np.dot(self.A, self.last_z.T), self.last_z)
+
+            # Actual matrix update
+            self.A = self.c_a*self.A + part_1*part_2*part_3
+
+        self.checkDegenerated()
 
 
     def checkDegenerated(self):

@@ -46,7 +46,7 @@ def onePlusOneCholeskyCMAES(n, fitnessFunction, budget):
         'recombine': lambda pop: Rec.onePlusOne(pop),  # simply copy the only existing individual and return as a list
         'mutate': lambda ind: Mut.x1(ind, parameters),
         'select': lambda pop, new_pop, t: Sel.onePlusOneSelection(pop, new_pop, t, parameters),
-        'mutateParameters': lambda t: parameters.oneFifthRule(t),
+        'mutateParameters': lambda t: parameters.adaptCholeskyCovarianceMatrix(),
     }
 
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
