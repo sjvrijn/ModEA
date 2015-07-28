@@ -22,8 +22,8 @@ def onePlusOneES(n, fitnessFunction, budget):
 
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
-        'recombine': lambda x: [x[0].getCopy()],  # simply copy the only existing individual and return as a list
-        'mutate': lambda x: Mut.x1(x, parameters),
+        'recombine': lambda pop: Rec.onePlusOne(pop),  # simply copy the only existing individual and return as a list
+        'mutate': lambda ind: Mut.x1(ind, parameters),
         'select': lambda pop, new_pop, t: Sel.onePlusOneSelection(pop, new_pop, t, parameters),
         'mutateParameters': lambda t: parameters.oneFifthRule(t),
     }
