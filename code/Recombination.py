@@ -10,6 +10,13 @@ that are to form the new population
 import numpy as np
 
 
+def onePlusOne(population):
+    """
+        Utility function for 1+1 ES strategies where the recombination is merely a copy
+    """
+    return [population[0].getCopy()]
+
+
 def average(population, parameters):
     """
         Given the new population, return the average of the mu best individuals
