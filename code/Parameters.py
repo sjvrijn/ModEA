@@ -53,6 +53,12 @@ class Parameters(object):
         self.lambda_success = False
         self.last_z = np.zeros((1,n))  # To be recorded by the mutation
 
+        ### Active (1+1)CMA-ES ###
+        self.A_inv = np.eye(n)
+        self.s = np.zeros((1,n))
+        self.fitnessHistory = np.zeros((5,1))
+        self.best_fitness = np.inf
+
 
     def oneFifthRule(self, t):
         """
@@ -180,3 +186,28 @@ class Parameters(object):
             self.p_success = self.p_target
             self.A = np.eye(n)
             self.p_c = np.zeros((1, n))
+
+
+    def checkActiveDegenerated(self):
+        """
+            Check if the parameters (C, s_mean, etc) have degenerated and need to be reset
+        """
+
+        degenerated = False
+
+        if np.linalg.cond(np.dot(self.A, self.A.T)) > (10 ** 14):
+            degenerated = True
+
+        elif not ((10 ** (-16)) < self.sigma_mean < (10 ** 16)):
+            degenerated = True
+
+        if degenerated:
+            n = self.n
+
+            self.A = np.eye(n)
+            self.A_inv = np.eye(n)
+            self.sigma_mean = 1
+            self.p_success = 0
+            self.s = np.zeros((1,n))
+
+            self.fitnessHistory = self.best_fitness * np.ones((5,1))
