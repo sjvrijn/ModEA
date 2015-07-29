@@ -121,7 +121,7 @@ class Parameters(object):
             # Actual matrix update
             self.A = self.c_a*self.A + part_1*part_2*part_3
 
-        self.checkDegenerated()
+        self.checkCholeskyDegenerated()
 
 
     def checkDegenerated(self):
@@ -132,12 +132,6 @@ class Parameters(object):
         degenerated = False
 
         if np.min(np.isfinite(self.C)) == 0:
-            degenerated = True
-
-        elif np.min(np.isfinite(self.A)) == 0:
-            degenerated = True
-
-        elif not ((10**(-16)) < np.linalg.cond(self.A) < (10**16)):
             degenerated = True
 
         elif not ((10**(-16)) < self.sigma_mean < (10**16)):
@@ -158,8 +152,31 @@ class Parameters(object):
             self.D = np.eye(n)
             self.sigma_mean = 1          # TODO: make this depend on any input default sigma value
 
+            # TODO: add feedback of resetting sigma to the sigma per individual
+
+
+    def checkCholeskyDegenerated(self):
+        """
+            Check if the parameters (C, s_mean, etc) have degenerated and need to be reset
+        """
+
+        degenerated = False
+
+        if np.min(np.isfinite(self.A)) == 0:
+            degenerated = True
+
+        elif not ((10 ** (-16)) < np.linalg.cond(self.A) < (10 ** 16)):
+            degenerated = True
+
+        elif not ((10 ** (-16)) < self.sigma_mean < (10 ** 16)):
+            degenerated = True
+
+
+        if degenerated:
+            n = self.n
+
+            self.sigma_mean = 1  # TODO: make this depend on any input default sigma value
+
             self.p_success = self.p_target
             self.A = np.eye(n)
-            self.p_c = np.zeros((1,n))
-
-            # TODO: add feedback of resetting sigma to the sigma per individual
+            self.p_c = np.zeros((1, n))
