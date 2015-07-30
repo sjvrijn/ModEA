@@ -2,7 +2,7 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
 import matplotlib.pyplot as plt
-from code.Algorithms import onePlusOneES, CMSA_ES, onePlusOneCholeskyCMAES
+from code.Algorithms import onePlusOneES, CMSA_ES, onePlusOneCholeskyCMAES, onePlusOneActiveCMAES
 
 # Constant fitness function
 def constantFitness(individual):
@@ -27,7 +27,8 @@ def rastriginFitness(individual):
 
 fitnes_functions = {'const': constantFitness, 'random': randomFitness, 'sum': sumFitness,
                     'sphere': sphereFitness, 'rastrigin': rastriginFitness, }
-algorithms = {'1+1': onePlusOneES, 'CMSA': CMSA_ES, 'Cholesky': onePlusOneCholeskyCMAES}
+algorithms = {'1+1': onePlusOneES, 'CMSA': CMSA_ES, 'Cholesky': onePlusOneCholeskyCMAES,
+              'Active': onePlusOneActiveCMAES}
 
 
 def run_tests():
@@ -42,7 +43,7 @@ def run_tests():
 
     # algorithms_to_test = ['1+1']
     # algorithms_to_test = ['CMSA']
-    algorithms_to_test = ['1+1', 'CMSA', 'Cholesky']
+    algorithms_to_test = ['1+1', 'CMSA', 'Cholesky', 'Active']
 
     # 'Catch' results
     results = {}
