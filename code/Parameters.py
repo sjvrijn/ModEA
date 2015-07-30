@@ -93,10 +93,9 @@ class Parameters(object):
 
         t %= self.N
         self.success_history[t] = 1 if success else 0
-        self.lambda_success = success  # For 1+1 Cholesky CMA ES
 
 
-    def addToFitnessHistory(self, t, fitness):
+    def addToFitnessHistory(self, fitness):
         """
             Record the latest fitness value (with a history of 5 generations)
         """

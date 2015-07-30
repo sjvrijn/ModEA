@@ -38,8 +38,7 @@ def choleskyCMAMutation(individual, parameters):
         Cholesky CMA based mutation
     """
 
-    n = individual.n
-    parameters.last_z = np.random.randn(1,n)
+    parameters.last_z = np.random.randn(1,individual.n)
     mutation_vector = parameters.sigma * np.dot(parameters.A, parameters.last_z.T)
 
     individual.dna += mutation_vector
