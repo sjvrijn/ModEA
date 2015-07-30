@@ -34,10 +34,51 @@ def onePlusOneSelection(population, new_population, t, parameters):
     individual = population[0]
 
     if new_individual.fitness < individual.fitness:
+        parameters.best_fitness = new_individual.fitness
         result = new_population
         parameters.addToSuccessHistory(t, True)
     else:
         result = population
         parameters.addToSuccessHistory(t, False)
+
+    return result
+
+
+def onePlusOneCholeskySelection(population, new_population, _, parameters):
+    """
+        (1+1)-selection (with success history)
+    """
+
+    new_individual = new_population[0]
+    individual = population[0]
+
+    if new_individual.fitness < individual.fitness:
+        parameters.best_fitness = new_individual.fitness
+        result = new_population
+        parameters.lambda_success = True
+    else:
+        result = population
+        parameters.lambda_success = False
+
+    return result
+
+
+def onePlusOneActiveSelection(population, new_population, _, parameters):
+    """
+        (1+1)-selection (with success history)
+    """
+
+    new_fitness = new_population[0].fitness
+    individual = population[0]
+
+    if new_fitness < individual.fitness:
+        parameters.best_fitness = new_fitness
+        result = new_population
+        parameters.lambda_success = True
+    else:
+        result = population
+        parameters.lambda_success = False
+
+    parameters.addToFitnessHistory(new_fitness)
 
     return result
