@@ -45,8 +45,30 @@ def onePlusOneCholeskyCMAES(n, fitnessFunction, budget):
     functions = {
         'recombine': lambda pop: Rec.onePlusOne(pop),  # simply copy the only existing individual and return as a list
         'mutate': lambda ind: Mut.choleskyCMAMutation(ind, parameters),
-        'select': lambda pop, new_pop, t: Sel.onePlusOneSelection(pop, new_pop, t, parameters),
+        'select': lambda pop, new_pop, t: Sel.onePlusOneCholeskySelection(pop, new_pop, t, parameters),
         'mutateParameters': lambda t: parameters.adaptCholeskyCovarianceMatrix(),
+    }
+
+    return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+
+
+def onePlusOneActiveCMAES(n, fitnessFunction, budget):
+    """
+        Implementation of the default (1+1)-ES
+        Requires the length of the vector to be optimized, the handle of a fitness function to use and the budget
+    """
+
+    parameters = Parameters(n, 1, 1)
+    population = [Individual(n)]
+    fitnessFunction(population[0])
+    parameters.addToFitnessHistory(population[0].fitness)
+
+    # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
+    functions = {
+        'recombine': lambda pop: Rec.onePlusOne(pop),  # simply copy the only existing individual and return as a list
+        'mutate': lambda ind: Mut.choleskyCMAMutation(ind, parameters),
+        'select': lambda pop, new_pop, t: Sel.onePlusOneActiveSelection(pop, new_pop, t, parameters),
+        'mutateParameters': lambda t: parameters.adaptActiveCovarianceMatrix(),
     }
 
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
