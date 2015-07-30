@@ -56,8 +56,11 @@ class Parameters(object):
         ### Active (1+1)CMA-ES ###
         self.A_inv = np.eye(n)
         self.s = np.zeros((1,n))
-        self.fitnessHistory = []  # 'Filler' data
+        self.fitness_history = []  # 'Filler' data
         self.best_fitness = np.inf
+        self.c_act = 2/(n+2)
+        self.c_cov_pos = 2/(n**2 + 6)
+        self.c_cov_neg = 0.4/(n**1.6 + 1)
 
 
     def oneFifthRule(self, t):
@@ -98,9 +101,9 @@ class Parameters(object):
             Record the latest fitness value (with a history of 5 generations)
         """
 
-        self.fitnessHistory.append(fitness)
-        if len(self.fitnessHistory) > 5:
-            self.fitnessHistory = self.fitnessHistory[1:]
+        self.fitness_history.append(fitness)
+        if len(self.fitness_history) > 5:
+            self.fitness_history = self.fitness_history[1:]
 
 
     def adaptCovarianceMatrix(self):
@@ -136,6 +139,50 @@ class Parameters(object):
 
             # Actual matrix update
             self.A = self.c_a*self.A + part_1*part_2*part_3
+
+        self.checkCholeskyDegenerated()
+
+
+    def adaptActiveCovarianceMatrix(self):
+        """
+            Adapt the covariance matrix according to the Cholesky CMA-ES
+        """
+
+        # Positive Cholesky update
+        if self.lambda_success:
+            self.p_success = (1 - self.c_p)*self.p_success + self.c_p
+            self.s = (1-self.c)*self.s + np.sqrt(self.c * (2-self.c)) * np.dot(self.A, self.last_z.T)
+
+            w = np.dot(self.A_inv, self.s.T)
+            w_norm_squared = np.linalg.norm(w)**2
+            a = np.sqrt(1 - self.c_cov_pos)
+            b = (a/w_norm_squared) * (np.sqrt(1+w_norm_squared * self.c_cov_pos / (1-self.c_cov_pos)) - 1)  #TODO check division/multiplication order
+
+            self.A = a*self.A + b*np.dot(np.dot(self.A, w), w.T)
+            self.A_inv = (1/a)*self.A_inv - b/(a**2 + a*b*w_norm_squared) * np.dot(w, np.dot(w.T, self.A_inv))
+
+        else:
+            self.p_success *= (1-self.c_p)
+
+        self.sigma *= np.exp((1/self.d) * ((self.p_success-self.p_target) / (1-self.p_target)))
+        self.sigma_mean = self.sigma
+
+        # Negative Cholesky update
+        if len(self.fitness_history) > 4 and self.fitness_history[-1] < self.best_fitness:
+            # Helper variables
+            z_squared = np.linalg.norm(self.last_z) ** 2
+
+            if self.c_cov_neg*(2*z_squared -1) > 1:
+                self.c_cov_neg = 1/(2*z_squared - 1)
+            else:
+                self.c_cov_neg = 0.4/(self.n**1.6 + 1)  # TODO: currently hardcoded copy of default value
+
+            c_cov_neg = self.c_cov_neg
+            w = np.dot(self.A_inv, self.s.T)
+            a = np.sqrt(1+self.c_cov_neg)
+            b = (a/z_squared) * (np.sqrt(1 + (c_cov_neg*z_squared) / (1+c_cov_neg)) - 1)
+            self.A = a*self.A + b*np.dot(np.dot(self.A, w), w.T)
+            self.A_inv = (1/a)*self.A_inv - b/(a**2 + a*b*(np.linalg.norm(w)**2) * np.dot(w, np.dot(w.T, self.A_inv)))
 
         self.checkCholeskyDegenerated()
 
@@ -220,4 +267,4 @@ class Parameters(object):
             self.p_success = 0
             self.s = np.zeros((1,n))
 
-            self.fitnessHistory = self.best_fitness * np.ones((5,1))
+            self.fitness_history = self.best_fitness * np.ones((5,1))
