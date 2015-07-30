@@ -56,7 +56,7 @@ class Parameters(object):
         ### Active (1+1)CMA-ES ###
         self.A_inv = np.eye(n)
         self.s = np.zeros((1,n))
-        self.fitnessHistory = np.zeros((5,1))
+        self.fitnessHistory = []  # 'Filler' data
         self.best_fitness = np.inf
 
 
@@ -91,6 +91,16 @@ class Parameters(object):
         t %= self.N
         self.success_history[t] = 1 if success else 0
         self.lambda_success = success  # For 1+1 Cholesky CMA ES
+
+
+    def addToFitnessHistory(self, t, fitness):
+        """
+            Record the latest fitness value (with a history of 5 generations)
+        """
+
+        self.fitnessHistory.append(fitness)
+        if len(self.fitnessHistory) > 5:
+            self.fitnessHistory = self.fitnessHistory[1:]
 
 
     def adaptCovarianceMatrix(self):
