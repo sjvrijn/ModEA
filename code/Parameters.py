@@ -11,7 +11,7 @@ class Parameters(object):
     """
 
 
-    def __init__(self, n, mu, lambda_, plus_selection=False):
+    def __init__(self, n, mu, lambda_, elitist=False):
         """
             Setup the set of parameters
         """
@@ -20,7 +20,7 @@ class Parameters(object):
         self.mu = mu
         self.lambda_ = lambda_
         self.sigma = 1
-        self.plus_selection = plus_selection
+        self.elitist = elitist
 
         ### Meta-parameters ###
         self.N = 10 * self.n

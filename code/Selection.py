@@ -17,7 +17,7 @@ def best(population, new_population, parameters):
     if parameters.mu < 1:
         raise Exception("best() has to return at least one individual")
 
-    if parameters.plus_selection:
+    if parameters.elitist:
         new_population.extend(population)
 
     new_population.sort(key=lambda individual: individual.fitness)  # sort descending
