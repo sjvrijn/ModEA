@@ -31,6 +31,28 @@ def onePlusOneES(n, fitnessFunction, budget):
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
 
 
+def CMA_ES(n, fitnessFunction, budget, mu=4, lambda_=15, elitist=False):
+    """
+        Implementation of a default (mu +/, lambda)-CMA-ES
+        Requires the length of the vector to be optimized, the handle of a fitness function to use and the budget
+    """
+
+    parameters = Parameters(n, mu, lambda_, elitist)
+    population = [Individual(n) for _ in range(mu)]
+    for individual in population:
+        fitnessFunction(individual)
+
+    # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
+    functions = {
+        'recombine': lambda pop: Rec.weighted(pop, parameters),
+        'mutate': lambda ind: Mut.CMAMutation__(ind, parameters),
+        'select': lambda pop, new_pop, _: Sel.best(pop, new_pop, parameters),
+        'mutateParameters': lambda t: parameters.adaptCovarianceMatrix(),
+    }
+
+    return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+
+
 def onePlusOneCholeskyCMAES(n, fitnessFunction, budget):
     """
         Implementation of the default (1+1)-ES
@@ -90,7 +112,7 @@ def CMSA_ES(n, fitnessFunction, budget, mu=4, lambda_=15, elitist=False):
         'recombine': lambda pop: Rec.average(pop, parameters),
         'mutate': lambda ind: Mut.CMAMutation(ind, parameters),
         'select': lambda pop, new_pop, _: Sel.best(pop, new_pop, parameters),
-        'mutateParameters': lambda t: parameters.adaptCovarianceMatrix(),
+        'mutateParameters': lambda t: parameters.selfAdaptCovarianceMatrix(),
     }
 
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
@@ -117,6 +139,8 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
 
          - mutateParameters:    Mutates and/or updates all parameters where required
     """
+
+    # TODO: allow for multiple different structures to be used; i.e. sequential VS parallel evaluation
 
     # Parameter tracking
     sigma_over_time = []

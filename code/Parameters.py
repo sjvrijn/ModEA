@@ -46,7 +46,8 @@ class Parameters(object):
         self.c_mu = min(1-self.c_1, self.alpha_mu*((mu_eff - 2 + 1/mu_eff) / ((n+2)**2 + self.alpha_mu*mu_eff/2)))
         self.p_sigma = np.zeros((1,n))
         self.p_c = np.zeros((1,n))
-        self.y_w = np.zeros((n,1))  # weighted average of the last generation of offset vectors
+        self.y_w = np.zeros((n,1))          # weighted average of the last generation of offset vectors
+        self.y_w_squared = np.zeros((n,1))  # y_w squared
 
         ### CMSA-ES ###
         self.tau = 1 / np.sqrt(2*n)
@@ -118,6 +119,31 @@ class Parameters(object):
 
 
     def adaptCovarianceMatrix(self):
+        """
+            Adapt the covariance matrix according to the CMA-ES
+        """
+
+        c_sigma = self.c_sigma
+        c_c = self.c_c
+
+        self.p_sigma = (1-c_sigma)*self.p_sigma + np.sqrt(c_sigma*(2 - c_sigma)*self.mu_eff) * np.dot(np.sqrt(self.C), self.y_w)
+        p_sigma_length = np.dot(self.p_sigma, self.p_sigma.T)
+        expected_random_vector = np.sqrt(self.n) * (1 - (1/(4*self.n)) + (1/(21*self.n**2)))
+        self.sigma *= np.exp((c_sigma/self.d_sigma) * (p_sigma_length/expected_random_vector - 1))
+        self.sigma_mean = self.sigma
+
+        h_sigma = 1  # TODO: heavyside function
+        delta_h_sigma = (1-h_sigma)*c_c*(2-c_c)
+        self.p_c = (1-self.c_p)*self.p_c + h_sigma * np.sqrt(c_c*(2-c_c)*self.mu_eff) * self.y_w
+
+        self.C = (1 - self.c_1 - self.c_mu)*self.C + \
+                 (self.c_1 * (self.p_c * self.p_c.T + delta_h_sigma*self.C)) + \
+                 (self.c_mu * self.y_w_squared)
+
+        # TODO: check degenerated?
+
+
+    def selfAdaptCovarianceMatrix(self):
         """
             Adapt the covariance matrix according to the CMSA-ES
         """
