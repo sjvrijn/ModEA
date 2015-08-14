@@ -22,6 +22,8 @@ class Parameters(object):
         self.sigma = 1
         self.elitist = elitist
         self.weights = self.getWeights()
+        mu_eff = 1 / np.sum(np.square(self.weights))  # Store locally to shorten calculations later on
+        self.mu_eff = mu_eff
 
         ### Meta-parameters ###
         self.N = 10 * self.n
@@ -36,6 +38,15 @@ class Parameters(object):
         self.D = np.eye(n)  # Diagonal eigenvalues of C
         self.s_mean = None
 
+        self.c_sigma = (mu_eff + 2) / (mu_eff + n + 5)
+        self.d_sigma = self.c_sigma + 1 + 2*max(0, np.sqrt((mu_eff-1) / (n+1)))
+        self.c_c = (4 + mu_eff/n) / (n + 4 + 2*mu_eff/n)
+        self.c_1 = 2 / ((n + 1.3)**2 + mu_eff)
+        self.alpha_mu = 2
+        self.c_mu = min(1-self.c_1, self.alpha_mu*((mu_eff - 2 + 1/mu_eff) / ((n+2)**2 + self.alpha_mu*mu_eff/2)))
+        self.p_sigma = np.zeros((1,n))
+        self.p_c = np.zeros((1,n))
+
         ### CMSA-ES ###
         self.tau = 1 / np.sqrt(2*n)
         self.tau_c = 1 + ((n**2 + n) / (2*mu))
@@ -46,7 +57,6 @@ class Parameters(object):
         self.d = 1 + n/2
         self.p_target = 2/11
         self.p_success = self.p_target
-        self.p_c = np.zeros((1,n))
         self.c_p = 1/12
         self.c_cov = 2 / (n**2 + 6)
         self.p_thresh = 0.44
