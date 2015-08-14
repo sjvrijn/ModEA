@@ -32,17 +32,19 @@ def average(population, parameters):
     return new_population
 
 
-def weighted(lambda_, weights, population):
+def weighted(population, parameters):
     """
         Given the population and weights, return the weighted average of the mu best
     """
 
     mu = len(population)
     avg = population[0].getCopy()
-    avg.dna = np.mean([population[i].dna * weights[i] for i in range(mu)])
+    parameters.y_w = np.sum([population[i].last_s * parameters.weights[i]] for i in range(mu))
+    mean = np.mean([population[i].dna for i in range(mu)])
+    avg.dna = mean + parameters.y_w
 
     new_population = [avg]
-    for _ in range(lambda_-1):
+    for _ in range(parameters.lambda_-1):
         new_population.append(avg.getCopy())
 
     return new_population

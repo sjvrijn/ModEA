@@ -46,6 +46,7 @@ class Parameters(object):
         self.c_mu = min(1-self.c_1, self.alpha_mu*((mu_eff - 2 + 1/mu_eff) / ((n+2)**2 + self.alpha_mu*mu_eff/2)))
         self.p_sigma = np.zeros((1,n))
         self.p_c = np.zeros((1,n))
+        self.y_w = np.zeros((n,1))  # weighted average of the last generation of offset vectors
 
         ### CMSA-ES ###
         self.tau = 1 / np.sqrt(2*n)
