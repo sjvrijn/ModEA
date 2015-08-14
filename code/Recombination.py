@@ -39,7 +39,7 @@ def weighted(population, parameters):
 
     mu = len(population)
     avg = population[0].getCopy()
-    parameters.y_w = np.sum([population[i].last_s * parameters.weights[i]] for i in range(mu))
+    parameters.y_w = np.sum([population[i].last_s * parameters.weights[i] for i in range(mu)])
     parameters.y_w_squared = np.sum([np.dot(population[i].last_s, population[i].last_s.T) * parameters.weights[i] for i in range(mu)])
 
     mean = np.mean([population[i].dna for i in range(mu)])
