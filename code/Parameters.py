@@ -21,6 +21,7 @@ class Parameters(object):
         self.lambda_ = lambda_
         self.sigma = 1
         self.elitist = elitist
+        self.weights = self.getWeights()
 
         ### Meta-parameters ###
         self.N = 10 * self.n
@@ -267,3 +268,13 @@ class Parameters(object):
             self.s = np.zeros((1,n))
 
             self.fitness_history = self.best_fitness * np.ones((5,1))
+
+
+    def getWeights(self):
+        """
+            Defines a list of weights to be used in weighted recombination
+        """
+        pre_weights = [np.log((self.lambda_/2) + .5) - np.log(i) for i in range(self.mu)]
+        sum_pre_weights = np.sum(pre_weights)
+        weights = [pre_weight / sum_pre_weights for pre_weight in pre_weights]
+        return weights
