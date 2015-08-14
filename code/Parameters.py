@@ -311,7 +311,10 @@ class Parameters(object):
         """
             Defines a list of weights to be used in weighted recombination
         """
-        pre_weights = [np.log((self.lambda_/2) + .5) - np.log(i) for i in range(self.mu)]
+        pre_weights = [np.log((self.lambda_/2) + .5) - np.log(i+1) for i in range(self.mu)]
         sum_pre_weights = np.sum(pre_weights)
-        weights = [pre_weight / sum_pre_weights for pre_weight in pre_weights]
+        if sum_pre_weights != 0:
+            weights = [pre_weight / sum_pre_weights for pre_weight in pre_weights]
+        else:
+            weights = [1/self.mu] * self.mu
         return weights
