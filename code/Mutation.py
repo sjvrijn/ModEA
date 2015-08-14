@@ -6,6 +6,11 @@ This Module contains a collection of Mutation operators to be used in the ES-Fra
 A Mutation operator mutates an Individual's DNA inline, thus returning nothing.
 """
 
+# TODO: Update all functions & usage to allow for (e.g.) mirrored sampling; i.e. returning multiple samples per given
+# TODO: individual
+
+# TODO: Split (CMA-based) mutations into multiple/as many parts as possible. E.g. step size control & CMA
+
 import numpy as np
 from random import getrandbits
 
