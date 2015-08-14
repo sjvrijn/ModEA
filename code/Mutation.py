@@ -33,6 +33,18 @@ def CMAMutation(individual, parameters):
     individual.dna += individual.last_z
 
 
+def CMAMutation__(individual, parameters):  # TODO FIXME: This should probably be the actual base function
+    """
+        CMA mutation: x = x + (sigma * B*D*N(0,I))
+    """
+
+    n = individual.n
+    individual.last_z = np.random.randn(n,1)
+    individual.last_s = np.dot(np.dot(parameters.B, parameters.D), individual.last_z)  # Noted as y_k in cmatutorial.pdf
+
+    individual.dna += parameters.sigma * individual.last_s
+
+
 def choleskyCMAMutation(individual, parameters):
     """
         Cholesky CMA based mutation
