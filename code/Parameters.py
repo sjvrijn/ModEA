@@ -127,7 +127,7 @@ class Parameters(object):
         c_c = self.c_c
 
         self.p_sigma = (1-c_sigma)*self.p_sigma + np.sqrt(c_sigma*(2 - c_sigma)*self.mu_eff) * np.dot(np.sqrt(self.C), self.y_w)
-        p_sigma_length = np.dot(self.p_sigma, self.p_sigma.T)
+        p_sigma_length = np.sqrt(np.sum([x**2 for x in self.p_sigma]))
         expected_random_vector = np.sqrt(self.n) * (1 - (1/(4*self.n)) + (1/(21*self.n**2)))
         self.sigma *= np.exp((c_sigma/self.d_sigma) * (p_sigma_length/expected_random_vector - 1))
         self.sigma_mean = self.sigma
