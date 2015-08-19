@@ -2,7 +2,7 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
 import matplotlib.pyplot as plt
-from code.Algorithms import onePlusOneES, CMSA_ES, onePlusOneCholeskyCMAES, onePlusOneActiveCMAES
+from code.Algorithms import onePlusOneES, CMSA_ES, CMA_ES, onePlusOneCholeskyCMAES, onePlusOneActiveCMAES
 
 # Constant fitness function
 def constantFitness(individual):
@@ -27,11 +27,13 @@ def rastriginFitness(individual):
 
 fitnes_functions = {'const': constantFitness, 'random': randomFitness, 'sum': sumFitness,
                     'sphere': sphereFitness, 'rastrigin': rastriginFitness, }
-algorithms = {'1+1': onePlusOneES, 'CMSA': CMSA_ES, 'Cholesky': onePlusOneCholeskyCMAES,
+algorithms = {'1+1': onePlusOneES, 'CMSA': CMSA_ES, 'CMA': CMA_ES, 'Cholesky': onePlusOneCholeskyCMAES,
               'Active': onePlusOneActiveCMAES}
 
 
 def run_tests():
+
+    np.set_printoptions(linewidth=200)
 
     # Set parameters
     n = 10
@@ -43,14 +45,14 @@ def run_tests():
 
     # algorithms_to_test = ['1+1']
     # algorithms_to_test = ['CMSA']
-    algorithms_to_test = ['1+1', 'CMSA', 'Cholesky', 'Active']
+    algorithms_to_test = ['1+1', 'CMSA', 'CMA', 'Cholesky', 'Active']
 
     # 'Catch' results
     results = {}
     sigmas = {}
     fitnesses = {}
 
-    fig = plt.figure(figsize=(12, 8))
+    fig = plt.figure(figsize=(20, 15))
     num_rows = len(algorithms_to_test)  # One row per algorithm
     num_colums = 2  # Fitness and Sigma
 
@@ -58,6 +60,7 @@ def run_tests():
     for i, alg_name in enumerate(algorithms_to_test):
 
         algorithm = algorithms[alg_name]
+        print(alg_name)
 
         for fitness_name in fitnesses_to_test:
 
@@ -88,21 +91,20 @@ def run_tests():
             fitness_plot.plot(x_range, fitnesses[fitness_name], label=fitness_name)
 
         sigma_plot.legend(loc=0, fontsize='small')
-        sigma_plot.set_title("Sigma over time")
+        sigma_plot.set_title("Sigma over time ({})".format(alg_name))
         sigma_plot.set_xlabel('Evaluations')
         sigma_plot.set_ylabel('Sigma')
         sigma_plot.set_yscale('log')
 
         fitness_plot.legend(loc=0, fontsize='small')
-        fitness_plot.set_title("Fitness over time")
+        fitness_plot.set_title("Fitness over time ({})".format(alg_name))
         fitness_plot.set_xlabel('Evaluations')
         fitness_plot.set_ylabel('Fitness value')
         fitness_plot.set_yscale('log')
 
     fig.tight_layout()
-    fig.show()
-    input("Done, press enter to close")  # Prevents the plot from closing prematurely
-
+    fig.savefig('../results_per_algorithm.png')
+    print('Done!')
 
 
 
