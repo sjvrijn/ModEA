@@ -19,13 +19,13 @@ class BaseParameters(object):
     c_p = 1/12
     p_thresh = 0.44
 
+
 class Parameters(BaseParameters):
     """
         Data holder class that initializes *all* possible parameters, regardless of what functions/algorithm are used
         If multiple functions/algorithms use the same parameter name, but differently, these will be split into
         separate parameters.
     """
-
 
     def __init__(self, n, mu, lambda_, elitist=False):
         """
@@ -151,8 +151,6 @@ class Parameters(BaseParameters):
                  (self.c_1 * (self.p_c * self.p_c.T + delta_h_sigma*self.C)) + \
                  (self.c_mu * self.y_w_squared)
 
-        # TODO: check degenerated?
-
 
     def selfAdaptCovarianceMatrix(self):
         """
@@ -193,7 +191,7 @@ class Parameters(BaseParameters):
 
     def adaptActiveCovarianceMatrix(self):
         """
-            Adapt the covariance matrix according to the Cholesky CMA-ES
+            Adapt the covariance matrix according to the Active CMA-ES
         """
 
         # Positive Cholesky update
