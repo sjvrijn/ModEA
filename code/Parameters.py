@@ -191,7 +191,7 @@ class Parameters(BaseParameters):
 
     def adaptActiveCovarianceMatrix(self):
         """
-            Adapt the covariance matrix according to the Active CMA-ES
+            Adapt the covariance matrix according to the (1+1) Active-Cholesky CMA-ES
         """
 
         # Positive Cholesky update
@@ -202,7 +202,7 @@ class Parameters(BaseParameters):
             w = np.dot(self.A_inv, self.s.T)
             w_norm_squared = np.linalg.norm(w)**2
             a = np.sqrt(1 - self.c_cov_pos)
-            b = (a/w_norm_squared) * (np.sqrt(1+w_norm_squared * self.c_cov_pos / (1-self.c_cov_pos)) - 1)  #TODO check division/multiplication order
+            b = (a/w_norm_squared) * (np.sqrt(1 + w_norm_squared*(self.c_cov_pos / (1-self.c_cov_pos))) - 1)
 
             self.A = a*self.A + b*np.dot(np.dot(self.A, w), w.T)
             self.A_inv = (1/a)*self.A_inv - b/(a**2 + a*b*w_norm_squared) * np.dot(w, np.dot(w.T, self.A_inv))
