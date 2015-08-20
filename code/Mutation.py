@@ -45,7 +45,8 @@ def CMAMutation__(individual, parameters):  # TODO FIXME: This should probably b
 
     n = individual.n
     individual.last_z = np.random.randn(n,1)
-    individual.last_s = np.dot(np.dot(parameters.B, parameters.D), individual.last_z)  # Noted as y_k in cmatutorial.pdf
+    # print(parameters.D, individual.last_z)
+    individual.last_s = np.dot(parameters.B, (parameters.D * individual.last_z))  # Noted as y_k in cmatutorial.pdf)
 
     individual.dna += parameters.sigma * individual.last_s
 
