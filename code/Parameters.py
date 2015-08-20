@@ -58,8 +58,8 @@ class Parameters(BaseParameters):
         self.c_c = (4 + mu_eff/n) / (n + 4 + 2*mu_eff/n)
         self.c_1 = 2 / ((n + 1.3)**2 + mu_eff)
         self.c_mu = min(1-self.c_1, self.alpha_mu*((mu_eff - 2 + 1/mu_eff) / ((n+2)**2 + self.alpha_mu*mu_eff/2)))
-        self.p_sigma = np.zeros((1,n))
-        self.p_c = np.zeros((1,n))
+        self.p_sigma = np.zeros((n,1))
+        self.p_c = np.zeros((n,1))
         self.y_w = np.zeros((n,1))          # weighted average of the last generation of offset vectors
         self.y_w_squared = np.zeros((n,1))  # y_w squared
 
@@ -138,7 +138,7 @@ class Parameters(BaseParameters):
         c_c = self.c_c
 
         self.p_sigma = (1-c_sigma)*self.p_sigma + np.sqrt(c_sigma*(2 - c_sigma)*self.mu_eff) * np.dot(np.sqrt(self.C), self.y_w)
-        p_sigma_length = np.sqrt(np.sum([x**2 for x in self.p_sigma]))
+        p_sigma_length = np.sqrt(np.dot(self.p_sigma.T, self.p_sigma))[0,0]
         expected_random_vector = np.sqrt(self.n) * (1 - (1/(4*self.n)) + (1/(21*self.n**2)))
         self.sigma *= np.exp((c_sigma/self.d_sigma) * (p_sigma_length/expected_random_vector - 1))
         self.sigma_mean = self.sigma
