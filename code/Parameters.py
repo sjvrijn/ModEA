@@ -1,6 +1,7 @@
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
+from scipy.linalg import sqrtm
 
 
 class BaseParameters(object):
@@ -49,6 +50,7 @@ class Parameters(BaseParameters):
 
         ### CMA-ES ###
         self.C = np.eye(n)  # Covariance matrix
+        self.sqrt_C = np.eye(n)
         self.B = np.eye(n)  # Eigenvectors of C
         self.D = np.ones((n,1))  # Diagonal eigenvalues of C
         self.s_mean = None
@@ -129,7 +131,7 @@ class Parameters(BaseParameters):
             self.fitness_history = self.fitness_history[1:]
 
 
-    def adaptCovarianceMatrix(self):
+    def adaptCovarianceMatrix(self, t):
         """
             Adapt the covariance matrix according to the CMA-ES
         """
@@ -137,15 +139,13 @@ class Parameters(BaseParameters):
         c_sigma = self.c_sigma
         c_c = self.c_c
 
-        sqrt_C = np.dot(self.B, np.diag(np.sqrt(self.D.T[0]))) / self.B
-
-        self.p_sigma = (1-c_sigma)*self.p_sigma + np.sqrt(c_sigma*(2 - c_sigma)*self.mu_eff) * np.dot(sqrt_C, self.y_w)
+        self.p_sigma = (1-c_sigma)*self.p_sigma + np.sqrt(c_sigma*(2 - c_sigma)*self.mu_eff) * np.dot(self.sqrt_C, self.y_w)
         p_sigma_length = np.sqrt(np.dot(self.p_sigma.T, self.p_sigma))[0,0]
         expected_random_vector = np.sqrt(self.n) * (1 - (1/(4*self.n)) + (1/(21*self.n**2)))
         self.sigma *= np.exp((c_sigma/self.d_sigma) * (p_sigma_length/expected_random_vector - 1))
         self.sigma_mean = self.sigma
 
-        h_sigma = 0  # TODO: heavyside function
+        h_sigma = self.heavySideCMA(t, p_sigma_length, expected_random_vector)
         delta_h_sigma = (1-h_sigma)*c_c*(2-c_c)
         self.p_c = (1-self.c_p)*self.p_c + h_sigma * np.sqrt(c_c*(2-c_c)*self.mu_eff) * self.y_w
 
@@ -155,6 +155,23 @@ class Parameters(BaseParameters):
 
         self.D, self.B = np.linalg.eig(self.C)
         self.D.shape = (self.n,1)  # Force D to be a column vector
+
+        self.sqrt_C = sqrtm(self.C)
+
+
+    def heavySideCMA(self, t, p_sigma_length, expected_random_vector):
+
+        g = t // self.lambda_  # Current generation
+        result = 0
+
+        threshold = expected_random_vector * (1.4 + 2/(self.n+1))
+        test = p_sigma_length / np.sqrt(1 - (1-self.c_sigma)**(2*(g+1)))
+
+        if test < threshold:
+            result = 1
+
+        return result
+
 
     def selfAdaptCovarianceMatrix(self):
         """

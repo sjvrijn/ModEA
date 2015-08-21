@@ -47,7 +47,7 @@ def CMA_ES(n, fitnessFunction, budget, mu=4, lambda_=15, elitist=False):
         'recombine': lambda pop: Rec.weighted(pop, parameters),
         'mutate': lambda ind: Mut.CMAMutation__(ind, parameters),
         'select': lambda pop, new_pop, _: Sel.best(pop, new_pop, parameters),
-        'mutateParameters': lambda t: parameters.adaptCovarianceMatrix(),
+        'mutateParameters': lambda t: parameters.adaptCovarianceMatrix(t),
     }
 
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
