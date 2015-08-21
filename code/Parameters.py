@@ -154,6 +154,7 @@ class Parameters(BaseParameters):
                  (self.c_mu * self.y_w_squared)
 
         self.D, self.B = np.linalg.eig(self.C)
+        self.D = np.sqrt(self.D)
         self.D.shape = (self.n,1)  # Force D to be a column vector
 
         self.sqrt_C = sqrtm(self.C)
@@ -270,6 +271,7 @@ class Parameters(BaseParameters):
         else:
             self.D, self.B = np.linalg.eig(self.C)
             self.D = np.sqrt(self.D)
+            self.D.shape = (self.n,1)  # Force D to be a column vector
             if not np.isreal(self.D).all():
                 degenerated = True
 
@@ -279,7 +281,7 @@ class Parameters(BaseParameters):
 
             self.C = np.eye(n)
             self.B = np.eye(n)
-            self.D = np.eye(n)
+            self.D = np.ones((n,1))
             self.sigma_mean = 1          # TODO: make this depend on any input default sigma value
 
             # TODO: add feedback of resetting sigma to the sigma per individual

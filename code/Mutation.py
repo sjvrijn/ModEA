@@ -32,7 +32,7 @@ def CMAMutation(individual, parameters):
 
     n = individual.n
     individual.sigma = parameters.sigma_mean * np.exp(parameters.tau * np.random.randn(1,1))
-    individual.last_s = np.dot(np.dot(parameters.B, parameters.D), np.random.randn(n,1))  # B*D*randn(n,1)
+    individual.last_s = np.dot(parameters.B, (parameters.D * np.random.randn(n,1)))  # B*D*randn(n,1)
     individual.last_z = individual.sigma * individual.last_s
 
     individual.dna += individual.last_z
