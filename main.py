@@ -8,24 +8,24 @@ import matplotlib.pyplot as plt
 from code.Algorithms import onePlusOneES, CMSA_ES, CMA_ES, onePlusOneCholeskyCMAES, onePlusOneActiveCMAES
 
 # Constant fitness function
-def constantFitness(individual):
-    individual.fitness = 0.5
+def constantFitness(_):
+    return 0.5
 
 # Random fitness function
-def randomFitness(individual):
-    individual.fitness = np.random.random(1)
+def randomFitness(_):
+    return np.random.random(1)
 
 # Sum fitness (minimize all parameters)
 def sumFitness(individual):
-    individual.fitness = np.sum(individual.dna)
+    return np.sum(individual.dna)
 
 # Sphere fitness function
 def sphereFitness(individual):
-    individual.fitness = np.sqrt(np.sum(np.square(individual.dna)))
+    return np.sqrt(np.sum(np.square(individual.dna)))
 
 # Rastrigin fitness function
 def rastriginFitness(individual):
-    individual.fitness = np.sum(np.square(individual.dna) + 10*np.cos(2*np.pi*individual.dna) + 10)
+    return np.sum(np.square(individual.dna) + 10*np.cos(2*np.pi*individual.dna) + 10)
 
 
 fitnes_functions = {'const': constantFitness, 'random': randomFitness, 'sum': sumFitness,
@@ -43,12 +43,12 @@ def run_tests():
     budget = 1000
     num_runs = 3
     # fitnesses_to_test = ['const', 'random', 'sum', 'sphere', 'rastrigin']
-    fitnesses_to_test = ['const', 'random', 'sphere', 'rastrigin']
-    # fitnesses_to_test = ['const', 'sphere']
+    # fitnesses_to_test = ['const', 'random', 'sphere', 'rastrigin']
+    fitnesses_to_test = ['sphere', 'rastrigin']
 
     # algorithms_to_test = ['1+1']
     # algorithms_to_test = ['CMSA']
-    algorithms_to_test = ['1+1', 'CMSA', 'CMA', 'Cholesky', 'Active']
+    algorithms_to_test = ['1+1', 'CMA', 'CMSA', 'Cholesky', 'Active']
 
     # 'Catch' results
     results = {}
@@ -66,6 +66,8 @@ def run_tests():
         print(alg_name)
 
         for fitness_name in fitnesses_to_test:
+
+            print("  {}".format(fitness_name))
 
             results[fitness_name] = []
             sigmas[fitness_name] = None
@@ -113,3 +115,6 @@ def run_tests():
 
 if __name__ == '__main__':
     run_tests()
+
+    # from bbob.bbob_pproc import cococommands
+    # help(cococommands)
