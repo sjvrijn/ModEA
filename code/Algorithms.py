@@ -21,7 +21,7 @@ def onePlusOneES(n, fitnessFunction, budget):
 
     parameters = Parameters(n, 1, 1)
     population = [Individual(n)]
-    population[0].fitness = fitnessFunction(population[0])
+    population[0].fitness = fitnessFunction(population[0].dna)
 
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
@@ -43,7 +43,7 @@ def CMA_ES(n, fitnessFunction, budget, mu=4, lambda_=15, elitist=False):
     parameters = Parameters(n, mu, lambda_, elitist)
     population = [Individual(n) for _ in range(mu)]
     for individual in population:
-        individual.fitness = fitnessFunction(individual)
+        individual.fitness = fitnessFunction(individual.dna)
 
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
@@ -64,7 +64,7 @@ def onePlusOneCholeskyCMAES(n, fitnessFunction, budget):
 
     parameters = Parameters(n, 1, 1)
     population = [Individual(n)]
-    population[0].fitness = fitnessFunction(population[0])
+    population[0].fitness = fitnessFunction(population[0].dna)
 
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
@@ -85,7 +85,7 @@ def onePlusOneActiveCMAES(n, fitnessFunction, budget):
 
     parameters = Parameters(n, 1, 1)
     population = [Individual(n)]
-    population[0].fitness = fitnessFunction(population[0])
+    population[0].fitness = fitnessFunction(population[0].dna)
     parameters.addToFitnessHistory(population[0].fitness)
 
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
@@ -108,7 +108,7 @@ def CMSA_ES(n, fitnessFunction, budget, mu=4, lambda_=15, elitist=False):
     parameters = Parameters(n, mu, lambda_, elitist)
     population = [Individual(n) for _ in range(mu)]
     for individual in population:
-        individual.fitness = fitnessFunction(individual)
+        individual.fitness = fitnessFunction(individual.dna)
 
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
@@ -166,7 +166,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
             # Mutation
             mutate(individual)
             # Evaluation
-            individual.fitness = fitnessFunction(individual)
+            individual.fitness = fitnessFunction(individual.dna)
             used_budget += 1
 
         # Selection
