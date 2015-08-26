@@ -42,58 +42,64 @@ def run_tests():
     n = 10
     budget = 1000
     num_runs = 3
-    # fitnesses_to_test = ['const', 'random', 'sum', 'sphere', 'rastrigin']
-    # fitnesses_to_test = ['const', 'random', 'sphere', 'rastrigin']
-    fitnesses_to_test = ['sphere', 'rastrigin']
+    fitnesses_to_test = ['sphere', 'rastrigin']  # ['const', 'random', 'sum', 'sphere', 'rastrigin']
 
-    # algorithms_to_test = ['1+1']
-    # algorithms_to_test = ['CMSA']
-    algorithms_to_test = ['1+1', 'CMA', 'CMSA', 'Cholesky', 'Active']
+    algorithms_to_test = ['1+1', 'CMA', 'CMSA', 'Cholesky', 'Active']  # ['1+1', 'CMA', 'CMSA', 'Cholesky', 'Active']
 
     # 'Catch' results
     results = {}
     sigmas = {}
     fitnesses = {}
 
-    fig = plt.figure(figsize=(20, 15))
-    num_rows = len(algorithms_to_test)  # One row per algorithm
-    num_colums = 2  # Fitness and Sigma
-
     # Run algorithms
     for i, alg_name in enumerate(algorithms_to_test):
 
-        algorithm = algorithms[alg_name]
         print(alg_name)
+        algorithm = algorithms[alg_name]
+        results[alg_name] = {}
+        sigmas[alg_name] = {}
+        fitnesses[alg_name] = {}
 
-        for fitness_name in fitnesses_to_test:
+        for fit_name in fitnesses_to_test:
 
-            print("  {}".format(fitness_name))
+            print("  {}".format(fit_name))
+            results[alg_name][fit_name] = []
+            sigmas[alg_name][fit_name] = None
+            fitnesses[alg_name][fit_name] = None
 
-            results[fitness_name] = []
-            sigmas[fitness_name] = None
-            fitnesses[fitness_name] = None
-
+            # Perform the actual run of the algorithm
             for _ in range(num_runs):
-                results[fitness_name].append(algorithm(n, fitnes_functions[fitness_name], budget))
+                results[alg_name][fit_name].append(algorithm(n, fitnes_functions[fit_name], budget))
 
             # Preprocess/unpack results
-            _, sigmas[fitness_name], fitnesses[fitness_name] = (list(x) for x in zip(*results[fitness_name]))
-            sigmas[fitness_name] = np.mean(np.array(sigmas[fitness_name]), axis=0)
-            fitnesses[fitness_name] = np.mean(np.array(fitnesses[fitness_name]), axis=0)
+            _, sigmas[alg_name][fit_name], fitnesses[alg_name][fit_name] = (list(x) for x in zip(*results[alg_name][fit_name]))
+            sigmas[alg_name][fit_name] = np.mean(np.array(sigmas[alg_name][fit_name]), axis=0)
+            fitnesses[alg_name][fit_name] = np.mean(np.array(fitnesses[alg_name][fit_name]), axis=0)
 
+    makeGraphs(sigmas, fitnesses, algorithms_to_test, fitnesses_to_test)
+
+    print('Done!')
+
+
+def makeGraphs(sigmas, fitnesses, alg_names, fit_names):
+
+    fig = plt.figure(figsize=(20, 15))
+    num_rows = len(alg_names)  # One row per algorithm
+    num_colums = 2  # Fitness and Sigma
+
+    for i, alg_name in enumerate(alg_names):
 
         # Plot results for this algorithm
-        x_range = np.array(range(len(sigmas[fitnesses_to_test[0]])))
-        nil_line = np.zeros(budget)
+        x_range = np.array(range(len(sigmas[alg_name][fit_names[0]])))
 
         sigma_plot = fig.add_subplot(num_rows, num_colums, num_colums*i + 1)
         sigma_plot.set_title('Sigma')
         fitness_plot = fig.add_subplot(num_rows, num_colums, num_colums*i + 2)
         fitness_plot.set_title('Fitness')
 
-        for fitness_name in fitnesses_to_test:
-            sigma_plot.plot(x_range, sigmas[fitness_name], label=fitness_name)
-            fitness_plot.plot(x_range, fitnesses[fitness_name], label=fitness_name)
+        for fitness_name in fit_names:
+            sigma_plot.plot(x_range, sigmas[alg_name][fitness_name], label=fitness_name)
+            fitness_plot.plot(x_range, fitnesses[alg_name][fitness_name], label=fitness_name)
 
         sigma_plot.legend(loc=0, fontsize='small')
         sigma_plot.set_title("Sigma over time ({})".format(alg_name))
@@ -109,8 +115,6 @@ def run_tests():
 
     fig.tight_layout()
     fig.savefig('../results_per_algorithm.png')
-    print('Done!')
-
 
 
 if __name__ == '__main__':
