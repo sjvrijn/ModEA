@@ -102,7 +102,6 @@ class Parameters(BaseParameters):
         if t % self.n != 0:
             return
 
-
         if t < self.N:
             success = np.mean(self.success_history[:t])
         else:
@@ -140,26 +139,26 @@ class Parameters(BaseParameters):
             Adapt the covariance matrix according to the CMA-ES
         """
 
-        c_sigma = self.c_sigma
-        c_c = self.c_c
+        c_c, c_mu, c_p, c_sigma, c_1, d_sigma, mu_eff, n = self.c_c, self.c_mu, self.c_p, self.c_sigma,\
+                                                           self.c_1, self.d_sigma, self.n, self.mu_eff
 
-        self.p_sigma = (1-c_sigma)*self.p_sigma + sqrt(c_sigma*(2 - c_sigma)*self.mu_eff) * dot(self.sqrt_C, self.y_w)
+        self.p_sigma = (1-c_sigma)*self.p_sigma + sqrt(c_sigma*(2 - c_sigma)*mu_eff) * dot(self.sqrt_C, self.y_w)
         p_sigma_length = sqrt(dot(self.p_sigma.T, self.p_sigma))[0,0]
-        expected_random_vector = sqrt(self.n) * (1 - (1/(4*self.n)) + (1/(21*self.n**2)))
-        self.sigma *= exp((c_sigma/self.d_sigma) * (p_sigma_length/expected_random_vector - 1))
+        expected_random_vector = sqrt(n) * (1 - (1/(4*n)) + (1/(21*n**2)))
+        self.sigma *= exp((c_sigma/d_sigma) * (p_sigma_length/expected_random_vector - 1))
         self.sigma_mean = self.sigma
 
         h_sigma = self.heavySideCMA(t, p_sigma_length, expected_random_vector)
         delta_h_sigma = (1-h_sigma)*c_c*(2-c_c)
-        self.p_c = (1-self.c_p)*self.p_c + h_sigma * sqrt(c_c*(2-c_c)*self.mu_eff) * self.y_w
+        self.p_c = (1-c_p)*self.p_c + h_sigma * sqrt(c_c*(2-c_c)*mu_eff) * self.y_w
 
-        self.C = (1 - self.c_1 - self.c_mu)*self.C + \
-                 (self.c_1 * (self.p_c * self.p_c.T + delta_h_sigma*self.C)) + \
-                 (self.c_mu * self.y_w_squared)
+        self.C = (1 - c_1 - c_mu)*self.C + \
+                 (c_1 * (self.p_c * self.p_c.T + delta_h_sigma*self.C)) + \
+                 (c_mu * self.y_w_squared)
 
         self.D, self.B = np.linalg.eig(self.C)
         self.D = sqrt(np.real(self.D))
-        self.D.shape = (self.n,1)  # Force D to be a column vector
+        self.D.shape = (n,1)  # Force D to be a column vector
 
         # self.sqrt_C = sqrtm(self.C)
         self.sqrt_C = dot(self.B, self.D**-1 * self.B.T)
@@ -185,7 +184,6 @@ class Parameters(BaseParameters):
         """
 
         tau_c_inv = 1/self.tau_c
-
         self.C *= (1 - tau_c_inv)
         self.C += tau_c_inv * (self.s_mean.T * self.s_mean)
 
@@ -196,22 +194,24 @@ class Parameters(BaseParameters):
         """
             Adapt the covariance matrix according to the Cholesky CMA-ES
         """
+        # Local variables
+        c_a, c_p, d, lambda_success, p_success, p_target = self.c_a, self.c_p, self.d, self.lambda_success, self.p_success, self.p_target
 
-        self.p_success = (1 - self.c_p)*self.p_success + self.c_p*int(self.lambda_success)
-        self.sigma *= exp((self.p_success - (self.p_target/(1-self.p_target))*(1-self.p_success))/self.d)
+        self.p_success = (1 - c_p)*p_success + c_p*int(lambda_success)
+        self.sigma *= exp((p_success - (p_target/(1-p_target))*(1-p_success))/d)
         self.sigma_mean = self.sigma
 
-        if self.lambda_success and self.p_success < self.p_thresh:
+        if lambda_success and p_success < self.p_thresh:
             # Helper variables
             z_squared = np.linalg.norm(self.last_z) ** 2
-            c_a_squared = self.c_a ** 2
+            c_a_squared = c_a ** 2
 
-            part_1 = self.c_a / z_squared
+            part_1 = c_a / z_squared
             part_2 = sqrt(1 + (((1 - c_a_squared)*z_squared) / c_a_squared)) - 1
             part_3 = dot(dot(self.A, self.last_z.T), self.last_z)
 
             # Actual matrix update
-            self.A = self.c_a*self.A + part_1*part_2*part_3
+            self.A = c_a*self.A + part_1*part_2*part_3
 
         self.checkCholeskyDegenerated()
 
@@ -220,24 +220,26 @@ class Parameters(BaseParameters):
         """
             Adapt the covariance matrix according to the (1+1) Active-Cholesky CMA-ES
         """
+        # Local variables
+        c, c_cov_pos, c_p, p_target = self.c, self.c_cov_pos, self.c_p, self.p_target
 
         # Positive Cholesky update
         if self.lambda_success:
-            self.p_success = (1 - self.c_p)*self.p_success + self.c_p
-            self.s = (1-self.c)*self.s + sqrt(self.c * (2-self.c)) * dot(self.A, self.last_z.T)
+            self.p_success = (1 - c_p)*self.p_success + c_p
+            self.s = (1-c)*self.s + sqrt(c * (2-c)) * dot(self.A, self.last_z.T)
 
             w = dot(self.A_inv, self.s.T)
             w_norm_squared = np.linalg.norm(w)**2
-            a = sqrt(1 - self.c_cov_pos)
-            b = (a/w_norm_squared) * (sqrt(1 + w_norm_squared*(self.c_cov_pos / (1-self.c_cov_pos))) - 1)
+            a = sqrt(1 - c_cov_pos)
+            b = (a/w_norm_squared) * (sqrt(1 + w_norm_squared*(c_cov_pos / (1-c_cov_pos))) - 1)
 
             self.A = a*self.A + b*dot(dot(self.A, w), w.T)
             self.A_inv = (1/a)*self.A_inv - b/(a**2 + a*b*w_norm_squared) * dot(w, dot(w.T, self.A_inv))
 
         else:
-            self.p_success *= (1-self.c_p)
+            self.p_success *= (1-c_p)
 
-        self.sigma *= exp((1/self.d) * ((self.p_success-self.p_target) / (1-self.p_target)))
+        self.sigma *= exp((1/self.d) * ((self.p_success-p_target) / (1-p_target)))
         self.sigma_mean = self.sigma
 
         # Negative Cholesky update
@@ -252,7 +254,7 @@ class Parameters(BaseParameters):
 
             c_cov_neg = self.c_cov_neg
             w = dot(self.A_inv, self.s.T)
-            a = sqrt(1+self.c_cov_neg)
+            a = sqrt(1+c_cov_neg)
             b = (a/z_squared) * (sqrt(1 + (c_cov_neg*z_squared) / (1+c_cov_neg)) - 1)
             self.A = a*self.A + b*dot(dot(self.A, w), w.T)
             self.A_inv = (1/a)*self.A_inv - b/(a**2 + a*b*(np.linalg.norm(w)**2) * dot(w, dot(w.T, self.A_inv)))
@@ -280,7 +282,6 @@ class Parameters(BaseParameters):
             if not np.isreal(self.D).all():
                 degenerated = True
 
-
         if degenerated:
             n = self.n
 
@@ -301,19 +302,14 @@ class Parameters(BaseParameters):
 
         if np.min(np.isfinite(self.A)) == 0:
             degenerated = True
-
         elif not ((10 ** (-16)) < np.linalg.cond(self.A) < (10 ** 16)):
             degenerated = True
-
         elif not ((10 ** (-16)) < self.sigma_mean < (10 ** 16)):
             degenerated = True
 
-
         if degenerated:
             n = self.n
-
             self.sigma_mean = 1  # TODO: make this depend on any input default sigma value
-
             self.p_success = self.p_target
             self.A = eye(n)
             self.p_c = zeros((1, n))
@@ -334,13 +330,11 @@ class Parameters(BaseParameters):
 
         if degenerated:
             n = self.n
-
             self.A = eye(n)
             self.A_inv = eye(n)
             self.sigma_mean = 1
             self.p_success = 0
             self.s = zeros((1,n))
-
             self.fitness_history = self.best_fitness * ones((5,1))
 
 
@@ -348,10 +342,12 @@ class Parameters(BaseParameters):
         """
             Defines a list of weights to be used in weighted recombination
         """
-        pre_weights = [np.log((self.lambda_/2) + .5) - np.log(i+1) for i in range(self.mu)]
+        mu = self.mu
+
+        pre_weights = [np.log((self.lambda_/2) + .5) - np.log(i+1) for i in range(mu)]
         sum_pre_weights = np.sum(pre_weights)
         if sum_pre_weights != 0:
             weights = [pre_weight / sum_pre_weights for pre_weight in pre_weights]
         else:
-            weights = [1/self.mu] * self.mu
+            weights = [1/mu] * mu
         return weights
