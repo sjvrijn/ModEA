@@ -4,6 +4,7 @@
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
+from numpy import dot, exp, eye, ones, sqrt, zeros
 from scipy.linalg import sqrtm
 
 
@@ -49,42 +50,42 @@ class Parameters(BaseParameters):
         self.N = 10 * self.n
 
         ### (1+1)-ES ###
-        self.success_history = np.zeros((self.N, ), dtype=np.int)
+        self.success_history = zeros((self.N, ), dtype=np.int)
 
         ### CMA-ES ###
-        self.C = np.eye(n)  # Covariance matrix
-        self.sqrt_C = np.eye(n)
-        self.B = np.eye(n)  # Eigenvectors of C
-        self.D = np.ones((n,1))  # Diagonal eigenvalues of C
+        self.C = eye(n)  # Covariance matrix
+        self.sqrt_C = eye(n)
+        self.B = eye(n)  # Eigenvectors of C
+        self.D = ones((n,1))  # Diagonal eigenvalues of C
         self.s_mean = None
 
         self.c_sigma = (mu_eff + 2) / (mu_eff + n + 5)
-        self.d_sigma = self.c_sigma + 1 + 2*max(0, np.sqrt((mu_eff-1) / (n+1)))
+        self.d_sigma = self.c_sigma + 1 + 2*max(0, sqrt((mu_eff-1) / (n+1)))
         self.c_c = (4 + mu_eff/n) / (n + 4 + 2*mu_eff/n)
         self.c_1 = 2 / ((n + 1.3)**2 + mu_eff)
         self.c_mu = min(1-self.c_1, self.alpha_mu*((mu_eff - 2 + 1/mu_eff) / ((n+2)**2 + self.alpha_mu*mu_eff/2)))
-        self.p_sigma = np.zeros((n,1))
-        self.p_c = np.zeros((n,1))
-        self.y_w = np.zeros((n,1))          # weighted average of the last generation of offset vectors
-        self.y_w_squared = np.zeros((n,1))  # y_w squared
+        self.p_sigma = zeros((n,1))
+        self.p_c = zeros((n,1))
+        self.y_w = zeros((n,1))          # weighted average of the last generation of offset vectors
+        self.y_w_squared = zeros((n,1))  # y_w squared
 
         ### CMSA-ES ###
-        self.tau = 1 / np.sqrt(2*n)
+        self.tau = 1 / sqrt(2*n)
         self.tau_c = 1 + ((n**2 + n) / (2*mu))
         self.sigma_mean = self.sigma
 
         ### (1+1)-Cholesky ES ###
-        self.A = np.eye(n)
+        self.A = eye(n)
         self.d = 1 + n/2
         self.p_success = self.p_target
         self.c_cov = 2 / (n**2 + 6)
-        self.c_a = np.sqrt(1 - self.c_cov)
+        self.c_a = sqrt(1 - self.c_cov)
         self.lambda_success = False
-        self.last_z = np.zeros((1,n))  # To be recorded by the mutation
+        self.last_z = zeros((1,n))  # To be recorded by the mutation
 
         ### Active (1+1)CMA-ES ###
-        self.A_inv = np.eye(n)
-        self.s = np.zeros((1,n))
+        self.A_inv = eye(n)
+        self.s = zeros((1,n))
         self.fitness_history = []  # 'Filler' data
         self.best_fitness = np.inf
         self.c_act = 2/(n+2)
@@ -142,25 +143,26 @@ class Parameters(BaseParameters):
         c_sigma = self.c_sigma
         c_c = self.c_c
 
-        self.p_sigma = (1-c_sigma)*self.p_sigma + np.sqrt(c_sigma*(2 - c_sigma)*self.mu_eff) * np.dot(self.sqrt_C, self.y_w)
-        p_sigma_length = np.sqrt(np.dot(self.p_sigma.T, self.p_sigma))[0,0]
-        expected_random_vector = np.sqrt(self.n) * (1 - (1/(4*self.n)) + (1/(21*self.n**2)))
-        self.sigma *= np.exp((c_sigma/self.d_sigma) * (p_sigma_length/expected_random_vector - 1))
+        self.p_sigma = (1-c_sigma)*self.p_sigma + sqrt(c_sigma*(2 - c_sigma)*self.mu_eff) * dot(self.sqrt_C, self.y_w)
+        p_sigma_length = sqrt(dot(self.p_sigma.T, self.p_sigma))[0,0]
+        expected_random_vector = sqrt(self.n) * (1 - (1/(4*self.n)) + (1/(21*self.n**2)))
+        self.sigma *= exp((c_sigma/self.d_sigma) * (p_sigma_length/expected_random_vector - 1))
         self.sigma_mean = self.sigma
 
         h_sigma = self.heavySideCMA(t, p_sigma_length, expected_random_vector)
         delta_h_sigma = (1-h_sigma)*c_c*(2-c_c)
-        self.p_c = (1-self.c_p)*self.p_c + h_sigma * np.sqrt(c_c*(2-c_c)*self.mu_eff) * self.y_w
+        self.p_c = (1-self.c_p)*self.p_c + h_sigma * sqrt(c_c*(2-c_c)*self.mu_eff) * self.y_w
 
         self.C = (1 - self.c_1 - self.c_mu)*self.C + \
                  (self.c_1 * (self.p_c * self.p_c.T + delta_h_sigma*self.C)) + \
                  (self.c_mu * self.y_w_squared)
 
         self.D, self.B = np.linalg.eig(self.C)
-        self.D = np.sqrt(self.D)
+        self.D = sqrt(np.real(self.D))
         self.D.shape = (self.n,1)  # Force D to be a column vector
 
-        self.sqrt_C = sqrtm(self.C)
+        # self.sqrt_C = sqrtm(self.C)
+        self.sqrt_C = dot(self.B, self.D**-1 * self.B.T)
 
 
     def heavySideCMA(self, t, p_sigma_length, expected_random_vector):
@@ -169,7 +171,7 @@ class Parameters(BaseParameters):
         result = 0
 
         threshold = expected_random_vector * (1.4 + 2/(self.n+1))
-        test = p_sigma_length / np.sqrt(1 - (1-self.c_sigma)**(2*(g+1)))
+        test = p_sigma_length / sqrt(1 - (1-self.c_sigma)**(2*(g+1)))
 
         if test < threshold:
             result = 1
@@ -196,7 +198,7 @@ class Parameters(BaseParameters):
         """
 
         self.p_success = (1 - self.c_p)*self.p_success + self.c_p*int(self.lambda_success)
-        self.sigma *= np.exp((self.p_success - (self.p_target/(1-self.p_target))*(1-self.p_success))/self.d)
+        self.sigma *= exp((self.p_success - (self.p_target/(1-self.p_target))*(1-self.p_success))/self.d)
         self.sigma_mean = self.sigma
 
         if self.lambda_success and self.p_success < self.p_thresh:
@@ -205,8 +207,8 @@ class Parameters(BaseParameters):
             c_a_squared = self.c_a ** 2
 
             part_1 = self.c_a / z_squared
-            part_2 = np.sqrt(1 + (((1 - c_a_squared)*z_squared) / c_a_squared)) - 1
-            part_3 = np.dot(np.dot(self.A, self.last_z.T), self.last_z)
+            part_2 = sqrt(1 + (((1 - c_a_squared)*z_squared) / c_a_squared)) - 1
+            part_3 = dot(dot(self.A, self.last_z.T), self.last_z)
 
             # Actual matrix update
             self.A = self.c_a*self.A + part_1*part_2*part_3
@@ -222,20 +224,20 @@ class Parameters(BaseParameters):
         # Positive Cholesky update
         if self.lambda_success:
             self.p_success = (1 - self.c_p)*self.p_success + self.c_p
-            self.s = (1-self.c)*self.s + np.sqrt(self.c * (2-self.c)) * np.dot(self.A, self.last_z.T)
+            self.s = (1-self.c)*self.s + sqrt(self.c * (2-self.c)) * dot(self.A, self.last_z.T)
 
-            w = np.dot(self.A_inv, self.s.T)
+            w = dot(self.A_inv, self.s.T)
             w_norm_squared = np.linalg.norm(w)**2
-            a = np.sqrt(1 - self.c_cov_pos)
-            b = (a/w_norm_squared) * (np.sqrt(1 + w_norm_squared*(self.c_cov_pos / (1-self.c_cov_pos))) - 1)
+            a = sqrt(1 - self.c_cov_pos)
+            b = (a/w_norm_squared) * (sqrt(1 + w_norm_squared*(self.c_cov_pos / (1-self.c_cov_pos))) - 1)
 
-            self.A = a*self.A + b*np.dot(np.dot(self.A, w), w.T)
-            self.A_inv = (1/a)*self.A_inv - b/(a**2 + a*b*w_norm_squared) * np.dot(w, np.dot(w.T, self.A_inv))
+            self.A = a*self.A + b*dot(dot(self.A, w), w.T)
+            self.A_inv = (1/a)*self.A_inv - b/(a**2 + a*b*w_norm_squared) * dot(w, dot(w.T, self.A_inv))
 
         else:
             self.p_success *= (1-self.c_p)
 
-        self.sigma *= np.exp((1/self.d) * ((self.p_success-self.p_target) / (1-self.p_target)))
+        self.sigma *= exp((1/self.d) * ((self.p_success-self.p_target) / (1-self.p_target)))
         self.sigma_mean = self.sigma
 
         # Negative Cholesky update
@@ -249,11 +251,11 @@ class Parameters(BaseParameters):
                 self.c_cov_neg = 0.4/(self.n**1.6 + 1)  # TODO: currently hardcoded copy of default value
 
             c_cov_neg = self.c_cov_neg
-            w = np.dot(self.A_inv, self.s.T)
-            a = np.sqrt(1+self.c_cov_neg)
-            b = (a/z_squared) * (np.sqrt(1 + (c_cov_neg*z_squared) / (1+c_cov_neg)) - 1)
-            self.A = a*self.A + b*np.dot(np.dot(self.A, w), w.T)
-            self.A_inv = (1/a)*self.A_inv - b/(a**2 + a*b*(np.linalg.norm(w)**2) * np.dot(w, np.dot(w.T, self.A_inv)))
+            w = dot(self.A_inv, self.s.T)
+            a = sqrt(1+self.c_cov_neg)
+            b = (a/z_squared) * (sqrt(1 + (c_cov_neg*z_squared) / (1+c_cov_neg)) - 1)
+            self.A = a*self.A + b*dot(dot(self.A, w), w.T)
+            self.A_inv = (1/a)*self.A_inv - b/(a**2 + a*b*(np.linalg.norm(w)**2) * dot(w, dot(w.T, self.A_inv)))
 
         self.checkCholeskyDegenerated()
 
@@ -273,7 +275,7 @@ class Parameters(BaseParameters):
 
         else:
             self.D, self.B = np.linalg.eig(self.C)
-            self.D = np.sqrt(self.D)
+            self.D = sqrt(self.D)
             self.D.shape = (self.n,1)  # Force D to be a column vector
             if not np.isreal(self.D).all():
                 degenerated = True
@@ -282,9 +284,9 @@ class Parameters(BaseParameters):
         if degenerated:
             n = self.n
 
-            self.C = np.eye(n)
-            self.B = np.eye(n)
-            self.D = np.ones((n,1))
+            self.C = eye(n)
+            self.B = eye(n)
+            self.D = ones((n,1))
             self.sigma_mean = 1          # TODO: make this depend on any input default sigma value
 
             # TODO: add feedback of resetting sigma to the sigma per individual
@@ -313,8 +315,8 @@ class Parameters(BaseParameters):
             self.sigma_mean = 1  # TODO: make this depend on any input default sigma value
 
             self.p_success = self.p_target
-            self.A = np.eye(n)
-            self.p_c = np.zeros((1, n))
+            self.A = eye(n)
+            self.p_c = zeros((1, n))
 
 
     def checkActiveDegenerated(self):
@@ -324,7 +326,7 @@ class Parameters(BaseParameters):
 
         degenerated = False
 
-        if np.linalg.cond(np.dot(self.A, self.A.T)) > (10 ** 14):
+        if np.linalg.cond(dot(self.A, self.A.T)) > (10 ** 14):
             degenerated = True
 
         elif not ((10 ** (-16)) < self.sigma_mean < (10 ** 16)):
@@ -333,13 +335,13 @@ class Parameters(BaseParameters):
         if degenerated:
             n = self.n
 
-            self.A = np.eye(n)
-            self.A_inv = np.eye(n)
+            self.A = eye(n)
+            self.A_inv = eye(n)
             self.sigma_mean = 1
             self.p_success = 0
-            self.s = np.zeros((1,n))
+            self.s = zeros((1,n))
 
-            self.fitness_history = self.best_fitness * np.ones((5,1))
+            self.fitness_history = self.best_fitness * ones((5,1))
 
 
     def getWeights(self):

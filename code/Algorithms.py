@@ -176,6 +176,6 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
 
         # Track parameters
         sigma_over_time.append(parameters.sigma_mean)
-        best_fitness_over_time.append(population[0].fitness)
+        best_fitness_over_time.append(population[0].fitness[0])
 
     return population, sigma_over_time, best_fitness_over_time
