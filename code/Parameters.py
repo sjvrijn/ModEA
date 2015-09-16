@@ -66,7 +66,7 @@ class Parameters(BaseParameters):
         self.c_mu = min(1-self.c_1, self.alpha_mu*((mu_eff - 2 + 1/mu_eff) / ((n+2)**2 + self.alpha_mu*mu_eff/2)))
         self.p_sigma = zeros((n,1))
         self.p_c = zeros((n,1))
-        self.y_w = zeros((n,1))          # weighted average of the last generation of offset vectors
+        self.weighted_mutation_vector = zeros((n,1))         # weighted average of the last generation of offset vectors
         self.y_w_squared = zeros((n,1))  # y_w squared
 
         ### CMSA-ES ###
@@ -139,10 +139,11 @@ class Parameters(BaseParameters):
             Adapt the covariance matrix according to the CMA-ES
         """
 
-        c_c, c_mu, c_p, c_sigma, c_1, d_sigma, mu_eff, n = self.c_c, self.c_mu, self.c_p, self.c_sigma,\
-                                                           self.c_1, self.d_sigma, self.n, self.mu_eff
+        c_c, c_mu, c_sigma, c_1, d_sigma, mu_eff, n = self.c_c, self.c_mu, self.c_sigma, self.c_1,\
+                                                      self.d_sigma, self.mu_eff, self.n
 
-        self.p_sigma = (1-c_sigma)*self.p_sigma + sqrt(c_sigma*(2 - c_sigma)*mu_eff) * dot(self.sqrt_C, self.y_w)
+        self.p_sigma = (1-c_sigma)*self.p_sigma + \
+                       sqrt(c_sigma*(2-c_sigma)*mu_eff) * dot(self.sqrt_C, self.weighted_mutation_vector)
         p_sigma_length = sqrt(dot(self.p_sigma.T, self.p_sigma))[0,0]
         expected_random_vector = sqrt(n) * (1 - (1/(4*n)) + (1/(21*n**2)))
         self.sigma *= exp((c_sigma/d_sigma) * (p_sigma_length/expected_random_vector - 1))
@@ -150,7 +151,7 @@ class Parameters(BaseParameters):
 
         h_sigma = self.heavySideCMA(t, p_sigma_length, expected_random_vector)
         delta_h_sigma = (1-h_sigma)*c_c*(2-c_c)
-        self.p_c = (1-c_p)*self.p_c + h_sigma * sqrt(c_c*(2-c_c)*mu_eff) * self.y_w
+        self.p_c = (1-c_c)*self.p_c + h_sigma * sqrt(c_c*(2-c_c)*mu_eff) * self.weighted_mutation_vector
 
         self.C = (1 - c_1 - c_mu)*self.C + \
                  (c_1 * (self.p_c * self.p_c.T + delta_h_sigma*self.C)) + \
@@ -166,14 +167,21 @@ class Parameters(BaseParameters):
 
     def heavySideCMA(self, t, p_sigma_length, expected_random_vector):
 
+        #p_sigma_length/(1-(1-self.c_sigma)**(2*g))/n
+        #  < 2 + 4/(n+1)
+
         g = t // self.lambda_  # Current generation
-        result = 0
+        n = self.n
 
-        threshold = expected_random_vector * (1.4 + 2/(self.n+1))
-        test = p_sigma_length / sqrt(1 - (1-self.c_sigma)**(2*(g+1)))
+        # threshold = expected_random_vector * (1.4 + 2/(self.n+1))
+        threshold = 2 + 4/(n+1)
+        # test = p_sigma_length / sqrt(1 - (1-self.c_sigma)**(2*(g+1)))
+        test = p_sigma_length/(1-(1-self.c_sigma)**(2*g))/n
 
-        if test < threshold:
-            result = 1
+        # if test < threshold:
+        #     result = 1
+
+        result = int(test < threshold)
 
         return result
 

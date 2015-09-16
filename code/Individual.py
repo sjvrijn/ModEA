@@ -22,7 +22,7 @@ class Individual(object):
         self.sigma = 1
 
         self.last_z = np.zeros((n,1))
-        self.last_s = np.zeros((n,1))
+        self.mutation_vector = np.zeros((n,1))
 
 
     def getCopy(self):
@@ -35,6 +35,6 @@ class Individual(object):
         return_copy.sigma = self.sigma
 
         return_copy.last_z = self.last_z
-        return_copy.last_s = self.last_s
+        return_copy.mutation_vector = self.mutation_vector
 
         return return_copy

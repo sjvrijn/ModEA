@@ -35,8 +35,8 @@ def CMAMutation(individual, parameters):
 
     n = individual.n
     individual.sigma = parameters.sigma_mean * np.exp(parameters.tau * np.random.randn(1,1))
-    individual.last_s = np.dot(parameters.B, (parameters.D * np.random.randn(n,1)))  # B*D*randn(n,1)
-    individual.last_z = individual.sigma * individual.last_s
+    individual.mutation_vector = np.dot(parameters.B, (parameters.D * np.random.randn(n,1)))  # B*D*randn(n,1)
+    individual.last_z = individual.sigma * individual.mutation_vector
 
     individual.dna += individual.last_z
 
@@ -49,9 +49,9 @@ def CMAMutation__(individual, parameters):  # TODO FIXME: This should probably b
     n = individual.n
     individual.last_z = np.random.randn(n,1)
     # print(parameters.D, individual.last_z)
-    individual.last_s = np.dot(parameters.B, (parameters.D * individual.last_z))  # Noted as y_k in cmatutorial.pdf)
+    individual.mutation_vector = np.dot(parameters.B, (parameters.D * individual.last_z))  # Noted as y_k in cmatutorial.pdf)
 
-    individual.dna += parameters.sigma * individual.last_s
+    individual.dna += parameters.sigma * individual.mutation_vector
 
 
 def choleskyCMAMutation(individual, parameters):
@@ -60,9 +60,9 @@ def choleskyCMAMutation(individual, parameters):
     """
 
     parameters.last_z = np.random.randn(1,individual.n)
-    mutation_vector = parameters.sigma * np.dot(parameters.A, parameters.last_z.T)
+    mutation_vector = np.dot(parameters.A, parameters.last_z.T)
 
-    individual.dna += mutation_vector
+    individual.dna += parameters.sigma * mutation_vector
 
 
 def adaptSigma(sigma, p_s, c=0.817):

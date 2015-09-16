@@ -11,7 +11,7 @@ that are to form the new population
 """
 
 import numpy as np
-
+from numpy import dot, mean, sqrt, sum
 
 def onePlusOne(population):
     """
@@ -20,36 +20,40 @@ def onePlusOne(population):
     return [population[0].getCopy()]
 
 
-def average(population, parameters):
+def average(pop, param):
     """
         Given the new population, return the average of the mu best individuals
     """
 
-    avg = population[0].getCopy()
-    avg.dna, parameters.s_mean, parameters.sigma_mean = np.mean([(i.dna, i.last_s, i.sigma) for i in population],axis=0)
+    avg = pop[0].getCopy()
+    avg.dna, param.s_mean, param.sigma_mean = mean([(ind.dna, ind.mutation_vector, ind.sigma) for ind in pop],axis=0)
 
     new_population = [avg]
-    for _ in range(parameters.lambda_-1):
+    for _ in range(param.lambda_-1):
         new_population.append(avg.getCopy())
 
     return new_population
 
 
-def weighted(population, parameters):
+def weighted(pop, param):
     """
         Given the population and weights, return the weighted average of the mu best
     """
 
-    mu = len(population)
-    avg = population[0].getCopy()
-    parameters.y_w = np.sum([population[i].last_s * parameters.weights[i] for i in range(mu)], axis=0)
-    parameters.y_w_squared = np.sum([np.dot(population[i].last_s, population[i].last_s.T) * parameters.weights[i] for i in range(mu)], axis=0)
+    weights = param.weights
 
-    mean = np.mean([population[i].dna for i in range(mu)], axis=0)
-    avg.dna = mean + parameters.y_w
+    mu = len(pop)
+    avg = pop[0].getCopy()
+    param.weighted_mutation_vector = sum([pop[i].mutation_vector * weights[i] for i in range(mu)], axis=0)
+    param.y_w_squared = sum([dot(pop[i].mutation_vector, pop[i].mutation_vector.T) * weights[i] for i in range(mu)], axis=0)
+
+    # mean = np.mean([population[i].dna for i in range(mu)], axis=0)
+    # avg.dna = mean + parameters.weighted_mutation_vector
+
+    avg.dna = mean([pop[i].dna * weights[i] for i in range(mu)])
 
     new_population = [avg]
-    for _ in range(parameters.lambda_-1):
+    for _ in range(param.lambda_-1):
         new_population.append(avg.getCopy())
 
     return new_population

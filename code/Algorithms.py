@@ -156,11 +156,11 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
     select = functions['select']
     mutateParameters = functions['mutateParameters']
 
+    # Single recombination outside the eval loop to create the new population
+    new_population = recombine(population)
+
     # The main evaluation loop
     while used_budget < budget:
-
-        # Recombination
-        new_population = recombine(population)
 
         for individual in new_population:
             # Mutation
@@ -171,6 +171,8 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
 
         # Selection
         population = select(population, new_population, used_budget)
+        # Recombination
+        new_population = recombine(population)
         # Parameter mutation
         mutateParameters(used_budget)
 
