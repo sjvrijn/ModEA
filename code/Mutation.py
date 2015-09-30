@@ -47,7 +47,7 @@ def CMAMutation__(individual, parameters):  # TODO FIXME: This should probably b
     """
 
     n = individual.n
-    # np.random.seed(42)
+    np.random.seed(42)
     individual.last_z = np.random.randn(n,1)
     # print(parameters.D, individual.last_z)
     individual.mutation_vector = np.dot(parameters.B, (parameters.D * individual.last_z))  # Noted as y_k in cmatutorial.pdf)

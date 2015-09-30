@@ -158,7 +158,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
 
     # Single recombination outside the eval loop to create the new population
     new_population = recombine(population)
-    # print('\n\n\n\n\n\n\n\n')
+    print('\n\n\n\n\n\n\n\n')
 
     # The main evaluation loop
     while used_budget < budget:

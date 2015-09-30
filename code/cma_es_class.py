@@ -160,10 +160,10 @@ class cma_es(object):
 
     def mutation(self):
         dim, _lambda, sigma, = self.dim, self._lambda, self.sigma
-        # np.random.seed(42)
+        np.random.seed(42)
         z = randn(dim, 1)
         for i in range(_lambda-1):
-            # np.random.seed(42)
+            np.random.seed(42)
             z = np.column_stack((z, randn(dim, 1)))
 
         self.z = z
@@ -201,7 +201,6 @@ class cma_es(object):
         self.sigma = self.sigma * exp((norm(self.ps)/self.chiN - 1) * self.cs/self.damps)
 
         # print("ps: {}".format(self.ps.T), "pc: {}".format(self.pc.T), "C: {}".format(self.C), sep='\n')
-        print()
 
     def updateBD(self):
         # Eigen decomposition
@@ -228,6 +227,7 @@ class cma_es(object):
                     self.stop_dict['linalgerror'] = True
                 else:
                     self.flg_warning ^= 2**1
+        print()
 
     def stop_criteria(self):
         #-------------------------- Restart criterion ------------------------------

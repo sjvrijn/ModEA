@@ -45,8 +45,8 @@ def weighted(pop, param):
     mu = len(pop)
     avg = pop[0].getCopy()
     param.weighted_mutation_vector = sum([pop[i].mutation_vector * weights[i] for i in range(mu)], axis=0)
-    # print("vec", param.B, "val", param.D.T, "z", [pop[i].mutation_vector.T for i in range(mu)], sep='\n')
-    # print("mut vector S", param.weighted_mutation_vector.T)
+    print("vec", param.B, "val", param.D.T, "z", [pop[i].mutation_vector.T for i in range(mu)], sep='\n')
+    print("mut vector S", param.weighted_mutation_vector.T)
     param.y_w_squared = sum([dot(pop[i].mutation_vector, pop[i].mutation_vector.T) * weights[i] for i in range(mu)], axis=0)
 
     # mean = np.mean([population[i].dna for i in range(mu)], axis=0)

@@ -150,22 +150,21 @@ class Parameters(BaseParameters):
 
         h_sigma = self.heavySideCMA(t, p_sigma_length, expected_random_vector)
         delta_h_sigma = (1-h_sigma)*c_c*(2-c_c)
-        # print("wmc", self.weighted_mutation_vector.T * self.sigma)
+        print("wmc", self.weighted_mutation_vector.T * self.sigma)
         self.p_c = (1-c_c)*self.p_c + h_sigma * sqrt(c_c*(2-c_c)*mu_eff) * self.weighted_mutation_vector
-        # print("p_c", self.p_c.T)
+        print("p_c", self.p_c.T)
 
         self.C = (1 - c_1 - c_mu)*self.C + \
                  (c_1 * (self.p_c * self.p_c.T + delta_h_sigma*self.C)) + \
                  (c_mu * self.y_w_squared)
-        # print("C\n", self.C)
+        print("C\n", self.C)
         # print("ps: {}".format(self.p_sigma.T), "pc: {}".format(self.p_c.T), "C: {}".format(self.C), sep='\n')
-        # print()
 
         # self.D, self.B = np.linalg.eig(self.C)
         C = self.C # lastest setting for
         C = triu(C) + triu(C, 1).T                  # eigen decomposition
         D, B, = eigh(C)
-        # print(D, B, sep='\n')
+        print(D, B, sep='\n')
         self.B = B                 # eigenvectors
         self.D = sqrt(np.real(D))  # eigenvalues
         self.D.shape = (n,1)  # Force D to be a column vector
@@ -176,6 +175,7 @@ class Parameters(BaseParameters):
         p_sigma_length = sqrt(dot(self.p_sigma.T, self.p_sigma))[0,0]  # recalculate
         self.sigma *= exp((c_sigma/d_sigma) * (p_sigma_length/expected_random_vector - 1))
         self.sigma_mean = self.sigma
+        print()
 
 
     def heavySideCMA(self, t, p_sigma_length, expected_random_vector):

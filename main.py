@@ -99,8 +99,8 @@ def run_tests():
             sigmas[alg_name][fit_name] = np.mean(np.array(sigmas[alg_name][fit_name]), axis=0)
             fitnesses[alg_name][fit_name] = np.mean(np.array(fitnesses[alg_name][fit_name]), axis=0)
 
-    makeGraphsPerAlgorithm(sigmas, fitnesses, algorithms_to_test, fitnesses_to_test)
-    makeGraphsPerFitness(sigmas, fitnesses, algorithms_to_test, fitnesses_to_test)
+    # makeGraphsPerAlgorithm(sigmas, fitnesses, algorithms_to_test, fitnesses_to_test)
+    # makeGraphsPerFitness(sigmas, fitnesses, algorithms_to_test, fitnesses_to_test)
 
     print('Done!')
 
