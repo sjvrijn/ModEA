@@ -54,12 +54,14 @@ def run_tests():
     np.set_printoptions(linewidth=200)
 
     # Set parameters
-    n = 10
-    budget = 1000
-    num_runs = 3
-    fitnesses_to_test = ['sphere', 'elipsoid', 'rastrigin']  # ['sphere', 'elipsoid', 'rastrigin']
+    n = 4
+    budget = 10
+    num_runs = 1
+    # fitnesses_to_test = ['sphere', 'elipsoid', 'rastrigin']  # ['sphere', 'elipsoid', 'rastrigin']
+    fitnesses_to_test = ['sphere']
 
-    algorithms_to_test = ['1+1', 'CMA', 'CMSA', 'Cholesky', 'Active']  # ['1+1', 'CMA', 'CMSA', 'Cholesky', 'Active']
+    # algorithms_to_test = ['1+1', 'CMA', 'CMSA', 'Cholesky', 'Active']  # ['1+1', 'CMA', 'CMSA', 'Cholesky', 'Active']
+    algorithms_to_test = ['CMA']
 
     # 'Catch' results
     results = {}
@@ -72,7 +74,7 @@ def run_tests():
         opts['algid'] = alg_name
         f = fgeneric.LoggingFunction(datapath, **opts)
 
-        print(alg_name)
+        # print(alg_name)
         algorithm = algorithms[alg_name]
         results[alg_name] = {}
         sigmas[alg_name] = {}
@@ -82,7 +84,7 @@ def run_tests():
 
             fun_id = fitness_functions[fit_name]
 
-            print("  {}".format(fit_name))
+            # print("  {}".format(fit_name))
             results[alg_name][fit_name] = []
             sigmas[alg_name][fit_name] = None
             fitnesses[alg_name][fit_name] = None
@@ -90,7 +92,7 @@ def run_tests():
             # Perform the actual run of the algorithm
             for i in range(num_runs):
                 f.setfun(*bbobbenchmarks.instantiate(fun_id, iinstance=i))
-                results[alg_name][fit_name].append(algorithm(n, f.evalfun, budget))
+                results[alg_name][fit_name].append(algorithm(n, f.evalfun, budget, mu=1, lambda_=2))
 
             # Preprocess/unpack results
             _, sigmas[alg_name][fit_name], fitnesses[alg_name][fit_name] = (list(x) for x in zip(*results[alg_name][fit_name]))
@@ -180,6 +182,7 @@ def makeGraphsPerFitness(sigmas, fitnesses, alg_names, fit_names):
 
 
 if __name__ == '__main__':
+    np.random.seed(42)
     run_tests()
 
     # from bbob.bbob_pproc import cococommands

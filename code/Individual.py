@@ -17,7 +17,8 @@ class Individual(object):
             :param n: dimensionality of the problem to be solved
         """
         self.n = n
-        self.dna = np.random.randn(n,1)  # Column vector
+        # self.dna = np.random.randn(n,1)  # Column vector
+        self.dna = np.ones((n,1))  # Column vector
         self.fitness = None  # Default 'unset' value
         self.sigma = 1
 

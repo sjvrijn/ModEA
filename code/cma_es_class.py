@@ -160,10 +160,10 @@ class cma_es(object):
 
     def mutation(self):
         dim, _lambda, sigma, = self.dim, self._lambda, self.sigma
-        np.random.seed(42)
+        # np.random.seed(42)
         z = randn(dim, 1)
         for i in range(_lambda-1):
-            np.random.seed(42)
+            # np.random.seed(42)
             z = np.column_stack((z, randn(dim, 1)))
 
         self.z = z

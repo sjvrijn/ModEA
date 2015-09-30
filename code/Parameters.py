@@ -4,7 +4,8 @@
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
-from numpy import dot, exp, eye, ones, sqrt, zeros
+from numpy import dot, exp, eye, ones, sqrt, zeros, triu
+from numpy.linalg import eigh
 from scipy.linalg import sqrtm
 
 
@@ -146,23 +147,35 @@ class Parameters(BaseParameters):
                        sqrt(c_sigma*(2-c_sigma)*mu_eff) * dot(self.sqrt_C, self.weighted_mutation_vector)
         p_sigma_length = sqrt(dot(self.p_sigma.T, self.p_sigma))[0,0]
         expected_random_vector = sqrt(n) * (1 - (1/(4*n)) + (1/(21*n**2)))
-        self.sigma *= exp((c_sigma/d_sigma) * (p_sigma_length/expected_random_vector - 1))
-        self.sigma_mean = self.sigma
 
         h_sigma = self.heavySideCMA(t, p_sigma_length, expected_random_vector)
         delta_h_sigma = (1-h_sigma)*c_c*(2-c_c)
+        # print("wmc", self.weighted_mutation_vector.T * self.sigma)
         self.p_c = (1-c_c)*self.p_c + h_sigma * sqrt(c_c*(2-c_c)*mu_eff) * self.weighted_mutation_vector
+        # print("p_c", self.p_c.T)
 
         self.C = (1 - c_1 - c_mu)*self.C + \
                  (c_1 * (self.p_c * self.p_c.T + delta_h_sigma*self.C)) + \
                  (c_mu * self.y_w_squared)
+        # print("C\n", self.C)
+        # print("ps: {}".format(self.p_sigma.T), "pc: {}".format(self.p_c.T), "C: {}".format(self.C), sep='\n')
+        # print()
 
-        self.D, self.B = np.linalg.eig(self.C)
-        self.D = sqrt(np.real(self.D))
+        # self.D, self.B = np.linalg.eig(self.C)
+        C = self.C # lastest setting for
+        C = triu(C) + triu(C, 1).T                  # eigen decomposition
+        D, B, = eigh(C)
+        # print(D, B, sep='\n')
+        self.B = B                 # eigenvectors
+        self.D = sqrt(np.real(D))  # eigenvalues
         self.D.shape = (n,1)  # Force D to be a column vector
 
         # self.sqrt_C = sqrtm(self.C)
         self.sqrt_C = dot(self.B, self.D**-1 * self.B.T)
+
+        p_sigma_length = sqrt(dot(self.p_sigma.T, self.p_sigma))[0,0]  # recalculate
+        self.sigma *= exp((c_sigma/d_sigma) * (p_sigma_length/expected_random_vector - 1))
+        self.sigma_mean = self.sigma
 
 
     def heavySideCMA(self, t, p_sigma_length, expected_random_vector):
