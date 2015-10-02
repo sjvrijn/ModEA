@@ -42,8 +42,13 @@ def CMA_ES(n, fitnessFunction, budget, mu=4, lambda_=15, elitist=False):
 
     parameters = Parameters(n, mu, lambda_, elitist)
     population = [Individual(n) for _ in range(mu)]
+
+    # Artificial init: in hopes of fixing CMA-ES
+    wcm = parameters.wcm
+    fitness = fitnessFunction(wcm)[0]
     for individual in population:
-        individual.fitness = fitnessFunction(individual.dna)
+        individual.dna = wcm
+        individual.fitness = fitness
 
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {

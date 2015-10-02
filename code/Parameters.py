@@ -4,7 +4,8 @@
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
-from numpy import dot, exp, eye, ones, sqrt, zeros
+from numpy import dot, exp, eye, ones, sqrt, zeros, triu, isinf, isreal, real, outer, log, newaxis, arange, any
+from numpy.linalg import eigh, LinAlgError, norm
 from scipy.linalg import sqrtm
 
 
@@ -68,6 +69,12 @@ class Parameters(BaseParameters):
         self.p_c = zeros((n,1))
         self.weighted_mutation_vector = zeros((n,1))         # weighted average of the last generation of offset vectors
         self.y_w_squared = zeros((n,1))  # y_w squared
+
+        self.chiN = n**.5 * (1-1./(4*n)+1./(21*n**2))  # Expected random vector (or something like it)
+        self.offspring = None
+        self.wcm = np.random.randn(n,1)
+        self.wcm_old = None
+        self.damps = 1. + 2*np.max([0, sqrt((mu_eff-1)/(n+1))-1]) + self.c_sigma
 
         ### CMSA-ES ###
         self.tau = 1 / sqrt(2*n)
@@ -139,30 +146,80 @@ class Parameters(BaseParameters):
             Adapt the covariance matrix according to the CMA-ES
         """
 
-        c_c, c_mu, c_sigma, c_1, d_sigma, mu_eff, n = self.c_c, self.c_mu, self.c_sigma, self.c_1,\
-                                                      self.d_sigma, self.mu_eff, self.n
+        cc, cs, c_1, c_mu = self.c_c, self.c_sigma, self.c_1, self.c_mu
+        wcm, wcm_old, mueff, invsqrt_C = self.wcm, self.wcm_old, self.mu_eff, self.sqrt_C
+        evalcount, _lambda = t, self.lambda_
 
-        self.p_sigma = (1-c_sigma)*self.p_sigma + \
-                       sqrt(c_sigma*(2-c_sigma)*mu_eff) * dot(self.sqrt_C, self.weighted_mutation_vector)
-        p_sigma_length = sqrt(dot(self.p_sigma.T, self.p_sigma))[0,0]
-        expected_random_vector = sqrt(n) * (1 - (1/(4*n)) + (1/(21*n**2)))
-        self.sigma *= exp((c_sigma/d_sigma) * (p_sigma_length/expected_random_vector - 1))
+        self.p_sigma = (1-cs) * self.p_sigma + sqrt(cs*(2-cs)*mueff) \
+            * dot(invsqrt_C, (wcm - wcm_old) / self.sigma)
+        hsig = sum(self.p_sigma**2.)/(1.-(1.-cs)**(2.*evalcount/_lambda))/self.n < 2. + 4./(self.n+1.)
+        # print("wmc", (wcm - wcm_old).T)
+        self.p_c = (1-cc) * self.p_c + \
+            hsig * sqrt(cc*(2.-cc)*mueff) * (wcm - wcm_old) / self.sigma
+        # print("p_c", self.p_c.T)
+        offset = (self.offspring - wcm_old) / self.sigma
+
+        self.C = (1.0-c_1-c_mu) * self.C \
+                  + c_1 * (outer(self.p_c, self.p_c) + (1.-hsig) * cc*(2-cc) * self.C) \
+                  + c_mu * dot(offset, self.weights*offset.T)
+        # print("C\n", self.C)
+        # Adapt step size sigma
+        self.sigma = self.sigma * exp((norm(self.p_sigma)/self.chiN - 1) * self.c_sigma/self.damps)
         self.sigma_mean = self.sigma
 
-        h_sigma = self.heavySideCMA(t, p_sigma_length, expected_random_vector)
-        delta_h_sigma = (1-h_sigma)*c_c*(2-c_c)
-        self.p_c = (1-c_c)*self.p_c + h_sigma * sqrt(c_c*(2-c_c)*mu_eff) * self.weighted_mutation_vector
 
-        self.C = (1 - c_1 - c_mu)*self.C + \
-                 (c_1 * (self.p_c * self.p_c.T + delta_h_sigma*self.C)) + \
-                 (c_mu * self.y_w_squared)
+        # c_c, c_mu, c_sigma, c_1, d_sigma, mu_eff, n = self.c_c, self.c_mu, self.c_sigma, self.c_1,\
+        #                                               self.d_sigma, self.mu_eff, self.n
+        #
+        # self.p_sigma = (1-c_sigma)*self.p_sigma + \
+        #                sqrt(c_sigma*(2-c_sigma)*mu_eff) * dot(self.sqrt_C, self.weighted_mutation_vector)
+        # p_sigma_length = sqrt(dot(self.p_sigma.T, self.p_sigma))[0,0]
+        # expected_random_vector = sqrt(n) * (1 - (1/(4*n)) + (1/(21*n**2)))
+        #
+        # h_sigma = self.heavySideCMA(t, p_sigma_length, expected_random_vector)
+        # delta_h_sigma = (1-h_sigma)*c_c*(2-c_c)
+        # print("wmc", self.weighted_mutation_vector.T * self.sigma)
+        # self.p_c = (1-c_c)*self.p_c + h_sigma * sqrt(c_c*(2-c_c)*mu_eff) * self.weighted_mutation_vector
+        # print("p_c", self.p_c.T)
+        #
+        # self.C = (1 - c_1 - c_mu)*self.C + \
+        #          (c_1 * (self.p_c * self.p_c.T + delta_h_sigma*self.C)) + \
+        #          (c_mu * self.y_w_squared)
+        # print("C\n", self.C)
+        # # print("ps: {}".format(self.p_sigma.T), "pc: {}".format(self.p_c.T), "C: {}".format(self.C), sep='\n')
+        #
+        # p_sigma_length = sqrt(dot(self.p_sigma.T, self.p_sigma))[0,0]  # recalculate
+        # self.sigma *= exp((c_sigma/d_sigma) * (p_sigma_length/expected_random_vector - 1))
+        # self.sigma_mean = self.sigma
 
-        self.D, self.B = np.linalg.eig(self.C)
-        self.D = sqrt(np.real(self.D))
-        self.D.shape = (n,1)  # Force D to be a column vector
+        ### Update BD ###
+        C = self.C # lastest setting for
+        C = triu(C) + triu(C, 1).T                  # eigen decomposition
+        if any(isinf(C)) > 1:                           # interval
+            raise Exception("Values in C are infinite")
+        else:
+            try:
+                w, e_vector = eigh(C)
+                # print(w, e_vector, sep='\n')
+                e_value = sqrt(list(map(complex, w))).reshape(-1, 1)
+                if any(~isreal(e_value)) or any(isinf(e_value)):
+                    raise Exception("Eigenvalues of C are infinite or not real")
+                else:
+                    self.D = real(e_value)
+                    self.B = e_vector
+                    self.sqrt_C = dot(e_vector, e_value**-1 * e_vector.T)
+            except LinAlgError as e:
+                raise Exception(e)
 
-        # self.sqrt_C = sqrtm(self.C)
-        self.sqrt_C = dot(self.B, self.D**-1 * self.B.T)
+        # D, B, = eigh(C)
+        # print(D, B, sep='\n')
+        # self.B = B                 # eigenvectors
+        # self.D = sqrt(np.real(D))  # eigenvalues
+        # self.D.shape = (n,1)  # Force D to be a column vector
+        #
+        # # self.sqrt_C = sqrtm(self.C)
+        # self.sqrt_C = dot(self.B, self.D**-1 * self.B.T)
+        # print()
 
 
     def heavySideCMA(self, t, p_sigma_length, expected_random_vector):
@@ -350,12 +407,8 @@ class Parameters(BaseParameters):
         """
             Defines a list of weights to be used in weighted recombination
         """
-        mu = self.mu
+        _mu_prime = (self.lambda_-1) / 2.0
+        weights = log(_mu_prime+1.0)-log(arange(1, self.mu+1)[:, newaxis])
+        weights = weights / sum(weights)
 
-        pre_weights = [np.log((self.lambda_/2) + .5) - np.log(i+1) for i in range(mu)]
-        sum_pre_weights = np.sum(pre_weights)
-        if sum_pre_weights != 0:
-            weights = [pre_weight / sum_pre_weights for pre_weight in pre_weights]
-        else:
-            weights = [1/mu] * mu
         return weights
