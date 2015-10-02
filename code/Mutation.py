@@ -15,6 +15,8 @@ A Mutation operator mutates an Individual's DNA inline, thus returning nothing.
 # TODO: Split (CMA-based) mutations into multiple/as many parts as possible. E.g. step size control & CMA
 
 import numpy as np
+from numpy.random import randn
+from numpy import add, dot, exp
 from random import getrandbits
 
 
@@ -34,8 +36,8 @@ def CMAMutation(individual, parameters):
     """
 
     n = individual.n
-    individual.sigma = parameters.sigma_mean * np.exp(parameters.tau * np.random.randn(1,1))
-    individual.mutation_vector = np.dot(parameters.B, (parameters.D * np.random.randn(n,1)))  # B*D*randn(n,1)
+    individual.sigma = parameters.sigma_mean * exp(parameters.tau * randn(1,1))
+    individual.mutation_vector = dot(parameters.B, (parameters.D * randn(n,1)))  # B*D*randn(n,1)
     individual.last_z = individual.sigma * individual.mutation_vector
 
     individual.dna += individual.last_z
@@ -47,13 +49,17 @@ def CMAMutation__(individual, parameters):  # TODO FIXME: This should probably b
     """
 
     n = individual.n
-    np.random.seed(42)
-    individual.last_z = np.random.randn(n,1)
+    # np.random.seed(42)
+    individual.last_z = randn(n,1)
     # print(parameters.D, individual.last_z)
-    individual.mutation_vector = np.dot(parameters.B, (parameters.D * individual.last_z))  # Noted as y_k in cmatutorial.pdf)
+    individual.mutation_vector = dot(parameters.B, (parameters.D * individual.last_z))  # Noted as y_k in cmatutorial.pdf)
 
-    individual.dna += parameters.sigma * individual.mutation_vector
+    # print(dot(parameters.B, parameters.D))
+    # print(individual.mutation_vector)
+    # print(individual.dna)
 
+    individual.dna = add(individual.dna, parameters.sigma * individual.mutation_vector)
+    # print(individual.last_z, individual.mutation_vector, individual.dna)
 
 def choleskyCMAMutation(individual, parameters):
     """
