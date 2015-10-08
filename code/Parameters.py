@@ -34,7 +34,7 @@ class Parameters(BaseParameters):
         separate parameters.
     """
 
-    def __init__(self, n, mu, lambda_, elitist=False):
+    def __init__(self, n, mu, lambda_, budget, elitist=False):
         """
             Setup the set of parameters
         """
@@ -48,6 +48,7 @@ class Parameters(BaseParameters):
         self.lambda_ = lambda_
         self.sigma = 1
         self.elitist = elitist
+        self.budget = budget
         self.weights = self.getWeights()
         mu_eff = 1 / sum(square(self.weights))  # Store locally to shorten calculations later on
         self.mu_eff = mu_eff
@@ -80,6 +81,12 @@ class Parameters(BaseParameters):
         self.wcm = randn(n,1)
         self.wcm_old = None
         self.damps = 1. + 2*max([0, sqrt((mu_eff-1)/(n+1))-1]) + self.c_sigma
+
+        ## Threshold Convergence ##
+        self.diameter = 10  # Diameter of the search space TODO: implement upper/lower bound
+        self.init_threshold = 0.2  # "guess" from
+        self.decay_factor = 0.995
+        self.threshold = self.init_threshold * self.diameter * ((1-0) / 1)**self.decay_factor
 
         ### CMSA-ES ###
         self.tau = 1 / sqrt(2*n)
@@ -379,3 +386,9 @@ class Parameters(BaseParameters):
         weights = weights / sum(weights)
 
         return weights
+
+
+    def updateThreshold(self, t):
+        budget = self.budget
+        # Formula from "Evolution Strategies with Thresheld Convergence (CEC 2015)"
+        self.threshold = self.init_threshold * self.diameter * ((budget-t) / self.budget)**self.decay_factor

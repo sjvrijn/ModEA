@@ -19,7 +19,7 @@ def onePlusOneES(n, fitnessFunction, budget):
         Requires the length of the vector to be optimized, the handle of a fitness function to use and the budget
     """
 
-    parameters = Parameters(n, 1, 1)
+    parameters = Parameters(n, 1, 1, budget)
     population = [Individual(n)]
     population[0].fitness = fitnessFunction(population[0].dna)
 
@@ -40,7 +40,7 @@ def CMA_ES(n, fitnessFunction, budget, mu=4, lambda_=15, elitist=False):
         Requires the length of the vector to be optimized, the handle of a fitness function to use and the budget
     """
 
-    parameters = Parameters(n, mu, lambda_, elitist)
+    parameters = Parameters(n, mu, lambda_, budget, elitist)
     population = [Individual(n) for _ in range(mu)]
 
     # Artificial init: in hopes of fixing CMA-ES
@@ -67,7 +67,7 @@ def onePlusOneCholeskyCMAES(n, fitnessFunction, budget):
         Requires the length of the vector to be optimized, the handle of a fitness function to use and the budget
     """
 
-    parameters = Parameters(n, 1, 1)
+    parameters = Parameters(n, 1, 1, budget)
     population = [Individual(n)]
     population[0].fitness = fitnessFunction(population[0].dna)
 
@@ -88,7 +88,7 @@ def onePlusOneActiveCMAES(n, fitnessFunction, budget):
         Requires the length of the vector to be optimized, the handle of a fitness function to use and the budget
     """
 
-    parameters = Parameters(n, 1, 1)
+    parameters = Parameters(n, 1, 1, budget)
     population = [Individual(n)]
     population[0].fitness = fitnessFunction(population[0].dna)
     parameters.addToFitnessHistory(population[0].fitness)
@@ -110,7 +110,7 @@ def CMSA_ES(n, fitnessFunction, budget, mu=4, lambda_=15, elitist=False):
         Requires the length of the vector to be optimized, the handle of a fitness function to use and the budget
     """
 
-    parameters = Parameters(n, mu, lambda_, elitist)
+    parameters = Parameters(n, mu, lambda_, budget, elitist)
     population = [Individual(n) for _ in range(mu)]
     for individual in population:
         individual.fitness = fitnessFunction(individual.dna)
