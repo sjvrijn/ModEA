@@ -15,25 +15,22 @@ A Mutation operator mutates an Individual's DNA inline, thus returning nothing.
 # TODO: Split (CMA-based) mutations into multiple/as many parts as possible. E.g. step size control & CMA
 
 import numpy as np
-from numpy.random import randn
 from numpy import add, dot, exp
+from numpy.linalg import norm
+from numpy.random import randn
 from random import getrandbits
 
 
 # TODO: come up with a better name for this mutation function
 def x1(individual, parameters):
-    """
-        Mutation 1: x = x + sigma*N(0,I)
-    """
+    """ Mutation 1: x = x + sigma*N(0,I) """
 
     n = individual.n
     individual.dna += parameters.sigma * np.random.randn(n,1)
 
 
 def CMAMutation(individual, parameters):
-    """
-        CMA based mutation: x = x + ((sigma_mean*tau*N(0,1)) * (B*D*N(0,I)))
-    """
+    """ CMA based mutation: x = x + ((sigma_mean*tau*N(0,1)) * (B*D*N(0,I))) """
 
     n = individual.n
     individual.sigma = parameters.sigma_mean * exp(parameters.tau * randn(1,1))
@@ -44,27 +41,30 @@ def CMAMutation(individual, parameters):
 
 
 def CMAMutation__(individual, parameters):  # TODO FIXME: This should probably be the actual base function
-    """
-        CMA mutation: x = x + (sigma * B*D*N(0,I))
-    """
+    """ CMA mutation: x = x + (sigma * B*D*N(0,I)) """
 
     n = individual.n
-    # np.random.seed(42)
     individual.last_z = randn(n,1)
-    # print(parameters.D, individual.last_z)
     individual.mutation_vector = dot(parameters.B, (parameters.D * individual.last_z))  # Noted as y_k in cmatutorial.pdf)
-
-    # print(dot(parameters.B, parameters.D))
-    # print(individual.mutation_vector)
-    # print(individual.dna)
-
     individual.dna = add(individual.dna, parameters.sigma * individual.mutation_vector)
-    # print(individual.last_z, individual.mutation_vector, individual.dna)
+
+
+def scaleWithThreshold(mutation_vector, threshold):
+    """
+        Checks if norm(mutation_vector) is at least the given threshold.
+        If not, the vector is mirrored to the other side of the threshold,
+        i.e. scaled to be length: threshold + (threshold - norm(mutation_vector))
+    """
+
+    length = norm(mutation_vector)
+    if length < threshold:
+        new_length = threshold + (threshold - length)
+        mutation_vector *= (new_length / length)
+
+    return mutation_vector
 
 def choleskyCMAMutation(individual, parameters):
-    """
-        Cholesky CMA based mutation
-    """
+    """ Cholesky CMA based mutation """
 
     parameters.last_z = np.random.randn(1,individual.n)
     mutation_vector = np.dot(parameters.A, parameters.last_z.T)
@@ -73,9 +73,7 @@ def choleskyCMAMutation(individual, parameters):
 
 
 def adaptSigma(sigma, p_s, c=0.817):
-    """
-        Adapt parameter sigma based on the 1/5th success rule
-    """
+    """ Adapt parameter sigma based on the 1/5th success rule """
 
     if p_s < 1/5:
         sigma *= c
@@ -86,9 +84,7 @@ def adaptSigma(sigma, p_s, c=0.817):
 
 
 def calculateRotationMatrix(rotations):
-    """
-        Given a list of rotation matrices (R_ij), calculate the final matrix C
-    """
+    """ Given a list of rotation matrices (R_ij), calculate the final matrix C """
 
     pass
 
