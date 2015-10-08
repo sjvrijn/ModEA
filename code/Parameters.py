@@ -34,7 +34,7 @@ class Parameters(BaseParameters):
         separate parameters.
     """
 
-    def __init__(self, n, mu, lambda_, budget, elitist=False):
+    def __init__(self, n, mu, lambda_, budget, elitist=False, active=False):
         """
             Setup the set of parameters
         """
@@ -48,6 +48,7 @@ class Parameters(BaseParameters):
         self.lambda_ = lambda_
         self.sigma = 1
         self.elitist = elitist
+        self.active = active
         self.budget = budget
         self.weights = self.getWeights()
         mu_eff = 1 / sum(square(self.weights))  # Store locally to shorten calculations later on
@@ -87,6 +88,11 @@ class Parameters(BaseParameters):
         self.init_threshold = 0.2  # "guess" from
         self.decay_factor = 0.995
         self.threshold = self.init_threshold * self.diameter * ((1-0) / 1)**self.decay_factor
+
+        ## Active CMA-ES ##
+        if active:
+            self.c_c = 2 / (n+sqrt(2))**2
+        self.beta = (4*mu - 2) / ((n+12)**2 + 4*mu)
 
         ### CMSA-ES ###
         self.tau = 1 / sqrt(2*n)
@@ -162,16 +168,21 @@ class Parameters(BaseParameters):
         wcm, wcm_old, mueff, invsqrt_C = self.wcm, self.wcm_old, self.mu_eff, self.sqrt_C
         evalcount, _lambda = t, self.lambda_
 
-        self.p_sigma = (1-cs) * self.p_sigma + sqrt(cs*(2-cs)*mueff) \
-            * dot(invsqrt_C, (wcm - wcm_old) / self.sigma)
-        hsig = sum(self.p_sigma**2.)/(1.-(1.-cs)**(2.*evalcount/_lambda))/self.n < 2. + 4./(self.n+1.)
-        self.p_c = (1-cc) * self.p_c + \
-            hsig * sqrt(cc*(2.-cc)*mueff) * (wcm - wcm_old) / self.sigma
-        offset = (self.offspring - wcm_old) / self.sigma
+        self.p_sigma = (1-cs) * self.p_sigma + \
+                       sqrt(cs*(2-cs)*mueff) * dot(invsqrt_C, (wcm - wcm_old) / self.sigma)
+        hsig = sum(self.p_sigma**2)/(1-(1-cs)**(2*evalcount/_lambda))/self.n < 2. + 4./(self.n+1.)
+        self.p_c = (1-cc) * self.p_c + hsig * sqrt(cc*(2-cc)*mueff) * (wcm - wcm_old) / self.sigma
 
-        self.C = (1.0-c_1-c_mu) * self.C \
-                  + c_1 * (outer(self.p_c, self.p_c) + (1.-hsig) * cc*(2-cc) * self.C) \
-                  + c_mu * dot(offset, self.weights*offset.T)
+        if not self.active:
+            offset = (self.offspring - wcm_old) / self.sigma
+            # Regular update of C
+            self.C = (1-c_1-c_mu) * self.C \
+                      + c_1 * (outer(self.p_c, self.p_c) + (1.-hsig) * cc*(2-cc) * self.C) \
+                      + c_mu * dot(offset, self.weights*offset.T)
+        # else:
+            # Active update of C TODO: separate function?
+
+            # Z = dot(self.B, self.D) *  * dot(self.B, self.D).T
         # Adapt step size sigma
         self.sigma = self.sigma * exp((norm(self.p_sigma)/self.chiN - 1) * self.c_sigma/self.damps)
         self.sigma_mean = self.sigma

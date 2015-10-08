@@ -40,12 +40,13 @@ def CMAMutation(individual, parameters):
     individual.dna += individual.last_z
 
 
-def CMAMutation__(individual, parameters, threshold_convergence=False):  # TODO FIXME: This should probably be the actual base function
+# TODO FIXME: This should probably be the actual base function
+def CMAMutation__(individual, parameters, threshold_convergence=False):
     """ CMA mutation: x = x + (sigma * B*D*N(0,I)) """
 
     n = individual.n
     individual.last_z = randn(n,1)
-    individual.mutation_vector = dot(parameters.B, (parameters.D * individual.last_z))  # Noted as y_k in cmatutorial.pdf)
+    individual.mutation_vector = dot(parameters.B, (parameters.D * individual.last_z))  # y_k in cmatutorial.pdf)
 
     mutation_vector = individual.mutation_vector * parameters.sigma
     if threshold_convergence:
