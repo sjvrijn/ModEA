@@ -5,7 +5,7 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
 from numpy import any, arange, dot, exp, eye, isfinite, isinf, isreal, ones, log,\
-                  max, mean, min, newaxis, outer, real, sqrt, square, sum, triu, zeros
+                  mean, newaxis, outer, real, sqrt, square, sum, triu, zeros
 from numpy.linalg import cond, eig, eigh, norm, LinAlgError
 from numpy.random import randn
 
@@ -80,7 +80,7 @@ class Parameters(BaseParameters):
         self.offspring = None
         self.wcm = randn(n,1)
         self.wcm_old = None
-        self.damps = 1. + 2*max([0, sqrt((mu_eff-1)/(n+1))-1]) + self.c_sigma
+        self.damps = 1. + 2*np.max([0, sqrt((mu_eff-1)/(n+1))-1]) + self.c_sigma
 
         ## Threshold Convergence ##
         self.diameter = 10  # Diameter of the search space TODO: implement upper/lower bound
@@ -308,7 +308,7 @@ class Parameters(BaseParameters):
 
         degenerated = False
 
-        if min(isfinite(self.C)) == 0:
+        if np.min(isfinite(self.C)) == 0:
             degenerated = True
 
         elif not ((10**(-16)) < self.sigma_mean < (10**16)):
@@ -339,7 +339,7 @@ class Parameters(BaseParameters):
 
         degenerated = False
 
-        if min(isfinite(self.A)) == 0:
+        if np.min(isfinite(self.A)) == 0:
             degenerated = True
         elif not ((10 ** (-16)) < cond(self.A) < (10 ** 16)):
             degenerated = True
