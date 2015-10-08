@@ -40,7 +40,7 @@ free_function_ids = bbobbenchmarks.nfreeIDs
 noisy_function_ids = bbobbenchmarks.noisyIDs
 
 fitness_functions = {'sphere': free_function_ids[0], 'elipsoid': free_function_ids[1],
-                    'rastrigin': free_function_ids[2], }
+                     'rastrigin': free_function_ids[2], }
 algorithms = {'1+1': onePlusOneES, 'CMSA': CMSA_ES, 'CMA': CMA_ES, 'Cholesky': onePlusOneCholeskyCMAES,
               'Active': onePlusOneActiveCMAES}
 

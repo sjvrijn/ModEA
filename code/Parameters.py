@@ -4,9 +4,10 @@
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
-from numpy import dot, exp, eye, ones, sqrt, zeros, triu, isinf, isreal, real, outer, log, newaxis, arange, any
-from numpy.linalg import eigh, LinAlgError, norm
-from scipy.linalg import sqrtm
+from numpy import any, arange, dot, exp, eye, isfinite, isinf, isreal, ones, log,\
+                  max, mean, min, newaxis, outer, real, sqrt, square, sum, triu, zeros
+from numpy.linalg import cond, eig, eigh, norm, LinAlgError
+from numpy.random import randn
 
 
 class BaseParameters(object):
@@ -37,6 +38,10 @@ class Parameters(BaseParameters):
         """
             Setup the set of parameters
         """
+
+        if mu < 1 or lambda_ <= mu or n < 1:
+            raise Exception("Invalid initialization values: mu, n >= 1, lambda > mu")
+
         ### Basic parameters ###
         self.n = n
         self.mu = mu
@@ -44,7 +49,7 @@ class Parameters(BaseParameters):
         self.sigma = 1
         self.elitist = elitist
         self.weights = self.getWeights()
-        mu_eff = 1 / np.sum(np.square(self.weights))  # Store locally to shorten calculations later on
+        mu_eff = 1 / sum(square(self.weights))  # Store locally to shorten calculations later on
         self.mu_eff = mu_eff
 
         ### Meta-parameters ###
@@ -72,9 +77,9 @@ class Parameters(BaseParameters):
 
         self.chiN = n**.5 * (1-1./(4*n)+1./(21*n**2))  # Expected random vector (or something like it)
         self.offspring = None
-        self.wcm = np.random.randn(n,1)
+        self.wcm = randn(n,1)
         self.wcm_old = None
-        self.damps = 1. + 2*np.max([0, sqrt((mu_eff-1)/(n+1))-1]) + self.c_sigma
+        self.damps = 1. + 2*max([0, sqrt((mu_eff-1)/(n+1))-1]) + self.c_sigma
 
         ### CMSA-ES ###
         self.tau = 1 / sqrt(2*n)
@@ -110,9 +115,9 @@ class Parameters(BaseParameters):
             return
 
         if t < self.N:
-            success = np.mean(self.success_history[:t])
+            success = mean(self.success_history[:t])
         else:
-            success = np.mean(self.success_history)
+            success = mean(self.success_history)
 
         if success < 1/5:
             self.sigma *= self.c
@@ -153,44 +158,16 @@ class Parameters(BaseParameters):
         self.p_sigma = (1-cs) * self.p_sigma + sqrt(cs*(2-cs)*mueff) \
             * dot(invsqrt_C, (wcm - wcm_old) / self.sigma)
         hsig = sum(self.p_sigma**2.)/(1.-(1.-cs)**(2.*evalcount/_lambda))/self.n < 2. + 4./(self.n+1.)
-        # print("wmc", (wcm - wcm_old).T)
         self.p_c = (1-cc) * self.p_c + \
             hsig * sqrt(cc*(2.-cc)*mueff) * (wcm - wcm_old) / self.sigma
-        # print("p_c", self.p_c.T)
         offset = (self.offspring - wcm_old) / self.sigma
 
         self.C = (1.0-c_1-c_mu) * self.C \
                   + c_1 * (outer(self.p_c, self.p_c) + (1.-hsig) * cc*(2-cc) * self.C) \
                   + c_mu * dot(offset, self.weights*offset.T)
-        # print("C\n", self.C)
         # Adapt step size sigma
         self.sigma = self.sigma * exp((norm(self.p_sigma)/self.chiN - 1) * self.c_sigma/self.damps)
         self.sigma_mean = self.sigma
-
-
-        # c_c, c_mu, c_sigma, c_1, d_sigma, mu_eff, n = self.c_c, self.c_mu, self.c_sigma, self.c_1,\
-        #                                               self.d_sigma, self.mu_eff, self.n
-        #
-        # self.p_sigma = (1-c_sigma)*self.p_sigma + \
-        #                sqrt(c_sigma*(2-c_sigma)*mu_eff) * dot(self.sqrt_C, self.weighted_mutation_vector)
-        # p_sigma_length = sqrt(dot(self.p_sigma.T, self.p_sigma))[0,0]
-        # expected_random_vector = sqrt(n) * (1 - (1/(4*n)) + (1/(21*n**2)))
-        #
-        # h_sigma = self.heavySideCMA(t, p_sigma_length, expected_random_vector)
-        # delta_h_sigma = (1-h_sigma)*c_c*(2-c_c)
-        # print("wmc", self.weighted_mutation_vector.T * self.sigma)
-        # self.p_c = (1-c_c)*self.p_c + h_sigma * sqrt(c_c*(2-c_c)*mu_eff) * self.weighted_mutation_vector
-        # print("p_c", self.p_c.T)
-        #
-        # self.C = (1 - c_1 - c_mu)*self.C + \
-        #          (c_1 * (self.p_c * self.p_c.T + delta_h_sigma*self.C)) + \
-        #          (c_mu * self.y_w_squared)
-        # print("C\n", self.C)
-        # # print("ps: {}".format(self.p_sigma.T), "pc: {}".format(self.p_c.T), "C: {}".format(self.C), sep='\n')
-        #
-        # p_sigma_length = sqrt(dot(self.p_sigma.T, self.p_sigma))[0,0]  # recalculate
-        # self.sigma *= exp((c_sigma/d_sigma) * (p_sigma_length/expected_random_vector - 1))
-        # self.sigma_mean = self.sigma
 
         ### Update BD ###
         C = self.C # lastest setting for
@@ -210,16 +187,6 @@ class Parameters(BaseParameters):
                     self.sqrt_C = dot(e_vector, e_value**-1 * e_vector.T)
             except LinAlgError as e:
                 raise Exception(e)
-
-        # D, B, = eigh(C)
-        # print(D, B, sep='\n')
-        # self.B = B                 # eigenvectors
-        # self.D = sqrt(np.real(D))  # eigenvalues
-        # self.D.shape = (n,1)  # Force D to be a column vector
-        #
-        # # self.sqrt_C = sqrtm(self.C)
-        # self.sqrt_C = dot(self.B, self.D**-1 * self.B.T)
-        # print()
 
 
     def heavySideCMA(self, t, p_sigma_length, expected_random_vector):
@@ -268,7 +235,7 @@ class Parameters(BaseParameters):
 
         if lambda_success and p_success < self.p_thresh:
             # Helper variables
-            z_squared = np.linalg.norm(self.last_z) ** 2
+            z_squared = norm(self.last_z) ** 2
             c_a_squared = c_a ** 2
 
             part_1 = c_a / z_squared
@@ -294,7 +261,7 @@ class Parameters(BaseParameters):
             self.s = (1-c)*self.s + sqrt(c * (2-c)) * dot(self.A, self.last_z.T)
 
             w = dot(self.A_inv, self.s.T)
-            w_norm_squared = np.linalg.norm(w)**2
+            w_norm_squared = norm(w)**2
             a = sqrt(1 - c_cov_pos)
             b = (a/w_norm_squared) * (sqrt(1 + w_norm_squared*(c_cov_pos / (1-c_cov_pos))) - 1)
 
@@ -310,7 +277,7 @@ class Parameters(BaseParameters):
         # Negative Cholesky update
         if len(self.fitness_history) > 4 and self.fitness_history[-1] < self.best_fitness:
             # Helper variables
-            z_squared = np.linalg.norm(self.last_z) ** 2
+            z_squared = norm(self.last_z) ** 2
 
             if self.c_cov_neg*(2*z_squared -1) > 1:
                 self.c_cov_neg = 1/(2*z_squared - 1)
@@ -322,7 +289,7 @@ class Parameters(BaseParameters):
             a = sqrt(1+c_cov_neg)
             b = (a/z_squared) * (sqrt(1 + (c_cov_neg*z_squared) / (1+c_cov_neg)) - 1)
             self.A = a*self.A + b*dot(dot(self.A, w), w.T)
-            self.A_inv = (1/a)*self.A_inv - b/(a**2 + a*b*(np.linalg.norm(w)**2) * dot(w, dot(w.T, self.A_inv)))
+            self.A_inv = (1/a)*self.A_inv - b/(a**2 + a*b*(norm(w)**2) * dot(w, dot(w.T, self.A_inv)))
 
         self.checkCholeskyDegenerated()
 
@@ -334,17 +301,17 @@ class Parameters(BaseParameters):
 
         degenerated = False
 
-        if np.min(np.isfinite(self.C)) == 0:
+        if min(isfinite(self.C)) == 0:
             degenerated = True
 
         elif not ((10**(-16)) < self.sigma_mean < (10**16)):
             degenerated = True
 
         else:
-            self.D, self.B = np.linalg.eig(self.C)
+            self.D, self.B = eig(self.C)
             self.D = sqrt(self.D)
             self.D.shape = (self.n,1)  # Force D to be a column vector
-            if not np.isreal(self.D).all():
+            if not isreal(self.D).all():
                 degenerated = True
 
         if degenerated:
@@ -365,9 +332,9 @@ class Parameters(BaseParameters):
 
         degenerated = False
 
-        if np.min(np.isfinite(self.A)) == 0:
+        if min(isfinite(self.A)) == 0:
             degenerated = True
-        elif not ((10 ** (-16)) < np.linalg.cond(self.A) < (10 ** 16)):
+        elif not ((10 ** (-16)) < cond(self.A) < (10 ** 16)):
             degenerated = True
         elif not ((10 ** (-16)) < self.sigma_mean < (10 ** 16)):
             degenerated = True
@@ -387,7 +354,7 @@ class Parameters(BaseParameters):
 
         degenerated = False
 
-        if np.linalg.cond(dot(self.A, self.A.T)) > (10 ** 14):
+        if cond(dot(self.A, self.A.T)) > (10 ** 14):
             degenerated = True
 
         elif not ((10 ** (-16)) < self.sigma_mean < (10 ** 16)):
