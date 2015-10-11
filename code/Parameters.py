@@ -79,6 +79,7 @@ class Parameters(BaseParameters):
 
         self.chiN = n**.5 * (1-1./(4*n)+1./(21*n**2))  # Expected random vector (or something like it)
         self.offspring = None
+        self.all_offspring = None
         self.wcm = randn(n,1)
         self.wcm_old = None
         self.damps = 1. + 2*np.max([0, sqrt((mu_eff-1)/(n+1))-1]) + self.c_sigma
@@ -179,10 +180,18 @@ class Parameters(BaseParameters):
             self.C = (1-c_1-c_mu) * self.C \
                       + c_1 * (outer(self.p_c, self.p_c) + (1.-hsig) * cc*(2-cc) * self.C) \
                       + c_mu * dot(offset, self.weights*offset.T)
-        # else:
+        else:
             # Active update of C TODO: separate function?
+            mu_inv = 1/self.mu
+            pos_part = mu_inv * np.sum(self.all_offspring[:,:(self.mu-1)], axis=1)
+            neg_part = mu_inv * np.sum(self.all_offspring[:,(self.lambda_-self.mu)-1:], axis=1)
 
-            # Z = dot(self.B, self.D) *  * dot(self.B, self.D).T
+            Z = dot(self.B, self.D) * (pos_part - neg_part)
+            Z *= dot(self.B, self.D).T
+            self.C = (1 - cc)*self.C \
+                     + cc*dot(self.p_c, self.p_c.T) \
+                     + self.beta * Z
+
         # Adapt step size sigma
         self.sigma = self.sigma * exp((norm(self.p_sigma)/self.chiN - 1) * self.c_sigma/self.damps)
         self.sigma_mean = self.sigma

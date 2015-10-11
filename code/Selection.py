@@ -10,7 +10,7 @@ A Selection operator accepts (mu + lambda) individuals and returns (mu) individu
 that are chosen to be the best of this generation
 """
 
-# import numpy as np
+import numpy as np
 
 
 def best(population, new_population, parameters):
@@ -19,6 +19,9 @@ def best(population, new_population, parameters):
         new_population.extend(population)
 
     new_population.sort(key=lambda individual: individual.fitness)  # sort descending
+
+    offspring = np.column_stack((ind.dna for ind in new_population))
+    parameters.all_offspring = offspring
 
     return new_population[:parameters.mu]
 
