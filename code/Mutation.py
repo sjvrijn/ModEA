@@ -26,7 +26,7 @@ def x1(individual, parameters):
     """ Mutation 1: x = x + sigma*N(0,I) """
 
     n = individual.n
-    individual.dna += parameters.sigma * np.random.randn(n,1)
+    individual.dna += parameters.sigma * randn(n,1)
 
 
 def CMAMutation(individual, parameters):
