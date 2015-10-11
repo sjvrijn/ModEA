@@ -195,7 +195,6 @@ class Parameters(BaseParameters):
         else:
             try:
                 w, e_vector = eigh(C)
-                # print(w, e_vector, sep='\n')
                 e_value = sqrt(list(map(complex, w))).reshape(-1, 1)
                 if any(~isreal(e_value)) or any(isinf(e_value)):
                     raise Exception("Eigenvalues of C are infinite or not real")
@@ -205,27 +204,6 @@ class Parameters(BaseParameters):
                     self.sqrt_C = dot(e_vector, e_value**-1 * e_vector.T)
             except LinAlgError as e:
                 raise Exception(e)
-
-
-    def heavySideCMA(self, t, p_sigma_length, expected_random_vector):
-
-        #p_sigma_length/(1-(1-self.c_sigma)**(2*g))/n
-        #  < 2 + 4/(n+1)
-
-        g = t // self.lambda_  # Current generation
-        n = self.n
-
-        # threshold = expected_random_vector * (1.4 + 2/(self.n+1))
-        threshold = 2 + 4/(n+1)
-        # test = p_sigma_length / sqrt(1 - (1-self.c_sigma)**(2*(g+1)))
-        test = p_sigma_length/(1-(1-self.c_sigma)**(2*g))/n
-
-        # if test < threshold:
-        #     result = 1
-
-        result = int(test < threshold)
-
-        return result
 
 
     def selfAdaptCovarianceMatrix(self):
