@@ -15,7 +15,7 @@ class GaussianSampling(object):
         self.n = n
         self.shape = (n,1) if shape == 'col' else (1,n)
 
-    def __next__(self):
+    def next(self):
         return randn(*self.shape)
 
 
@@ -32,14 +32,13 @@ class OrthogonalSampling(object):
         self.current_sample = 0
         self.samples = None
 
-    def __next__(self):
+    def next(self):
         if self.current_sample % self.num_samples == 0:
             self.current_sample = 0
             self.generateSamples()
 
         self.current_sample += 1
         return self.samples[self.current_sample-1]
-
 
     def generateSamples(self):
         samples = []
@@ -86,7 +85,7 @@ class MirroredSampling(object):
         else:
             self.base_sampler = base_sampler
 
-    def __next__(self):
+    def next(self):
         mirror_next = self.mirror_next
         self.mirror_next = not mirror_next
 

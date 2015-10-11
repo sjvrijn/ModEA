@@ -11,6 +11,7 @@ from .Parameters import Parameters
 import code.Mutation as Mut
 import code.Recombination as Rec
 import code.Selection as Sel
+import code.Sampling as Sam
 
 
 def onePlusOneES(n, fitnessFunction, budget):
@@ -26,7 +27,7 @@ def onePlusOneES(n, fitnessFunction, budget):
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
         'recombine': lambda pop: Rec.onePlusOne(pop),  # simply copy the only existing individual and return as a list
-        'mutate': lambda ind: Mut.x1(ind, parameters),
+        'mutate': lambda ind: Mut.x1(ind, parameters, Sam.GaussianSampling(n)),
         'select': lambda pop, new_pop, t: Sel.onePlusOneSelection(pop, new_pop, t, parameters),
         'mutateParameters': lambda t: parameters.oneFifthRule(t),
     }
@@ -53,7 +54,7 @@ def CMA_ES(n, fitnessFunction, budget, mu=4, lambda_=15, elitist=False):
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
         'recombine': lambda pop: Rec.weighted(pop, parameters),
-        'mutate': lambda ind: Mut.CMAMutation__(ind, parameters),
+        'mutate': lambda ind: Mut.CMAMutation__(ind, parameters, Sam.GaussianSampling(n)),
         'select': lambda pop, new_pop, _: Sel.best(pop, new_pop, parameters),
         'mutateParameters': lambda t: parameters.adaptCovarianceMatrix(t),
     }
@@ -74,7 +75,7 @@ def onePlusOneCholeskyCMAES(n, fitnessFunction, budget):
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
         'recombine': lambda pop: Rec.onePlusOne(pop),  # simply copy the only existing individual and return as a list
-        'mutate': lambda ind: Mut.choleskyCMAMutation(ind, parameters),
+        'mutate': lambda ind: Mut.choleskyCMAMutation(ind, parameters, Sam.GaussianSampling(n)),
         'select': lambda pop, new_pop, t: Sel.onePlusOneCholeskySelection(pop, new_pop, t, parameters),
         'mutateParameters': lambda t: parameters.adaptCholeskyCovarianceMatrix(),
     }
@@ -96,7 +97,7 @@ def onePlusOneActiveCMAES(n, fitnessFunction, budget):
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
         'recombine': lambda pop: Rec.onePlusOne(pop),  # simply copy the only existing individual and return as a list
-        'mutate': lambda ind: Mut.choleskyCMAMutation(ind, parameters),
+        'mutate': lambda ind: Mut.choleskyCMAMutation(ind, parameters, Sam.GaussianSampling(n)),
         'select': lambda pop, new_pop, t: Sel.onePlusOneActiveSelection(pop, new_pop, t, parameters),
         'mutateParameters': lambda t: parameters.adaptActiveCovarianceMatrix(),
     }
@@ -118,7 +119,7 @@ def CMSA_ES(n, fitnessFunction, budget, mu=4, lambda_=15, elitist=False):
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
         'recombine': lambda pop: Rec.average(pop, parameters),
-        'mutate': lambda ind: Mut.CMAMutation(ind, parameters),
+        'mutate': lambda ind: Mut.CMAMutation(ind, parameters, Sam.GaussianSampling(n)),
         'select': lambda pop, new_pop, _: Sel.best(pop, new_pop, parameters),
         'mutateParameters': lambda t: parameters.selfAdaptCovarianceMatrix(),
     }

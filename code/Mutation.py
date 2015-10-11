@@ -22,30 +22,30 @@ from random import getrandbits
 
 
 # TODO: come up with a better name for this mutation function
-def x1(individual, parameters):
+def x1(individual, parameters, sampler):
     """ Mutation 1: x = x + sigma*N(0,I) """
 
     n = individual.n
-    individual.dna += parameters.sigma * randn(n,1)
+    individual.dna += parameters.sigma * sampler.next()
 
 
-def CMAMutation(individual, parameters):
+def CMAMutation(individual, parameters, sampler):
     """ CMA based mutation: x = x + ((sigma_mean*tau*N(0,1)) * (B*D*N(0,I))) """
 
     n = individual.n
     individual.sigma = parameters.sigma_mean * exp(parameters.tau * randn(1,1))
-    individual.mutation_vector = dot(parameters.B, (parameters.D * randn(n,1)))  # B*D*randn(n,1)
+    individual.mutation_vector = dot(parameters.B, (parameters.D * sampler.next()))  # B*D*randn(n,1)
     individual.last_z = individual.sigma * individual.mutation_vector
 
     individual.dna += individual.last_z
 
 
 # TODO FIXME: This should probably be the actual base function
-def CMAMutation__(individual, parameters, threshold_convergence=False):
+def CMAMutation__(individual, parameters, sampler, threshold_convergence=False):
     """ CMA mutation: x = x + (sigma * B*D*N(0,I)) """
 
     n = individual.n
-    individual.last_z = randn(n,1)
+    individual.last_z = sampler.next()
     individual.mutation_vector = dot(parameters.B, (parameters.D * individual.last_z))  # y_k in cmatutorial.pdf)
 
     mutation_vector = individual.mutation_vector * parameters.sigma
@@ -69,10 +69,10 @@ def scaleWithThreshold(mutation_vector, threshold):
 
     return mutation_vector
 
-def choleskyCMAMutation(individual, parameters):
+def choleskyCMAMutation(individual, parameters, sampler):
     """ Cholesky CMA based mutation """
 
-    parameters.last_z = np.random.randn(1,individual.n)
+    parameters.last_z = sampler.next()
     mutation_vector = np.dot(parameters.A, parameters.last_z.T)
 
     individual.dna += parameters.sigma * mutation_vector
