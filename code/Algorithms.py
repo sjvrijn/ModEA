@@ -41,7 +41,7 @@ def CMA_ES(n, fitnessFunction, budget, mu=4, lambda_=15, elitist=False):
         Requires the length of the vector to be optimized, the handle of a fitness function to use and the budget
     """
 
-    parameters = Parameters(n, mu, lambda_, budget, elitist, active=True)
+    parameters = Parameters(n, mu, lambda_, budget, elitist)
     population = [Individual(n) for _ in range(mu)]
 
     # Artificial init: in hopes of fixing CMA-ES

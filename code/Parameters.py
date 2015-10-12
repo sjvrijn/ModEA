@@ -183,11 +183,10 @@ class Parameters(BaseParameters):
         else:
             # Active update of C TODO: separate function?
             mu_inv = 1/self.mu
-            pos_part = mu_inv * np.sum(self.all_offspring[:,:(self.mu-1)], axis=1)
-            neg_part = mu_inv * np.sum(self.all_offspring[:,(self.lambda_-self.mu)-1:], axis=1)
+            pos_part = mu_inv * np.sum(self.all_offspring[:,:self.mu], axis=1).reshape((-1,1))
+            neg_part = mu_inv * np.sum(self.all_offspring[:,(self.lambda_-self.mu):], axis=1).reshape((-1,1))
 
-            Z = dot(self.B, self.D) * (pos_part - neg_part)
-            Z *= dot(self.B, self.D).T
+            Z = dot(self.B, self.D).T * (pos_part - neg_part) * dot(self.B, self.D)
             self.C = (1 - cc)*self.C \
                      + cc*dot(self.p_c, self.p_c.T) \
                      + self.beta * Z
