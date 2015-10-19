@@ -72,6 +72,7 @@ def run_tests():
 
     # 'Catch' results
     results = {}
+    targets = {}
     sigmas = {}
     fitnesses = {}
     avg_sigmas = {}
@@ -87,6 +88,7 @@ def run_tests():
         print(alg_name)
         algorithm = algorithms[alg_name]
         results[alg_name] = {}
+        targets[alg_name] = {}
         sigmas[alg_name] = {}
         fitnesses[alg_name] = {}
         avg_sigmas[alg_name] = {}
@@ -98,13 +100,15 @@ def run_tests():
 
             print('  {}'.format(fit_name))
             results[alg_name][fit_name] = []
+            targets[alg_name][fit_name] = []
             sigmas[alg_name][fit_name] = None
             fitnesses[alg_name][fit_name] = None
 
             # Perform the actual run of the algorithm
             for j in range(num_runs):
                 sysPrint('    Run: {}\r'.format(j))  # I want the actual carriage return here! No output clutter
-                f.setfun(*bbobbenchmarks.instantiate(fun_id, iinstance=j))
+                f_target = f.setfun(*bbobbenchmarks.instantiate(fun_id, iinstance=j)).ftarget
+                targets[alg_name][fit_name].append(f_target)
                 results[alg_name][fit_name].append(algorithm(n, f.evalfun, budget))
 
             # Preprocess/unpack results
@@ -113,7 +117,7 @@ def run_tests():
             avg_sigmas[alg_name][fit_name] = np.mean(sigmas[alg_name][fit_name], axis=1)
 
             fitnesses[alg_name][fit_name] = np.array(fitnesses[alg_name][fit_name]).T
-            fitnesses[alg_name][fit_name] = np.subtract(fitnesses[alg_name][fit_name], np.min(fitnesses[alg_name][fit_name], axis=0)[np.newaxis,:])
+            fitnesses[alg_name][fit_name] = np.subtract(fitnesses[alg_name][fit_name], np.array(targets[alg_name][fit_name])[np.newaxis,:])
             avg_fitnesses[alg_name][fit_name] = np.mean(fitnesses[alg_name][fit_name], axis=1)
 
     sysPrint('Creating graphs.')
