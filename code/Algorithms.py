@@ -129,7 +129,7 @@ def CMSA_ES(n, fitnessFunction, budget, mu=4, lambda_=15, elitist=False):
 
 
 # Evolving ES
-def customizedEvolutionStrategy(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
+def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
     """
         This function accepts a dictionary of options 'opts' which selects from a large range of different
         functions and combinations of those. Instrumental in Evolving Evolution Strategies

@@ -16,3 +16,8 @@ options = (
     ('selection', ('default', 'pairwise')),
     ('sampler',   ('gaussian', 'orthogonal')),
 )
+
+def getOpts(bitstring):
+    opts = {option[0]: option[1][bitstring[i]] for i, option in enumerate(options)}
+    print(opts)
+    return opts
