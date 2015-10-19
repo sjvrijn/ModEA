@@ -19,6 +19,16 @@ class GaussianSampling(object):
         return randn(*self.shape)
 
 
+class QuasiGaussianSampling(object):
+    """ A quasi-Gaussian sampler """
+    def __init__(self, n, shape='col'):
+        self.n = n
+        self.shape = (n,1) if shape == 'col' else (1,n)
+
+    def next(self):
+        pass
+
+
 class OrthogonalSampling(object):
     """ A sampler to create orthogonal samples using some base sampler (Gaussian as default) """
     def __init__(self, n, shape='col', base_sampler=None, lambda_=1):
