@@ -14,6 +14,7 @@ import code.Selection as Sel
 import code.Sampling as Sam
 
 
+# Example algorithms
 def onePlusOneES(n, fitnessFunction, budget):
     """
         Implementation of the default (1+1)-ES
@@ -122,6 +123,57 @@ def CMSA_ES(n, fitnessFunction, budget, mu=4, lambda_=15, elitist=False):
         'mutate': lambda ind: Mut.CMAMutation(ind, parameters, Sam.GaussianSampling(n)),
         'select': lambda pop, new_pop, _: Sel.best(pop, new_pop, parameters),
         'mutateParameters': lambda t: parameters.selfAdaptCovarianceMatrix(),
+    }
+
+    return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+
+
+# Evolving ES
+def customizedEvolutionStrategy(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
+    """
+        This function accepts a dictionary of options 'opts' which selects from a large range of different
+        functions and combinations of those. Instrumental in Evolving Evolution Strategies
+    """
+
+    if mu is None:
+        mu = 4
+    if lambda_ is None:
+        lambda_ = 15
+
+    if opts['sampler'] == 'gaussian':
+        sampler = Sam.GaussianSampling(n)
+    elif opts['sampler'] == 'orthogonal':
+        sampler = Sam.OrthogonalSampling(n)
+    else:
+        raise Exception('Sampler \'{}\' is an invalid choice!'.format(opts['sampler']))
+
+    if opts['mirrored']:
+        sampler = Sam.MirroredSampling(n, base_sampler=sampler)
+
+    if opts['selection'] == 'default':
+        selector = Sel.best
+    elif opts['selection'] == 'pairwise':
+        selector = Sel.pairwise
+    else:
+        raise Exception('Selector \'{}\' is an invalid choice!'.format(opts['selection']))
+
+
+    parameters = Parameters(n, mu, lambda_, budget, elitist=opts['elitist'], active=opts['active'])
+    population = [Individual(n) for _ in range(mu)]
+
+    # Artificial init: in hopes of fixing CMA-ES
+    wcm = parameters.wcm
+    fitness = fitnessFunction(wcm)[0]
+    for individual in population:
+        individual.dna = wcm
+        individual.fitness = fitness
+
+    # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
+    functions = {
+        'recombine': lambda pop: Rec.weighted(pop, parameters),
+        'mutate': lambda ind: Mut.CMAMutation__(ind, parameters, sampler, threshold_convergence=opts['threshold']),
+        'select': lambda pop, new_pop, _: selector(pop, new_pop, parameters),
+        'mutateParameters': lambda t: parameters.adaptCovarianceMatrix(t),
     }
 
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
