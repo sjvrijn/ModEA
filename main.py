@@ -8,32 +8,8 @@ import matplotlib.pyplot as plt
 import sys
 from bbob import bbobbenchmarks
 from bbob import fgeneric
-from code.Algorithms import onePlusOneES, CMSA_ES, CMA_ES, onePlusOneCholeskyCMAES, onePlusOneActiveCMAES
-
-# Constant fitness function
-def constantFitness(_):
-    return 0.5
-
-# Random fitness function
-def randomFitness(_):
-    return np.random.random(1)
-
-# Sum fitness (minimize all parameters)
-def sumFitness(individual):
-    return np.sum(individual)
-
-# Sphere fitness function
-def sphereFitness(individual):
-    return np.sqrt(np.sum(np.square(individual)))
-
-# Rastrigin fitness function
-def rastriginFitness(individual):
-    return np.sum(np.square(individual) + 10*np.cos(2*np.pi*individual) + 10)
-
-
-# ['const', 'random', 'sum', 'sphere', 'rastrigin']
-my_fitness_functions = {'const': constantFitness, 'random': randomFitness, 'sum': sumFitness,
-                        'sphere': sphereFitness, 'rastrigin': rastriginFitness, }
+from code import getOpts, options
+from code.Algorithms import onePlusOneES, CMSA_ES, CMA_ES, onePlusOneCholeskyCMAES, onePlusOneActiveCMAES, customizedES
 
 # Sets of noise-free and noisy benchmarks
 free_function_ids = bbobbenchmarks.nfreeIDs
@@ -65,19 +41,13 @@ def run_tests():
     budget = 1000
     num_runs = 5
     fitnesses_to_test = ['sphere', 'elipsoid', 'rastrigin']  # ['sphere', 'elipsoid', 'rastrigin']
-    # fitnesses_to_test = ['sphere']
-
-    # algorithms_to_test = ['1+1', 'CMA', 'CMSA', 'Cholesky', 'Active']  # ['1+1', 'CMA', 'CMSA', 'Cholesky', 'Active']
-    algorithms_to_test = ['CMA']
+    algorithms_to_test = ['CMA']  # ['1+1', 'CMA', 'CMSA', 'Cholesky', 'Active']
 
     # 'Catch' results
-    results = {}
-    targets = {}
     sigmas = {}
     fitnesses = {}
     avg_sigmas = {}
     avg_fitnesses = {}
-
 
     # Run algorithms
     for i, alg_name in enumerate(algorithms_to_test):
@@ -87,8 +57,10 @@ def run_tests():
 
         print(alg_name)
         algorithm = algorithms[alg_name]
-        results[alg_name] = {}
-        targets[alg_name] = {}
+        # bitstring = [random.getrandbits(1) for _ in range(len(options))]
+        # opts = getOpts(bitstring)
+        # algorithm = lambda n, evalfun, budget: customizedES(n, evalfun, budget, opts=opts)
+
         sigmas[alg_name] = {}
         fitnesses[alg_name] = {}
         avg_sigmas[alg_name] = {}
@@ -96,41 +68,46 @@ def run_tests():
 
         for fit_name in fitnesses_to_test:
 
-            fun_id = fitness_functions[fit_name]
-
-            print('  {}'.format(fit_name))
-            results[alg_name][fit_name] = []
-            targets[alg_name][fit_name] = []
-            sigmas[alg_name][fit_name] = None
-            fitnesses[alg_name][fit_name] = None
-
-            # Perform the actual run of the algorithm
-            for j in range(num_runs):
-                sysPrint('    Run: {}\r'.format(j))  # I want the actual carriage return here! No output clutter
-                f_target = f.setfun(*bbobbenchmarks.instantiate(fun_id, iinstance=j)).ftarget
-                targets[alg_name][fit_name].append(f_target)
-                results[alg_name][fit_name].append(algorithm(n, f.evalfun, budget))
-
-            # Preprocess/unpack results
-            _, sigmas[alg_name][fit_name], fitnesses[alg_name][fit_name] = (list(x) for x in zip(*results[alg_name][fit_name]))
-            sigmas[alg_name][fit_name] = np.array(sigmas[alg_name][fit_name]).T
+            sigmas[alg_name][fit_name], fitnesses[alg_name][fit_name] = runAlgorithm(fit_name, algorithm, n, num_runs, f, budget)
             avg_sigmas[alg_name][fit_name] = np.mean(sigmas[alg_name][fit_name], axis=1)
-
-            fitnesses[alg_name][fit_name] = np.array(fitnesses[alg_name][fit_name]).T
-            fitnesses[alg_name][fit_name] = np.subtract(fitnesses[alg_name][fit_name], np.array(targets[alg_name][fit_name])[np.newaxis,:])
             avg_fitnesses[alg_name][fit_name] = np.mean(fitnesses[alg_name][fit_name], axis=1)
 
     sysPrint('Creating graphs.')
 
-    makeGraphsPerAlgorithm(sigmas, fitnesses, algorithms_to_test, fitnesses_to_test, save_pdf=save_pdf)
+    data = (sigmas, fitnesses, algorithms_to_test, fitnesses_to_test)
+    makeGraphsPerAlgorithm(*data, save_pdf=save_pdf)
     sysPrint('.')
-    makeGraphsPerFitness(sigmas, fitnesses, algorithms_to_test, fitnesses_to_test, save_pdf=save_pdf)
+    makeGraphsPerFitness(*data, save_pdf=save_pdf)
     sysPrint('.')
-    makeGraphsPerAlgorithm(avg_sigmas, avg_fitnesses, algorithms_to_test, fitnesses_to_test, suffix='_avg', save_pdf=save_pdf)
+
+    avg_data = (avg_sigmas, avg_fitnesses, algorithms_to_test, fitnesses_to_test)
+    makeGraphsPerAlgorithm(*avg_data, suffix='_avg', save_pdf=save_pdf)
     print('.')
-    makeGraphsPerFitness(avg_sigmas, avg_fitnesses, algorithms_to_test, fitnesses_to_test, suffix='_avg', save_pdf=save_pdf)
+    makeGraphsPerFitness(*avg_data, suffix='_avg', save_pdf=save_pdf)
 
     print('Done!')
+
+
+def runAlgorithm(fit_name, algorithm, n, num_runs, f, budget):
+
+    fun_id = fitness_functions[fit_name]
+    print('  {}'.format(fit_name))
+    results = []
+    targets = []
+
+    # Perform the actual run of the algorithm
+    for j in range(num_runs):
+        sysPrint('    Run: {}\r'.format(j))  # I want the actual carriage return here! No output clutter
+        f_target = f.setfun(*bbobbenchmarks.instantiate(fun_id, iinstance=j)).ftarget
+        targets.append(f_target)
+        results.append(algorithm(n, f.evalfun, budget))
+
+    # Preprocess/unpack results
+    _, sigmas, fitnesses = (list(x) for x in zip(*results))
+    sigmas = np.array(sigmas).T
+    fitnesses = np.subtract(np.array(fitnesses).T, np.array(targets)[np.newaxis,:])
+
+    return sigmas, fitnesses
 
 
 def makeGraphsPerAlgorithm(sigmas, fitnesses, alg_names, fit_names, suffix='', save_pdf=False):
