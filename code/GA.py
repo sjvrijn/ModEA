@@ -70,7 +70,7 @@ def evaluate_ES(bitstring, fitness_function='sphere'):
     bbob_opts['algid'] = bitstring
     f = fgeneric.LoggingFunction(datapath, **bbob_opts)
 
-    print(bitstring)
+    print(bitstring, end='')
     opts = getOpts(bitstring)
     algorithm = lambda n, evalfun, budget: customizedES(n, evalfun, budget, opts=opts)
 
@@ -79,8 +79,9 @@ def evaluate_ES(bitstring, fitness_function='sphere'):
 
         min_fitnesses = np.min(fitnesses, axis=0)
         mean_best_fitness = np.mean(min_fitnesses)
+        print(" {}".format(mean_best_fitness))
     except Exception as e:
-        print(e, "fitness set to np.inf")
+        print(" np.inf: {}".format(e))
         mean_best_fitness = np.inf
 
     return [mean_best_fitness]
@@ -93,7 +94,7 @@ def runAlgorithm(fit_name, algorithm, n, num_runs, f, budget):
 
     # Perform the actual run of the algorithm
     for j in range(num_runs):
-        sysPrint('    Run: {}\r'.format(j))  # I want the actual carriage return here! No output clutter
+        # sysPrint('    Run: {}\r'.format(j))  # I want the actual carriage return here! No output clutter
         f_target = f.setfun(*bbobbenchmarks.instantiate(fun_id, iinstance=j)).ftarget
         targets.append(f_target)
         results.append(algorithm(n, f.evalfun, budget))
@@ -119,4 +120,7 @@ if __name__ == '__main__':
     # print(evaluate_ES([0,0,0,0,0,1,0]))
     # print(evaluate_ES([0,0,0,0,0,0,1]))
 
-    print(GA())
+    pop, sigmas, fitness = GA()
+    print(pop[0].dna)
+    print(sigmas)
+    print(fitness)
