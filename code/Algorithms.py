@@ -3,7 +3,7 @@
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 # External libraries
-# import numpy as np
+import numpy as np
 # Internal classes
 from .Individual import Individual
 from .Parameters import Parameters
@@ -138,7 +138,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
     if mu is None:
         mu = 4
     if lambda_ is None:
-        lambda_ = 15
+        lambda_ = 16
 
     if opts['sampler'] == 'orthogonal':
         sampler = Sam.OrthogonalSampling(n)
@@ -155,7 +155,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
 
 
     parameters = Parameters(n, mu, lambda_, budget,
-                            elitist=opts['elitist'], active=opts['active'], weights_option=opts['weights'])
+                            elitist=opts['elitism'], active=opts['active'], weights_option=opts['weights'])
     population = [Individual(n) for _ in range(mu)]
 
     # Artificial init: in hopes of fixing CMA-ES

@@ -38,7 +38,7 @@ def pairwise(population, new_population, parameters):
 
     # Select the best (=lowest) fitness for each consecutive pair of individuals
     pairwise_filtered = []
-    for i in range(len(new_population), step=2):
+    for i in range(0, len(new_population), 2):
         if new_population[i].fitness < new_population[i+1].fitness:
             pairwise_filtered.append(new_population[i])
         else:

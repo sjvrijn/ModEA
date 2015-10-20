@@ -57,9 +57,6 @@ def run_tests():
 
         print(alg_name)
         algorithm = algorithms[alg_name]
-        # bitstring = [random.getrandbits(1) for _ in range(len(options))]
-        # opts = getOpts(bitstring)
-        # algorithm = lambda n, evalfun, budget: customizedES(n, evalfun, budget, opts=opts)
 
         sigmas[alg_name] = {}
         fitnesses[alg_name] = {}
@@ -194,6 +191,7 @@ def makeGraphsPerFitness(sigmas, fitnesses, alg_names, fit_names, suffix='', sav
 
 
 if __name__ == '__main__':
+    np.set_printoptions(linewidth=200)
     np.random.seed(42)
     run_tests()
 
