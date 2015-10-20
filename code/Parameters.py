@@ -34,7 +34,7 @@ class Parameters(BaseParameters):
         separate parameters.
     """
 
-    def __init__(self, n, mu, lambda_, budget, elitist=False, active=False):
+    def __init__(self, n, mu, lambda_, budget, elitist=False, active=False, weights_option=None):
         """
             Setup the set of parameters
         """
@@ -50,7 +50,7 @@ class Parameters(BaseParameters):
         self.elitist = elitist
         self.active = active
         self.budget = budget
-        self.weights = self.getWeights()
+        self.weights = self.getWeights(weights_option)
         mu_eff = 1 / sum(square(self.weights))  # Store locally to shorten calculations later on
         self.mu_eff = mu_eff
 
@@ -374,13 +374,16 @@ class Parameters(BaseParameters):
             self.fitness_history = self.best_fitness * ones((5,1))
 
 
-    def getWeights(self):
+    def getWeights(self, weights_option=None):
         """
             Defines a list of weights to be used in weighted recombination
         """
-        _mu_prime = (self.lambda_-1) / 2.0
-        weights = log(_mu_prime+1.0)-log(arange(1, self.mu+1)[:, newaxis])
-        weights = weights / sum(weights)
+        if weights_option == '1/n':
+            weights = ones((self.mu, 1)) * (1/self.mu)
+        else:
+            _mu_prime = (self.lambda_-1) / 2.0
+            weights = log(_mu_prime+1.0)-log(arange(1, self.mu+1)[:, newaxis])
+            weights = weights / sum(weights)
 
         return weights
 

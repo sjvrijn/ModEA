@@ -140,25 +140,22 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
     if lambda_ is None:
         lambda_ = 15
 
-    if opts['sampler'] == 'gaussian':
-        sampler = Sam.GaussianSampling(n)
-    elif opts['sampler'] == 'orthogonal':
+    if opts['sampler'] == 'orthogonal':
         sampler = Sam.OrthogonalSampling(n)
     else:
-        raise Exception('Sampler \'{}\' is an invalid choice!'.format(opts['sampler']))
+        sampler = Sam.GaussianSampling(n)
 
     if opts['mirrored']:
         sampler = Sam.MirroredSampling(n, base_sampler=sampler)
 
-    if opts['selection'] == 'default':
-        selector = Sel.best
-    elif opts['selection'] == 'pairwise':
+    if opts['selection'] == 'pairwise':
         selector = Sel.pairwise
     else:
-        raise Exception('Selector \'{}\' is an invalid choice!'.format(opts['selection']))
+        selector = Sel.best
 
 
-    parameters = Parameters(n, mu, lambda_, budget, elitist=opts['elitist'], active=opts['active'])
+    parameters = Parameters(n, mu, lambda_, budget,
+                            elitist=opts['elitist'], active=opts['active'], weights_option=opts['weights'])
     population = [Individual(n) for _ in range(mu)]
 
     # Artificial init: in hopes of fixing CMA-ES
