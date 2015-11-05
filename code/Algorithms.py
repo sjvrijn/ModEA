@@ -221,7 +221,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
             # Mutation
             mutate(individual)
             # Evaluation
-            individual.fitness = fitnessFunction(individual.dna)
+            individual.fitness = fitnessFunction(individual.dna)[0]
             used_budget += 1
 
         # Selection
@@ -233,7 +233,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
 
         # Track parameters
         sigma_over_time.append(parameters.sigma_mean)
-        best_fitness_over_time.append(population[0].fitness[0])
+        best_fitness_over_time.append(population[0].fitness)
 
     if parameters.count_degenerations:
         print(parameters.count_degenerations, end=' ')
