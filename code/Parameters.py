@@ -56,6 +56,7 @@ class Parameters(BaseParameters):
 
         ### Meta-parameters ###
         self.N = 10 * self.n
+        self.count_degenerations = 0
 
         ### (1+1)-ES ###
         self.success_history = zeros((self.N, ), dtype=np.int)
@@ -165,13 +166,13 @@ class Parameters(BaseParameters):
             Adapt the covariance matrix according to the CMA-ES
         """
 
-        cc, cs, c_1, c_mu = self.c_c, self.c_sigma, self.c_1, self.c_mu
+        cc, cs, c_1, c_mu, n = self.c_c, self.c_sigma, self.c_1, self.c_mu, self.n
         wcm, wcm_old, mueff, invsqrt_C = self.wcm, self.wcm_old, self.mu_eff, self.sqrt_C
         evalcount, _lambda = t, self.lambda_
 
         self.p_sigma = (1-cs) * self.p_sigma + \
                        sqrt(cs*(2-cs)*mueff) * dot(invsqrt_C, (wcm - wcm_old) / self.sigma)
-        hsig = sum(self.p_sigma**2)/(1-(1-cs)**(2*evalcount/_lambda))/self.n < 2. + 4./(self.n+1.)
+        hsig = sum(self.p_sigma**2)/(1-(1-cs)**(2*evalcount/_lambda))/n < 2 + 4/(n+1)
         self.p_c = (1-cc) * self.p_c + hsig * sqrt(cc*(2-cc)*mueff) * (wcm - wcm_old) / self.sigma
 
         if not self.active:
@@ -198,20 +199,34 @@ class Parameters(BaseParameters):
         ### Update BD ###
         C = self.C # lastest setting for
         C = triu(C) + triu(C, 1).T                  # eigen decomposition
+
+        degenerated = False
         if any(isinf(C)) > 1:                           # interval
-            raise Exception("Values in C are infinite")
+            degenerated = True
+            # raise Exception("Values in C are infinite")
         else:
             try:
                 w, e_vector = eigh(C)
                 e_value = sqrt(list(map(complex, w))).reshape(-1, 1)
-                if any(~isreal(e_value)) or any(isinf(e_value)):
-                    raise Exception("Eigenvalues of C are infinite or not real")
+                if any(~isreal(e_value)):
+                    degenerated = True
+                    # raise Exception("Eigenvalues of C are not real")
+                elif any(isinf(e_value)):
+                    degenerated = True
+                    # raise Exception("Eigenvalues of C are infinite")
                 else:
                     self.D = real(e_value)
                     self.B = e_vector
                     self.sqrt_C = dot(e_vector, e_value**-1 * e_vector.T)
             except LinAlgError as e:
                 raise Exception(e)
+
+        if degenerated:
+            self.count_degenerations += 1
+            self.C = eye(n)
+            self.B = eye(n)
+            self.D = ones((n,1))
+            self.sigma_mean = 1
 
 
     def selfAdaptCovarianceMatrix(self):

@@ -64,13 +64,13 @@ def evaluate_ES(bitstring, fitness_function='sphere'):
 
     # Set parameters
     n = 10
-    budget = 1000
-    num_runs = 5
+    budget = 100
+    num_runs = 15
 
     bbob_opts['algid'] = bitstring
     f = fgeneric.LoggingFunction(datapath, **bbob_opts)
 
-    print(bitstring, end='')
+    print(bitstring, end=' ')
     opts = getOpts(bitstring)
     algorithm = lambda n, evalfun, budget: customizedES(n, evalfun, budget, opts=opts)
 
@@ -78,6 +78,7 @@ def evaluate_ES(bitstring, fitness_function='sphere'):
         _, fitnesses = runAlgorithm(fitness_function, algorithm, n, num_runs, f, budget)
 
         min_fitnesses = np.min(fitnesses, axis=0)
+        median = np.median(min_fitnesses)
         mean_best_fitness = np.mean(min_fitnesses)
         print(" {}".format(mean_best_fitness))
     except Exception as e:

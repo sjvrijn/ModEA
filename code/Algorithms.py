@@ -235,4 +235,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
         sigma_over_time.append(parameters.sigma_mean)
         best_fitness_over_time.append(population[0].fitness[0])
 
+    if parameters.count_degenerations:
+        print(parameters.count_degenerations, end=' ')
+
     return population, sigma_over_time, best_fitness_over_time
