@@ -64,8 +64,8 @@ def evaluate_ES(bitstring, fitness_function='sphere'):
 
     # Set parameters
     n = 10
-    budget = 10
-    num_runs = 5
+    budget = 100
+    num_runs = 15
 
     bbob_opts['algid'] = bitstring
     f = fgeneric.LoggingFunction(datapath, **bbob_opts)
@@ -75,7 +75,7 @@ def evaluate_ES(bitstring, fitness_function='sphere'):
     algorithm = lambda n, evalfun, budget: customizedES(n, evalfun, budget, opts=opts)
 
     try:
-        _, fitnesses = runAlgorithm(fitness_function, algorithm, n, num_runs, f, budget)
+        _, fitnesses = runAlgorithm(fitness_function, algorithm, n, num_runs, f, budget, opts)
 
         min_fitnesses = np.min(fitnesses, axis=0)
         median = np.median(min_fitnesses)
@@ -89,18 +89,39 @@ def evaluate_ES(bitstring, fitness_function='sphere'):
     # return [mean_best_fitness]
     return [median]
 
-def runAlgorithm(fit_name, algorithm, n, num_runs, f, budget):
+def fetchResults(fun_id, instance, n, budget, opts):
+    """
+        Small overhead-function to enable multi-processing
+    """
+    f = fgeneric.LoggingFunction(datapath, **bbob_opts)
+    f_target = f.setfun(*bbobbenchmarks.instantiate(fun_id, iinstance=instance)).ftarget
+    results = customizedES(n, f.evalfun, budget, opts=opts)
+    return f_target, results
+
+def runAlgorithm(fit_name, algorithm, n, num_runs, f, budget, opts):
 
     fun_id = fitness_functions[fit_name]
-    results = []
-    targets = []
 
     # Perform the actual run of the algorithm
+
+    # Single-core version
+    # '''
+    results = []
+    targets = []
     for j in range(num_runs):
         # sysPrint('    Run: {}\r'.format(j))  # I want the actual carriage return here! No output clutter
         f_target = f.setfun(*bbobbenchmarks.instantiate(fun_id, iinstance=j)).ftarget
         targets.append(f_target)
         results.append(algorithm(n, f.evalfun, budget))
+
+    '''  # Multi-core version
+
+    from multiprocessing import Pool
+    p = Pool(4)
+    function = lambda x: fetchResults(fun_id, x, n, budget, opts)
+    run_data = p.map(function, range(num_runs))
+    targets, results = zip(*run_data)
+    #'''
 
     # Preprocess/unpack results
     _, sigmas, fitnesses, best_individual = (list(x) for x in zip(*results))
