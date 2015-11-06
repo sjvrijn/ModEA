@@ -201,8 +201,9 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
     # TODO: allow for multiple different structures to be used; i.e. sequential VS parallel evaluation
 
     # Parameter tracking
-    sigma_over_time = []
-    best_fitness_over_time = []
+    sigma_over_time = [parameters.sigma_mean]
+    best_fitness_over_time = [population[0].fitness]
+    best_individual = population[0]
 
     # Initialization
     used_budget = 0
@@ -235,7 +236,10 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
         sigma_over_time.append(parameters.sigma_mean)
         best_fitness_over_time.append(population[0].fitness)
 
+        if population[0].fitness < best_individual.fitness:
+            best_individual = population[0].getCopy()
+
     if parameters.count_degenerations:
         print(parameters.count_degenerations, end=' ')
 
-    return population, sigma_over_time, best_fitness_over_time
+    return population, sigma_over_time, best_fitness_over_time, best_individual

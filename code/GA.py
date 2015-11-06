@@ -47,7 +47,7 @@ def GA(n=10, budget=100, fitness_function='sphere'):
     parameters = Parameters(n, 1, 3, budget)
     population = [Individual(n)]
     population[0].dna = np.random.randint(2, size=len(options))
-    population[0].fitness = fitnessFunction(population[0].dna)
+    population[0].fitness = fitnessFunction(population[0].dna)[0]
 
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
@@ -64,8 +64,8 @@ def evaluate_ES(bitstring, fitness_function='sphere'):
 
     # Set parameters
     n = 10
-    budget = 100
-    num_runs = 15
+    budget = 10
+    num_runs = 5
 
     bbob_opts['algid'] = bitstring
     f = fgeneric.LoggingFunction(datapath, **bbob_opts)
@@ -80,12 +80,14 @@ def evaluate_ES(bitstring, fitness_function='sphere'):
         min_fitnesses = np.min(fitnesses, axis=0)
         median = np.median(min_fitnesses)
         mean_best_fitness = np.mean(min_fitnesses)
-        print(" {}".format(mean_best_fitness))
+        print(" {}  \t({})".format(mean_best_fitness, median))
     except Exception as e:
         print(" np.inf: {}".format(e))
         mean_best_fitness = np.inf
+        median = np.inf
 
-    return [mean_best_fitness]
+    # return [mean_best_fitness]
+    return [median]
 
 def runAlgorithm(fit_name, algorithm, n, num_runs, f, budget):
 
@@ -101,7 +103,7 @@ def runAlgorithm(fit_name, algorithm, n, num_runs, f, budget):
         results.append(algorithm(n, f.evalfun, budget))
 
     # Preprocess/unpack results
-    _, sigmas, fitnesses = (list(x) for x in zip(*results))
+    _, sigmas, fitnesses, best_individual = (list(x) for x in zip(*results))
     sigmas = np.array(sigmas).T
     fitnesses = np.subtract(np.array(fitnesses).T, np.array(targets)[np.newaxis,:])
 
@@ -121,7 +123,9 @@ if __name__ == '__main__':
     # print(evaluate_ES([0,0,0,0,0,1,0]))
     # print(evaluate_ES([0,0,0,0,0,0,1]))
 
-    pop, sigmas, fitness = GA()
-    print(pop[0].dna)
-    print(sigmas)
-    print(fitness)
+    pop, sigmas, fitness, best = GA()
+    print()
+    print("Best Individual:     {}\n"
+          "        Fitness:     {}\n"
+          "Fitnesses over time: {}".format(best.dna, best.fitness, fitness))
+
