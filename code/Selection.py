@@ -3,6 +3,8 @@
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
+import numpy as np
+
 """
 This Module contains a collection of Selection operators to be used in the ES-Framework
 
@@ -10,11 +12,15 @@ A Selection operator accepts (mu + lambda) individuals and returns (mu) individu
 that are chosen to be the best of this generation
 """
 
-import numpy as np
-
 
 def best(population, new_population, parameters):
-    """ Given the population, return the (mu) best """
+    """
+        Given the population, return the (mu) best
+
+        :param population:      List of :py:class:code.Individual objects containing the previous generation
+        :param new_population:  List of :py:class:code.Individual objects containing the new generation
+        :param parameters:      :py:class:code.Parameters object for storing all parameters, options, etc.
+    """
     if parameters.elitist:
         new_population.extend(population)
 

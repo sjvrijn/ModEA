@@ -11,7 +11,7 @@ that are to form the new population
 """
 
 import numpy as np
-from numpy import dot, mean, sqrt, sum
+from numpy import dot, mean, sqrt
 
 def onePlusOne(population):
     """
@@ -51,23 +51,5 @@ def weighted(pop, param):
     new_population = [new_ind]
     for _ in range(param.lambda_-1):
         new_population.append(new_ind.getCopy())
-
-    # weights = param.weights
-
-    # mu = len(pop)
-    # avg = pop[0].getCopy()
-    # param.weighted_mutation_vector = sum([pop[i].mutation_vector * weights[i] for i in range(mu)], axis=0)
-    # print("vec", param.B, "val", param.D.T, "z", [pop[i].mutation_vector.T for i in range(mu)], sep='\n')
-    # print("mut vector S", param.weighted_mutation_vector.T)
-    # param.y_w_squared = sum([dot(pop[i].mutation_vector, pop[i].mutation_vector.T) * weights[i] for i in range(mu)], axis=0)
-    #
-    # # mean = np.mean([population[i].dna for i in range(mu)], axis=0)
-    # # avg.dna = mean + parameters.weighted_mutation_vector
-    #
-    # avg.dna = mean([pop[i].dna * weights[i] for i in range(mu)])
-    #
-    # new_population = [avg]
-    # for _ in range(param.lambda_-1):
-    #     new_population.append(avg.getCopy())
 
     return new_population
