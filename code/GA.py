@@ -69,7 +69,7 @@ def evaluate_ES(bitstring, fitness_function='sphere'):
 
     # Set parameters
     n = 10
-    budget = 100
+    budget = 500
     num_runs = 15
 
     bbob_opts['algid'] = bitstring
@@ -140,14 +140,15 @@ def runAlgorithm(fit_name, algorithm, n, num_runs, f, budget, opts):
 def run():
 
     # Test all individual options
-    # print(evaluate_ES([0,0,0,0,0,0,0]))
-    # print(evaluate_ES([1,0,0,0,0,0,0]))
-    # print(evaluate_ES([0,1,0,0,0,0,0]))
-    # print(evaluate_ES([0,0,1,0,0,0,0]))
-    # print(evaluate_ES([0,0,0,1,0,0,0]))
-    # print(evaluate_ES([0,0,0,0,1,0,1]))
-    # print(evaluate_ES([0,0,0,0,0,1,0]))
-    # print(evaluate_ES([0,0,0,0,0,0,1]))
+    # print(evaluate_ES([0,0,0,0,0,0,0,0]))
+    # print(evaluate_ES([1,0,0,0,0,0,0,0]))
+    # print(evaluate_ES([0,1,0,0,0,0,0,0]))
+    # print(evaluate_ES([0,0,1,0,0,0,0,0]))
+    # print(evaluate_ES([0,0,0,1,0,0,0,0]))
+    # print(evaluate_ES([0,0,0,0,1,0,1,0]))
+    # print(evaluate_ES([0,0,0,0,0,1,0,0]))
+    # print(evaluate_ES([0,0,0,0,0,0,1,0]))
+    # print(evaluate_ES([0,0,0,0,0,0,0,1]))
 
     pop, sigmas, fitness, best = GA()
     print()

@@ -140,11 +140,17 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
     if lambda_ is None:
         lambda_ = 16
 
-    if opts['sampler'] == 'orthogonal':
-        sampler = Sam.OrthogonalSampling(n)
+    # Pick the lowest-level sampler
+    if opts['base-sampler'] == 'quasi-sobol':
+        sampler = Sam.QuasiGaussianSampling(n)
     else:
         sampler = Sam.GaussianSampling(n)
 
+    # Create an orthogonal sampler using the determined base_sampler
+    if opts['orthogonal']:
+        sampler = Sam.OrthogonalSampling(n, base_sampler=sampler)
+
+    # Create a mirrored sampler using the sampler (structure) chosen so far
     if opts['mirrored']:
         sampler = Sam.MirroredSampling(n, base_sampler=sampler)
 
