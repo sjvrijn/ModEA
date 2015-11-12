@@ -51,8 +51,7 @@ class Parameters(BaseParameters):
         self.active = active
         self.budget = budget
         self.weights = self.getWeights(weights_option)
-        mu_eff = 1 / sum(square(self.weights))  # Store locally to shorten calculations later on
-        self.mu_eff = mu_eff
+        self.mu_eff = 1 / sum(square(self.weights))
 
         ### Meta-parameters ###
         self.N = 10 * self.n
@@ -62,12 +61,13 @@ class Parameters(BaseParameters):
         self.success_history = zeros((self.N, ), dtype=np.int)
 
         ### CMA-ES ###
-        self.C = eye(n)  # Covariance matrix
+        self.C = eye(n)       # Covariance matrix
         self.sqrt_C = eye(n)
-        self.B = eye(n)  # Eigenvectors of C
+        self.B = eye(n)       # Eigenvectors of C
         self.D = ones((n,1))  # Diagonal eigenvalues of C
         self.s_mean = None
 
+        mu_eff = self.mu_eff  # Local copy
         self.c_sigma = (mu_eff + 2) / (mu_eff + n + 5)
         self.d_sigma = self.c_sigma + 1 + 2*max(0, sqrt((mu_eff-1) / (n+1)))
         self.c_c = (4 + mu_eff/n) / (n + 4 + 2*mu_eff/n)
@@ -75,8 +75,8 @@ class Parameters(BaseParameters):
         self.c_mu = min(1-self.c_1, self.alpha_mu*((mu_eff - 2 + 1/mu_eff) / ((n+2)**2 + self.alpha_mu*mu_eff/2)))
         self.p_sigma = zeros((n,1))
         self.p_c = zeros((n,1))
-        self.weighted_mutation_vector = zeros((n,1))         # weighted average of the last generation of offset vectors
-        self.y_w_squared = zeros((n,1))  # y_w squared
+        self.weighted_mutation_vector = zeros((n,1))   # weighted average of the last generation of offset vectors
+        self.y_w_squared = zeros((n,1))
 
         self.chiN = n**.5 * (1-1./(4*n)+1./(21*n**2))  # Expected random vector (or something like it)
         self.offspring = None
@@ -86,7 +86,7 @@ class Parameters(BaseParameters):
         self.damps = 1. + 2*np.max([0, sqrt((mu_eff-1)/(n+1))-1]) + self.c_sigma
 
         ## Threshold Convergence ##
-        self.diameter = 10  # Diameter of the search space TODO: implement upper/lower bound
+        self.diameter = 10         # Diameter of the search space TODO: implement upper/lower bound
         self.init_threshold = 0.2  # "guess" from
         self.decay_factor = 0.995
         self.threshold = self.init_threshold * self.diameter * ((1-0) / 1)**self.decay_factor
@@ -123,6 +123,7 @@ class Parameters(BaseParameters):
     def oneFifthRule(self, t):
         """
             Adapts sigma based on the 1/5-th success rule
+            :param t:
         """
 
         # Only adapt every n evaluations
@@ -145,6 +146,8 @@ class Parameters(BaseParameters):
     def addToSuccessHistory(self, t, success):
         """
             Record the (boolean) 'success' value at time 't'
+            :param t:
+            :param success:
         """
 
         t %= self.N
@@ -154,6 +157,7 @@ class Parameters(BaseParameters):
     def addToFitnessHistory(self, fitness):
         """
             Record the latest fitness value (with a history of 5 generations)
+            :param fitness:
         """
 
         self.fitness_history.append(fitness)
@@ -164,6 +168,7 @@ class Parameters(BaseParameters):
     def adaptCovarianceMatrix(self, t):
         """
             Adapt the covariance matrix according to the CMA-ES
+            :param t:
         """
 
         cc, cs, c_1, c_mu, n = self.c_c, self.c_sigma, self.c_1, self.c_mu, self.n
@@ -174,30 +179,26 @@ class Parameters(BaseParameters):
                        sqrt(cs*(2-cs)*mueff) * dot(invsqrt_C, (wcm - wcm_old) / self.sigma)
         hsig = sum(self.p_sigma**2)/(1-(1-cs)**(2*evalcount/_lambda))/n < 2 + 4/(n+1)
         self.p_c = (1-cc) * self.p_c + hsig * sqrt(cc*(2-cc)*mueff) * (wcm - wcm_old) / self.sigma
+        offset = (self.offspring - wcm_old) / self.sigma
 
         if not self.active:
-            offset = (self.offspring - wcm_old) / self.sigma
             # Regular update of C
             self.C = (1-c_1-c_mu) * self.C \
                       + c_1 * (outer(self.p_c, self.p_c) + (1.-hsig) * cc*(2-cc) * self.C) \
                       + c_mu * dot(offset, self.weights*offset.T)
         else:
             # Active update of C TODO: separate function?
-            mu_inv = 1/self.mu
-            pos_part = mu_inv * np.sum(self.all_offspring[:,:self.mu], axis=1).reshape((-1,1))
-            neg_part = mu_inv * np.sum(self.all_offspring[:,(self.lambda_-self.mu):], axis=1).reshape((-1,1))
-
-            Z = dot(self.B, self.D).T * (pos_part - neg_part) * dot(self.B, self.D)
-            self.C = (1 - cc)*self.C \
-                     + cc*dot(self.p_c, self.p_c.T) \
-                     + self.beta * Z
+            offset_bad = (self.all_offspring[:,-self.mu:] - wcm_old) / self.sigma
+            self.C = (1-c_1-c_mu)*self.C \
+                      + c_1 * (outer(self.p_c, self.p_c) + (1 - hsig) * cc * (2 - cc) * self.C) \
+                      + c_mu * (dot(offset, self.weights*offset.T) - dot(offset_bad, self.weights*offset_bad.T))
 
         # Adapt step size sigma
         self.sigma = self.sigma * exp((norm(self.p_sigma)/self.chiN - 1) * self.c_sigma/self.damps)
         self.sigma_mean = self.sigma
 
         ### Update BD ###
-        C = self.C # lastest setting for
+        C = self.C  # lastest setting for
         C = triu(C) + triu(C, 1).T                  # eigen decomposition
 
         degenerated = False
@@ -298,7 +299,7 @@ class Parameters(BaseParameters):
             # Helper variables
             z_squared = norm(self.last_z) ** 2
 
-            if self.c_cov_neg*(2*z_squared -1) > 1:
+            if self.c_cov_neg*(2*z_squared - 1) > 1:
                 self.c_cov_neg = 1/(2*z_squared - 1)
             else:
                 self.c_cov_neg = 0.4/(self.n**1.6 + 1)  # TODO: currently hardcoded copy of default value
@@ -392,6 +393,7 @@ class Parameters(BaseParameters):
     def getWeights(self, weights_option=None):
         """
             Defines a list of weights to be used in weighted recombination
+            :param weights_option:
         """
         if weights_option == '1/n':
             weights = ones((self.mu, 1)) * (1/self.mu)
@@ -404,6 +406,12 @@ class Parameters(BaseParameters):
 
 
     def updateThreshold(self, t):
+        """
+            Update the threshold that is used to maintain a minimum stepsize.
+            Taken from: Evolution Strategies with Thresheld Convergence (CEC 2015)
+
+            :param t:
+            :return:
+        """
         budget = self.budget
-        # Formula from "Evolution Strategies with Thresheld Convergence (CEC 2015)"
         self.threshold = self.init_threshold * self.diameter * ((budget-t) / self.budget)**self.decay_factor
