@@ -4,10 +4,11 @@
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 # External libraries
 import numpy as np
-from numpy import dot
+from numpy import array, dot
 from numpy.linalg import norm
 from numpy.random import randn
-
+from scipy.stats import norm as norm_dist
+from sobol_seq import i4_sobol
 
 class GaussianSampling(object):
     """ A sampler to create random vectors using a Gaussian distribution """
@@ -24,9 +25,16 @@ class QuasiGaussianSampling(object):
     def __init__(self, n, shape='col'):
         self.n = n
         self.shape = (n,1) if shape == 'col' else (1,n)
+        self.seed = 1
 
     def next(self):
-        pass
+        vec, seed = i4_sobol(self.n, self.seed)
+        self.seed = seed
+
+        vec = array([norm_dist.ppf(vec[m]) for m in range(self.n)])
+        vec = vec.reshape(self.shape)
+        print(vec)
+        return vec
 
 
 class OrthogonalSampling(object):
@@ -45,12 +53,12 @@ class OrthogonalSampling(object):
     def next(self):
         if self.current_sample % self.num_samples == 0:
             self.current_sample = 0
-            self.generateSamples()
+            self.__generateSamples()
 
         self.current_sample += 1
         return self.samples[self.current_sample-1]
 
-    def generateSamples(self):
+    def __generateSamples(self):
         samples = []
         lengths = []
         for i in range(self.num_samples):
@@ -59,13 +67,14 @@ class OrthogonalSampling(object):
             lengths.append(norm(sample))
 
         num_samples = self.num_samples if self.num_samples <= self.n else self.n
-        samples[:num_samples] = self.Gram_Schmidt(samples[:num_samples])
+        samples[:num_samples] = self.__gramSchmidt(samples[:num_samples])
         for i in range(num_samples):
             samples[i] *= lengths[i]
 
         self.samples = samples
 
-    def Gram_Schmidt(self, vectors):
+    @staticmethod
+    def __gramSchmidt(vectors):
         """ Implementation of the Gram-Schmidt process for orthonormalizing a set of vectors """
         num_vectors = len(vectors)
         for i in range(1, num_vectors):
