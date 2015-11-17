@@ -55,7 +55,7 @@ def CMA_ES(n, fitnessFunction, budget, mu=4, lambda_=15, elitist=False):
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
         'recombine': lambda pop: Rec.weighted(pop, parameters),
-        'mutate': lambda ind: Mut.CMAMutation__(ind, parameters, Sam.GaussianSampling(n)),
+        'mutate': lambda ind: Mut.CMAMutation(ind, parameters, Sam.GaussianSampling(n)),
         'select': lambda pop, new_pop, _: Sel.best(pop, new_pop, parameters),
         'mutateParameters': lambda t: parameters.adaptCovarianceMatrix(t),
     }
@@ -174,7 +174,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
         'recombine': lambda pop: Rec.weighted(pop, parameters),
-        'mutate': lambda ind: Mut.CMAMutation__(ind, parameters, sampler, threshold_convergence=opts['threshold']),
+        'mutate': lambda ind: Mut.CMAMutation(ind, parameters, sampler, threshold_convergence=opts['threshold']),
         'select': lambda pop, new_pop, _: selector(pop, new_pop, parameters),
         'mutateParameters': lambda t: parameters.adaptCovarianceMatrix(t),
     }
