@@ -17,13 +17,21 @@ from numpy import dot, mean, sqrt
 def onePlusOne(population):
     """
         Utility function for 1+1 ES strategies where the recombination is merely a copy
+
+        :param population:  The population to be recombined
+        :returns:           A copy of the first individual in the given population
     """
     return [copy(population[0])]
 
 
+# TODO: remove, is implemented in weighted with weights = 1/n?
 def average(pop, param):
     """
         Given the new population, return the average of the mu best individuals
+
+        :param pop:     The population to be recombined
+        :param param:   Parameter object
+        :returns:       A list of lambda individuals, the dna of each set to the numerical mean of the given population
     """
 
     avg = copy(pop[0])
@@ -39,6 +47,12 @@ def average(pop, param):
 def weighted(pop, param):
     """
         Given the population and weights, return the weighted average of the mu best
+
+        :param pop:     The population to be recombined
+        :param param:   Parameter object
+        :returns:       A list of lambda individuals, the dna of each set to the numerical mean of the given population,
+                        corrected by the weights set in the Parameters object. Set weights to 1/n for plain numerical
+                        mean.
     """
 
     param.wcm_old = param.wcm
