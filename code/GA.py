@@ -18,9 +18,11 @@ import code.Recombination as Rec
 free_function_ids = bbobbenchmarks.nfreeIDs
 noisy_function_ids = bbobbenchmarks.noisyIDs
 datapath = "test_results/"  # Where to store results
+# Options to be stored in the log file(s)
 bbob_opts = {'algid': None,
              'comments': '<comments>',
              'inputformat': 'col'}  # 'row' or 'col'
+# Shortcut dictionary to index benchmark functions by name
 fitness_functions = {'sphere': free_function_ids[0], 'elipsoid': free_function_ids[1],
                      'rastrigin': free_function_ids[2], }
 
@@ -37,6 +39,7 @@ def mutateBitstring(individual):
     bitstring = individual.dna
     n = len(bitstring)
     p = 1/n
+    # TODO: rewrite to generic randint() version depending on len(options[i])
     for i in range(n):
         if np.random.random() < p:
             bitstring[i] = 1-bitstring[i]
@@ -45,11 +48,14 @@ def mutateBitstring(individual):
 def GA(n=10, budget=100, fitness_function='sphere'):
     """ Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function """
 
-    # fitnessFunction = lambda x: evaluate_ES(x, fitness_function)
+    # Fitness function to be passed on to the baseAlgorithm
     def fitnessFunction(x):
         return evaluate_ES(x, fitness_function)
+
     parameters = Parameters(n, 1, 3, budget)
+    # Initialize the first individual in the population
     population = [Individual(n)]
+    # TODO: rewrite to generic randint() version depending on len(options[i])
     population[0].dna = np.random.randint(2, size=len(options))
     population[0].fitness = fitnessFunction(population[0].dna)[0]
 
@@ -72,18 +78,22 @@ def evaluate_ES(bitstring, fitness_function='sphere'):
     budget = 500
     num_runs = 15
 
+    # Setup the bbob logger
     bbob_opts['algid'] = bitstring
     f = fgeneric.LoggingFunction(datapath, **bbob_opts)
 
     print(bitstring, end=' ')
     opts = getOpts(bitstring)
-    # algorithm = lambda n, evalfun, budget: customizedES(n, evalfun, budget, opts=opts)
+    # define local function of the algorithm to be used, fixing certain parameters
     def algorithm(n, evalfun, budget):
         return customizedES(n, evalfun, budget, opts=opts)
 
+    # Actually running the algorithm is encapsulated in a try-except for now... math errors
     try:
+        # Run the actual ES for <num_runs> times
         _, fitnesses = runAlgorithm(fitness_function, algorithm, n, num_runs, f, budget, opts)
 
+        # From all different runs, retrieve the median fitness to be used as fitness for this ES
         min_fitnesses = np.min(fitnesses, axis=0)
         median = np.median(min_fitnesses)
         print("\t\t{}".format(median))
@@ -92,6 +102,7 @@ def evaluate_ES(bitstring, fitness_function='sphere'):
         # print(" {}  \t({})".format(mean_best_fitness, median))
 
     except Exception as e:
+        # Give this ES fitness INF in case of runtime errors
         print(" np.inf: {}".format(e))
         # mean_best_fitness = np.inf
         median = np.inf
@@ -103,6 +114,7 @@ def fetchResults(fun_id, instance, n, budget, opts):
     """ Small overhead-function to enable multi-processing """
     f = fgeneric.LoggingFunction(datapath, **bbob_opts)
     f_target = f.setfun(*bbobbenchmarks.instantiate(fun_id, iinstance=instance)).ftarget
+    # Run the ES defined by opts once with the given budget
     results = customizedES(n, f.evalfun, budget, opts=opts)
     return f_target, results
 
