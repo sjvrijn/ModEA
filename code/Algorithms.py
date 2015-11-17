@@ -77,7 +77,7 @@ def onePlusOneCholeskyCMAES(n, fitnessFunction, budget):
     functions = {
         'recombine': lambda pop: Rec.onePlusOne(pop),  # simply copy the only existing individual and return as a list
         'mutate': lambda ind: Mut.choleskyCMAMutation(ind, parameters, Sam.GaussianSampling(n)),
-        'select': lambda pop, new_pop, t: Sel.onePlusOneCholeskySelection(pop, new_pop, t, parameters),
+        'select': lambda pop, new_pop, _: Sel.onePlusOneCholeskySelection(pop, new_pop, parameters),
         'mutateParameters': lambda t: parameters.adaptCholeskyCovarianceMatrix(),
     }
 
@@ -99,7 +99,7 @@ def onePlusOneActiveCMAES(n, fitnessFunction, budget):
     functions = {
         'recombine': lambda pop: Rec.onePlusOne(pop),  # simply copy the only existing individual and return as a list
         'mutate': lambda ind: Mut.choleskyCMAMutation(ind, parameters, Sam.GaussianSampling(n)),
-        'select': lambda pop, new_pop, t: Sel.onePlusOneActiveSelection(pop, new_pop, t, parameters),
+        'select': lambda pop, new_pop, _: Sel.onePlusOneActiveSelection(pop, new_pop, parameters),
         'mutateParameters': lambda t: parameters.adaptActiveCovarianceMatrix(),
     }
 

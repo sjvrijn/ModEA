@@ -9,7 +9,7 @@ import numpy as np
 This Module contains a collection of Selection operators to be used in the ES-Framework
 
 A Selection operator accepts (mu + lambda) individuals and returns (mu) individuals
-that are chosen to be the best of this generation
+that are chosen to be the best of this generation.
 """
 
 
@@ -20,6 +20,7 @@ def best(population, new_population, parameters):
         :param population:      List of :py:class:code.Individual objects containing the previous generation
         :param new_population:  List of :py:class:code.Individual objects containing the new generation
         :param parameters:      :py:class:code.Parameters object for storing all parameters, options, etc.
+        :returns:               A slice of the sorted new_population list.
     """
     if parameters.elitist:
         new_population.extend(population)
@@ -38,6 +39,11 @@ def pairwise(population, new_population, parameters):
         Intended for use with a mirrored sampling strategy to prevent bias.
 
         Assumes that new_population contains pairs as [P1_a, P1_b, P2_a, P2_b, etc ... ]
+
+        :param population:      List of :py:class:code.Individual objects containing the previous generation
+        :param new_population:  List of :py:class:code.Individual objects containing the new generation
+        :param parameters:      :py:class:code.Parameters object for storing all parameters, options, etc.
+        :returns:               A slice of the sorted new_population list.
     """
     if len(new_population) % 2 != 0:
         raise Exception("Error: attempting to perform pairwise selection on an odd number of individuals")
@@ -55,7 +61,15 @@ def pairwise(population, new_population, parameters):
 
 
 def onePlusOneSelection(population, new_population, t, parameters):
-    """ (1+1)-selection (with success history) """
+    """
+        (1+1)-selection (with success history)
+
+        :param population:      List of :py:class:code.Individual objects containing the previous generation
+        :param new_population:  List of :py:class:code.Individual objects containing the new generation
+        :param t:               Timestamp of the current generation being evaluated
+        :param parameters:      :py:class:code.Parameters object for storing all parameters, options, etc.
+        :returns:               A slice of the sorted new_population list.
+    """
 
     new_individual = new_population[0]
     individual = population[0]
@@ -71,9 +85,14 @@ def onePlusOneSelection(population, new_population, t, parameters):
     return result
 
 
-def onePlusOneCholeskySelection(population, new_population, _, parameters):
+def onePlusOneCholeskySelection(population, new_population, parameters):
     """
         (1+1)-selection (with success history)
+
+        :param population:      List of :py:class:code.Individual objects containing the previous generation
+        :param new_population:  List of :py:class:code.Individual objects containing the new generation
+        :param parameters:      :py:class:code.Parameters object for storing all parameters, options, etc.
+        :returns:               A slice of the sorted new_population list.
     """
 
     new_individual = new_population[0]
@@ -90,9 +109,14 @@ def onePlusOneCholeskySelection(population, new_population, _, parameters):
     return result
 
 
-def onePlusOneActiveSelection(population, new_population, _, parameters):
+def onePlusOneActiveSelection(population, new_population, parameters):
     """
         (1+1)-selection (with success history)
+
+        :param population:      List of :py:class:code.Individual objects containing the previous generation
+        :param new_population:  List of :py:class:code.Individual objects containing the new generation
+        :param parameters:      :py:class:code.Parameters object for storing all parameters, options, etc.
+        :returns:               A slice of the sorted new_population list.
     """
 
     new_fitness = new_population[0].fitness
