@@ -13,33 +13,56 @@ from sobol_seq import i4_sobol
 class GaussianSampling(object):
     """ A sampler to create random vectors using a Gaussian distribution """
     def __init__(self, n, shape='col'):
+        """
+            :param n:       Dimensionality of the vectors to be sampled
+            :param shape:   String to select between 'col' and 'row'. Default: 'col'
+        """
         self.n = n
         self.shape = (n,1) if shape == 'col' else (1,n)
 
     def next(self):
+        """
+            Draw the next sample from the Sampler
+
+            :return:    A new vector sampled from a Gaussian distribution with mean 0 and standard deviation 1
+        """
         return randn(*self.shape)
 
 
 class QuasiGaussianSampling(object):
     """ A quasi-Gaussian sampler """
     def __init__(self, n, shape='col'):
+        """
+            :param n:       Dimensionality of the vectors to be sampled
+            :param shape:   String to select between 'col' and 'row'. Default: 'col'
+        """
         self.n = n
         self.shape = (n,1) if shape == 'col' else (1,n)
         self.seed = 1
 
     def next(self):
+        """
+            Draw the next sample from the Sampler
+
+            :return:    A new vector sampled from a Gaussian distribution with mean 0 and standard deviation 1
+        """
         vec, seed = i4_sobol(self.n, self.seed)
         self.seed = seed
 
         vec = array([norm_dist.ppf(vec[m]) for m in range(self.n)])
         vec = vec.reshape(self.shape)
-        print(vec)
         return vec
 
 
 class OrthogonalSampling(object):
     """ A sampler to create orthogonal samples using some base sampler (Gaussian as default) """
     def __init__(self, n, shape='col', base_sampler=None, lambda_=1):
+        """
+            :param n:               Dimensionality of the vectors to be sampled
+            :param shape:           String to select between 'col' and 'row'. Default: 'col'
+            :param base_sampler:    A different Sampling object from which samples to be mirrored are drawn
+            :param lambda_:         Number of samples to be drawn and orthonormalized per generation
+        """
         self.n = n
         self.shape = (n,1) if shape == 'col' else (1,n)
         if base_sampler is None:
@@ -51,6 +74,11 @@ class OrthogonalSampling(object):
         self.samples = None
 
     def next(self):
+        """
+            Draw the next sample from the Sampler
+
+            :return:    A new vector sampled from a set of orthonormalized vectors, originally drawn from base_sampler
+        """
         if self.current_sample % self.num_samples == 0:
             self.current_sample = 0
             self.__generateSamples()
@@ -59,6 +87,7 @@ class OrthogonalSampling(object):
         return self.samples[self.current_sample-1]
 
     def __generateSamples(self):
+        """ Draw <num_samples> new samples from the base_sampler, orthonormalize them and store to be drawn from """
         samples = []
         lengths = []
         for i in range(self.num_samples):
@@ -95,6 +124,11 @@ class MirroredSampling(object):
         Returns a single vector each time, remembers its state (next is new/mirror)
     """
     def __init__(self, n, shape='col', base_sampler=None):
+        """
+            :param n:               Dimensionality of the vectors to be sampled
+            :param shape:           String to select between 'col' and 'row'. Default: 'col'
+            :param base_sampler:    A different Sampling object from which samples to be mirrored are drawn
+        """
         self.n = n
         self.shape = (n,1) if shape == 'col' else (1,n)
         self.mirror_next = False
@@ -105,6 +139,11 @@ class MirroredSampling(object):
             self.base_sampler = base_sampler
 
     def next(self):
+        """
+            Draw the next sample from the Sampler
+
+            :return:    A new vector, alternating between a new sample from the base_sampler and a mirror of the last.
+        """
         mirror_next = self.mirror_next
         self.mirror_next = not mirror_next
 
