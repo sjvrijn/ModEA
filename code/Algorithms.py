@@ -4,6 +4,7 @@
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 # External libraries
 import numpy as np
+from copy import copy
 # Internal classes
 from .Individual import Individual
 from .Parameters import Parameters
@@ -243,7 +244,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
         best_fitness_over_time.append(population[0].fitness)
 
         if population[0].fitness < best_individual.fitness:
-            best_individual = population[0].getCopy()
+            best_individual = copy(population[0])
 
     if parameters.count_degenerations:
         print(parameters.count_degenerations, end=' ')

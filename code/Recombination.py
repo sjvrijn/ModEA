@@ -11,13 +11,14 @@ that are to form the new population
 """
 
 import numpy as np
+from copy import copy
 from numpy import dot, mean, sqrt
 
 def onePlusOne(population):
     """
         Utility function for 1+1 ES strategies where the recombination is merely a copy
     """
-    return [population[0].getCopy()]
+    return [copy(population[0])]
 
 
 def average(pop, param):
@@ -25,12 +26,12 @@ def average(pop, param):
         Given the new population, return the average of the mu best individuals
     """
 
-    avg = pop[0].getCopy()
+    avg = copy(pop[0])
     avg.dna, param.s_mean, param.sigma_mean = mean([(ind.dna, ind.mutation_vector, ind.sigma) for ind in pop],axis=0)
 
     new_population = [avg]
     for _ in range(param.lambda_-1):
-        new_population.append(avg.getCopy())
+        new_population.append(copy(avg))
 
     return new_population
 
@@ -46,10 +47,10 @@ def weighted(pop, param):
     param.offspring = offspring
     param.wcm = dot(offspring, param.weights)
 
-    new_ind = pop[0].getCopy()
+    new_ind = copy(pop[0])
     new_ind.dna = param.wcm
     new_population = [new_ind]
     for _ in range(param.lambda_-1):
-        new_population.append(new_ind.getCopy())
+        new_population.append(copy(new_ind))
 
     return new_population
