@@ -9,3 +9,5 @@
 This project contains the code for the Master Thesis of Sander van Rijn.
 
 Intended to run with Python 3
+
+Documentation is available at http://www.svrijn.nl/docs
