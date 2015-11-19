@@ -15,8 +15,8 @@ options = (
     ('orthogonal',   (False, True)),
     # ('sequential',   (False, True)),
     # ('two-point',    (False, True)),
-    ('weights',      ('default', '1/n', '1/2^n')),
     ('selection',    ('default', 'pairwise')),
+    ('weights',      ('default', '1/n',         '1/2^n')),
     ('base-sampler', ('default', 'quasi-sobol', 'quasi-halton')),
 )
 

@@ -204,6 +204,37 @@ def run():
     evaluate_ES([0,0,0,1,0,0,1,0])
     # '''
 
+
+    '''
+    # Exhaustive/brute-force search over *all* possible combinations
+    # NB: THIS ASSUMES OPTIONS ARE SORTED ASCENDING BY NUMBER OF VALUES
+    print("Number of possible ES-combinations currently available: {}".format(np.product(num_options)))
+    from collections import Counter
+    from itertools import product
+    from datetime import datetime, timedelta
+
+    products = []
+    # count how often there is a choice of x options
+    counts = Counter(num_options)
+    for num, count in sorted(counts.items(), key=lambda x: x[0]):
+        products.append(product(range(num), repeat=count))
+
+    x = datetime.now()
+    for combo in product(*products):
+        opts = list(sum(combo, ()))
+        evaluate_ES(opts)
+    y = datetime.now()
+
+    z = y - x
+    days = z.days
+    hours = z.seconds//3600
+    minutes = (z.seconds % 3600) // 60
+    seconds = (z.seconds % 60)
+    print("Time at start: {}\n"
+          "Time at end:   {}\n"
+          "Elapsed time:  {} days, {} hours, {} minutes, {} seconds, ".format(x, y, days, hours, minutes, seconds))
+    # '''
+
     # '''
     pop, sigmas, fitness, best = GA()
     print()
