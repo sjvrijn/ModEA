@@ -6,7 +6,7 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 import numpy as np
 import sys
 from bbob import bbobbenchmarks, fgeneric
-from code import getOpts, options
+from code import getOpts, options, num_options
 from code.Algorithms import customizedES, baseAlgorithm
 from code.Individual import Individual
 from code.Parameters import Parameters
@@ -35,14 +35,28 @@ def sysPrint(string):
 
 
 def mutateBitstring(individual):
-    """ extremely simple 1/n mutation """
+    """ Extremely simple 1/n bit-flip mutation """
     bitstring = individual.dna
     n = len(bitstring)
     p = 1/n
-    # TODO: rewrite to generic randint() version depending on len(options[i])
     for i in range(n):
         if np.random.random() < p:
             bitstring[i] = 1-bitstring[i]
+
+
+def mutateIntList(individual, num_options):
+    """ extremely simple 1/n random integer mutation """
+    int_list = individual.dna
+    n = len(int_list)
+    p = 1/n
+    for i in range(n):
+        if np.random.random() < p:
+            # -1 as random_integers is [1, val], -1 to simulate leaving out the current value
+            new_int = np.random.random_integers(num_options[i]-1)-1
+            if int_list[i] == new_int:
+                new_int = num_options[i] - 1  # If we randomly selected the same value, pick the value we left out
+
+            int_list[i] = new_int
 
 
 def GA(n=10, budget=100, fitness_function='sphere'):
@@ -62,7 +76,7 @@ def GA(n=10, budget=100, fitness_function='sphere'):
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
         'recombine': lambda pop: Rec.onePlusOne(pop),  # simply copy the only existing individual and return as a list
-        'mutate': mutateBitstring,
+        'mutate': lambda ind: mutateIntList(ind, num_options),
         'select': lambda pop, new_pop, _: Sel.best(pop, new_pop, parameters),
         'mutateParameters': lambda t: parameters.oneFifthRule(t),
     }
@@ -152,22 +166,38 @@ def runAlgorithm(fit_name, algorithm, n, num_runs, f, budget, opts):
 def run():
 
     # Test all individual options
+    n = len(options)
+    evaluate_ES(np.zeros(n, dtype=int))
+    for i in range(n):
+        for j in range(1, num_options[i]):
+            dna = np.zeros(n, dtype=int)
+            dna[i] = j
+            evaluate_ES(dna)
+
     # print(evaluate_ES([0,0,0,0,0,0,0,0]))
     # print(evaluate_ES([1,0,0,0,0,0,0,0]))
     # print(evaluate_ES([0,1,0,0,0,0,0,0]))
     # print(evaluate_ES([0,0,1,0,0,0,0,0]))
     # print(evaluate_ES([0,0,0,1,0,0,0,0]))
-    # print(evaluate_ES([0,0,0,0,1,0,1,0]))
+    # print(evaluate_ES([0,0,0,0,1,0,0,0]))
     # print(evaluate_ES([0,0,0,0,0,1,0,0]))
+    # print(evaluate_ES([0,0,0,0,0,2,0,0]))
     # print(evaluate_ES([0,0,0,0,0,0,1,0]))
     # print(evaluate_ES([0,0,0,0,0,0,0,1]))
 
+    # Known problems
+    # evaluate_ES([0,1,1,0,0,0,0,0])
+    # evaluate_ES([1,1,1,0,0,0,0,0])
+
+    print("\n\n")
+
+    '''
     pop, sigmas, fitness, best = GA()
     print()
     print("Best Individual:     {}\n"
           "        Fitness:     {}\n"
           "Fitnesses over time: {}".format(best.dna, best.fitness, fitness))
-
+    # '''
 
 if __name__ == '__main__':
     np.set_printoptions(linewidth=200)

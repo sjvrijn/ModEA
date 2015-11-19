@@ -415,6 +415,7 @@ class Parameters(BaseParameters):
             # The idea here is to give weights (1/2, 1/4, ..., 1/2**mu) + (1/2**mu / mu) so it all sums to 1
             leftover = (1 / (2**self.mu)) / self.mu
             weights = 1 / 2**arange(1, self.mu+1) + leftover
+            weights.shape = (self.mu, 1)
         else:
             _mu_prime = (self.lambda_-1) / 2.0
             weights = log(_mu_prime+1.0)-log(arange(1, self.mu+1)[:, newaxis])

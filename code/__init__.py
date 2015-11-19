@@ -13,10 +13,12 @@ options = (
     ('threshold',    (False, True)),
     ('mirrored',     (False, True)),
     ('orthogonal',   (False, True)),
-    ('weights',      ('default', '1/n')),
+    ('weights',      ('default', '1/n', '1/2^n')),
     ('selection',    ('default', 'pairwise')),
     ('base-sampler', ('default', 'quasi-sobol')),
 )
+
+num_options = [len(opt[1]) for opt in options]
 
 def getOpts(bitstring):
     opts = {option[0]: option[1][bitstring[i]] for i, option in enumerate(options)}
