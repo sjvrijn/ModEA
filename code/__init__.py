@@ -17,7 +17,7 @@ options = (
     # ('two-point',    (False, True)),
     ('weights',      ('default', '1/n', '1/2^n')),
     ('selection',    ('default', 'pairwise')),
-    ('base-sampler', ('default', 'quasi-sobol')),  #, 'quasi-halton')),
+    ('base-sampler', ('default', 'quasi-sobol', 'quasi-halton')),
 )
 
 num_options = [len(opt[1]) for opt in options]
