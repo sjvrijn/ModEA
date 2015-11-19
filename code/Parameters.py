@@ -34,7 +34,7 @@ class Parameters(BaseParameters):
         separate parameters.
     """
 
-    def __init__(self, n, mu, lambda_, budget, elitist=False, active=False, weights_option=None):
+    def __init__(self, n, budget, mu=None, lambda_=None, elitist=False, active=False, weights_option=None):
         """
             Setup the set of parameters
 
@@ -46,6 +46,11 @@ class Parameters(BaseParameters):
             :param active:          Boolean switch on using an active update. Default: False
             :param weights_option:  String to determine which weignts to use. Choose from 'default' (CMA-ES), '1/n'
         """
+
+        if lambda_ is None:
+            lambda_ = int(4 + np.floor(3 * log(n)))
+        if mu is None:
+            mu = int(lambda_//2)
 
         if mu < 1 or lambda_ <= mu or n < 1:
             raise Exception("Invalid initialization values: mu, n >= 1, lambda > mu")

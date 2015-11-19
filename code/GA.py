@@ -66,7 +66,7 @@ def GA(n=10, budget=100, fitness_function='sphere'):
     def fitnessFunction(x):
         return evaluate_ES(x, fitness_function)
 
-    parameters = Parameters(n, 1, 3, budget)
+    parameters = Parameters(n, budget, 1, 3)
     # Initialize the first individual in the population
     population = [Individual(n)]
     # TODO: rewrite to generic randint() version depending on len(options[i])
@@ -164,13 +164,14 @@ def runAlgorithm(fit_name, algorithm, n, num_runs, f, budget, opts):
 
 
 def run():
-
+    pass
+    '''
     # Test all individual options
     n = len(options)
-    evaluate_ES(np.zeros(n, dtype=int))
+    evaluate_ES([0]*n)
     for i in range(n):
         for j in range(1, num_options[i]):
-            dna = np.zeros(n, dtype=int)
+            dna = [0]*n
             dna[i] = j
             evaluate_ES(dna)
 
@@ -185,13 +186,25 @@ def run():
     # print(evaluate_ES([0,0,0,0,0,0,1,0]))
     # print(evaluate_ES([0,0,0,0,0,0,0,1]))
 
-    # Known problems
-    # evaluate_ES([0,1,1,0,0,0,0,0])
-    # evaluate_ES([1,1,1,0,0,0,0,0])
-
     print("\n\n")
+    # '''
 
     '''
+    # Known problems
+    print("Combinations known to cause problems:")
+    evaluate_ES([0,1,1,0,0,0,0,0])
+    evaluate_ES([1,1,1,0,0,0,0,0])
+
+    print("\n\n")
+    # '''
+
+    '''
+    print("Mirrored vs Mirrored-pairwise")
+    evaluate_ES([0,0,0,1,0,0,0,0])
+    evaluate_ES([0,0,0,1,0,0,1,0])
+    # '''
+
+    # '''
     pop, sigmas, fitness, best = GA()
     print()
     print("Best Individual:     {}\n"
