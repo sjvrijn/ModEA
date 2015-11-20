@@ -16,7 +16,6 @@ A Mutation operator mutates an Individual's DNA inline, thus returning nothing.
 import numpy as np
 from numpy import add, dot, exp
 from numpy.linalg import norm
-from numpy.random import randn
 from random import getrandbits
 
 
@@ -44,11 +43,15 @@ def CMAMutation(individual, parameters, sampler, threshold_convergence=False):
     """
 
     individual.last_z = sampler.next()
-    individual.mutation_vector = dot(parameters.B, (parameters.D * individual.last_z))  # y_k in cmatutorial.pdf)
 
-    mutation_vector = individual.mutation_vector * parameters.sigma
     if threshold_convergence:
-        individual.mutation_vector = _scaleWithThreshold(mutation_vector, parameters.threshold) / parameters.sigma
+        individual.last_z = _scaleWithThreshold(individual.last_z, parameters.threshold)
+
+    individual.mutation_vector = dot(parameters.B, (parameters.D * individual.last_z))  # y_k in cmatutorial.pdf)
+    mutation_vector = individual.mutation_vector * parameters.sigma
+
+    # if threshold_convergence:
+    #     individual.mutation_vector = _scaleWithThreshold(mutation_vector, parameters.threshold) / parameters.sigma
 
     individual.dna = add(individual.dna, mutation_vector)
 

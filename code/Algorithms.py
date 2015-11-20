@@ -3,7 +3,6 @@
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 # External libraries
-import numpy as np
 from copy import copy
 # Internal classes
 from .Individual import Individual
