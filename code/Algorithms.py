@@ -179,6 +179,20 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
     if lambda_ is None:
         lambda_ = 16
 
+    # Boolean defaults, if not given
+    if 'elitism' not in opts:
+        opts['elitism'] = False
+    if 'active' not in opts:
+        opts['active'] = False
+    if 'threshold' not in opts:
+        opts['threshold'] = False
+
+    # String defaults, if not given
+    if 'weights' not in opts:
+        opts['weights'] = 'default'
+    if 'base-sampler' not in opts:
+        opts['base-sampler'] = 'default'
+
     # Pick the lowest-level sampler
     if opts['base-sampler'] == 'quasi-sobol':
         sampler = Sam.QuasiGaussianSobolSampling(n)
@@ -188,14 +202,14 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
         sampler = Sam.GaussianSampling(n)
 
     # Create an orthogonal sampler using the determined base_sampler
-    if opts['orthogonal']:
+    if 'orthogonal' in opts and opts['orthogonal']:
         sampler = Sam.OrthogonalSampling(n, base_sampler=sampler)
 
     # Create a mirrored sampler using the sampler (structure) chosen so far
-    if opts['mirrored']:
+    if 'mirrored' in opts and opts['mirrored']:
         sampler = Sam.MirroredSampling(n, base_sampler=sampler)
 
-    if opts['selection'] == 'pairwise':
+    if 'selection' in opts and opts['selection'] == 'pairwise':
         selector = Sel.pairwise
     else:
         selector = Sel.best

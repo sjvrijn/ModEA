@@ -102,6 +102,7 @@ def evaluate_ES(bitstring, fitness_function='sphere'):
     def algorithm(n, evalfun, budget):
         return customizedES(n, evalfun, budget, opts=opts)
 
+    # '''
     # Actually running the algorithm is encapsulated in a try-except for now... math errors
     try:
         # Run the actual ES for <num_runs> times
@@ -114,13 +115,23 @@ def evaluate_ES(bitstring, fitness_function='sphere'):
 
         # mean_best_fitness = np.mean(min_fitnesses)
         # print(" {}  \t({})".format(mean_best_fitness, median))
+    # '''
 
+    # _, fitnesses = runAlgorithm(fitness_function, algorithm, n, num_runs, f, budget, opts)
+    #
+    # # From all different runs, retrieve the median fitness to be used as fitness for this ES
+    # min_fitnesses = np.min(fitnesses, axis=0)
+    # median = np.median(min_fitnesses)
+    # print("\t\t{}".format(median))
+
+
+    # '''
     except Exception as e:
         # Give this ES fitness INF in case of runtime errors
         print(" np.inf: {}".format(e))
         # mean_best_fitness = np.inf
         median = np.inf
-
+    # '''
     return [median]
 
 
@@ -189,11 +200,12 @@ def run():
     print("\n\n")
     # '''
 
-    '''
+    # '''
     # Known problems
     print("Combinations known to cause problems:")
-    evaluate_ES([0,1,1,0,0,0,0,0])
-    evaluate_ES([1,1,1,0,0,0,0,0])
+    evaluate_ES([0,0,0,0,1,0,0,1])
+    evaluate_ES([0,0,1,0,0,0,0,1])
+    evaluate_ES([0,0,1,0,1,0,0,1])
 
     print("\n\n")
     # '''
@@ -205,13 +217,16 @@ def run():
     # '''
 
 
-    '''
+    # '''
     # Exhaustive/brute-force search over *all* possible combinations
     # NB: THIS ASSUMES OPTIONS ARE SORTED ASCENDING BY NUMBER OF VALUES
     print("Number of possible ES-combinations currently available: {}".format(np.product(num_options)))
     from collections import Counter
     from itertools import product
     from datetime import datetime, timedelta
+
+    best_ES = None
+    best_result = np.inf
 
     products = []
     # count how often there is a choice of x options
@@ -222,20 +237,29 @@ def run():
     x = datetime.now()
     for combo in product(*products):
         opts = list(sum(combo, ()))
-        evaluate_ES(opts)
+        result = evaluate_ES(opts)[0]
+
+        if result < best_result:
+            best_result = result
+            best_ES = opts
+
     y = datetime.now()
 
+
+    print("Best ES found:       {}\n"
+          "With median fitness: {}\n".format(best_ES, best_result))
     z = y - x
     days = z.days
     hours = z.seconds//3600
     minutes = (z.seconds % 3600) // 60
     seconds = (z.seconds % 60)
-    print("Time at start: {}\n"
-          "Time at end:   {}\n"
-          "Elapsed time:  {} days, {} hours, {} minutes, {} seconds, ".format(x, y, days, hours, minutes, seconds))
+
+    print("Time at start:       {}\n"
+          "Time at end:         {}\n"
+          "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
     # '''
 
-    # '''
+    '''
     pop, sigmas, fitness, best = GA()
     print()
     print("Best Individual:     {}\n"
