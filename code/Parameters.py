@@ -194,7 +194,7 @@ class Parameters(BaseParameters):
         self.p_c = (1-cc) * self.p_c + hsig * sqrt(cc*(2-cc)*mueff) * (wcm - wcm_old) / self.sigma
         offset = (self.offspring - wcm_old) / self.sigma
 
-        if not self.active:
+        if not self.active or len(self.all_offspring) < 2*self.mu:
             # Regular update of C
             self.C = (1-c_1-c_mu) * self.C \
                       + c_1 * (outer(self.p_c, self.p_c) + (1.-hsig) * cc*(2-cc) * self.C) \
