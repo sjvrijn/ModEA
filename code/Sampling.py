@@ -9,7 +9,11 @@ from numpy.linalg import norm
 from numpy.random import randn
 from scipy.stats import norm as norm_dist
 from sobol_seq import i4_sobol
-from ghalton import Halton
+try:
+    from ghalton import Halton
+    halton_available = True
+except ImportError:
+    halton_available = False
 
 class GaussianSampling(object):
     """ A sampler to create random vectors using a Gaussian distribution """
@@ -55,29 +59,34 @@ class QuasiGaussianSobolSampling(object):
         return vec
 
 # '''
-class QuasiGaussianHaltonSampling(object):
-    """ A quasi-Gaussian sampler """
-    def __init__(self, n, shape='col'):
-        """
-            :param n:       Dimensionality of the vectors to be sampled
-            :param shape:   String to select between 'col' and 'row'. Default: 'col'
-        """
-        self.n = n
-        self.shape = (n,1) if shape == 'col' else (1,n)
-        self.halton = Halton(n)
+if halton_available:
+    class QuasiGaussianHaltonSampling(object):
+        """ A quasi-Gaussian sampler """
+        def __init__(self, n, shape='col'):
+            """
+                :param n:       Dimensionality of the vectors to be sampled
+                :param shape:   String to select between 'col' and 'row'. Default: 'col'
+            """
+            self.n = n
+            self.shape = (n,1) if shape == 'col' else (1,n)
+            self.halton = Halton(n)
 
 
-    def next(self):
-        """
-            Draw the next sample from the Sampler
+        def next(self):
+            """
+                Draw the next sample from the Sampler
 
-            :return:    A new vector sampled from a Gaussian distribution with mean 0 and standard deviation 1
-        """
-        vec = self.halton.get(1)[0]
+                :return:    A new vector sampled from a Gaussian distribution with mean 0 and standard deviation 1
+            """
+            vec = self.halton.get(1)[0]
 
-        vec = array(norm_dist.ppf(vec))
-        vec = vec.reshape(self.shape)
-        return vec
+            vec = array(norm_dist.ppf(vec))
+            vec = vec.reshape(self.shape)
+            return vec
+else:
+    class QuasiGaussianHaltonSampling(object):
+        def __init__(self, *args, **kwargs):
+            raise ImportError("Package 'ghalton' not found, QuasiGaussianHaltonSampling not available.")
 # '''
 
 class OrthogonalSampling(object):

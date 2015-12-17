@@ -198,7 +198,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
     # Pick the lowest-level sampler
     if opts['base-sampler'] == 'quasi-sobol':
         sampler = Sam.QuasiGaussianSobolSampling(n)
-    elif opts['base-sampler'] == 'quasi-halton':
+    elif opts['base-sampler'] == 'quasi-halton' and Sam.halton_available:
         sampler = Sam.QuasiGaussianHaltonSampling(n)
     else:
         sampler = Sam.GaussianSampling(n)
