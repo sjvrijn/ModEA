@@ -291,37 +291,27 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
     while used_budget < budget:
 
         for i, individual in enumerate(new_population):
-            # Mutation
-            mutate(individual)
+            mutate(individual)  # Mutation
             # Evaluation
             individual.fitness = fitnessFunction(individual.dna)[0]  # fitnessFunction returns as a list, as it allows
             used_budget += 1                                         # simultaneous evaluation for multiple individuals
 
-            # Sequential evaluation: we interrupt once a better individual has been found
-            if sequential_evaluation:
-                # Check if the latest individual is better
+            if sequential_evaluation:  # Sequential evaluation: we interrupt once a better individual has been found
                 if individual.fitness < best_individual.fitness:
-                    improvement_found = True
-
-                # Only stop if we have at least evaluated mu mutated individuals
+                    improvement_found = True  # Is the latest individual better?
                 if i >= parameters.mu and improvement_found:
-                    improvement_found = False
+                    improvement_found = False  # Have we evaluated at least mu mutated individuals?
                     break
-
                 if used_budget == budget:
                     break
 
-        # Selection
-        population = select(population, new_population, used_budget)
-        # Recombination
-        new_population = recombine(population)
-        # Parameter mutation
-        mutateParameters(used_budget)
+        population = select(population, new_population, used_budget)  # Selection
+        new_population = recombine(population)                        # Recombination
+        mutateParameters(used_budget)                                 # Parameter mutation
 
         # Track parameters
         sigma_over_time.extend([parameters.sigma_mean] * (used_budget - len(sigma_over_time)))
         best_fitness_over_time.extend([population[0].fitness] * (used_budget - len(best_fitness_over_time)))
-
         if population[0].fitness < best_individual.fitness:
             best_individual = copy(population[0])
 
