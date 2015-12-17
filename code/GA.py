@@ -6,7 +6,7 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 import numpy as np
 import sys
 from bbob import bbobbenchmarks, fgeneric
-from code import getOpts, options, num_options
+from code import getOpts, getBitString, options, num_options
 from code.Algorithms import customizedES, baseAlgorithm
 from code.Individual import Individual
 from code.Parameters import Parameters
@@ -84,7 +84,7 @@ def GA(n=10, budget=100, fitness_function='sphere'):
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
 
 
-def evaluate_ES(bitstring, fitness_function='sphere'):
+def evaluate_ES(bitstring, fitness_function='sphere', opts=None):
     """ Single function to run all desired combinations of algorithms * fitness functions """
 
     # Set parameters
@@ -96,8 +96,12 @@ def evaluate_ES(bitstring, fitness_function='sphere'):
     bbob_opts['algid'] = bitstring
     f = fgeneric.LoggingFunction(datapath, **bbob_opts)
 
-    print(bitstring, end=' ')
-    opts = getOpts(bitstring)
+    if opts:
+        print(getBitString(opts))
+    else:
+        print(bitstring, end=' ')
+        opts = getOpts(bitstring)
+
     # define local function of the algorithm to be used, fixing certain parameters
     def algorithm(n, evalfun, budget):
         return customizedES(n, evalfun, budget, opts=opts)
@@ -186,34 +190,23 @@ def run():
             dna[i] = j
             evaluate_ES(dna)
 
-    # print(evaluate_ES([0,0,0,0,0,0,0,0]))
-    # print(evaluate_ES([1,0,0,0,0,0,0,0]))
-    # print(evaluate_ES([0,1,0,0,0,0,0,0]))
-    # print(evaluate_ES([0,0,1,0,0,0,0,0]))
-    # print(evaluate_ES([0,0,0,1,0,0,0,0]))
-    # print(evaluate_ES([0,0,0,0,1,0,0,0]))
-    # print(evaluate_ES([0,0,0,0,0,1,0,0]))
-    # print(evaluate_ES([0,0,0,0,0,2,0,0]))
-    # print(evaluate_ES([0,0,0,0,0,0,1,0]))
-    # print(evaluate_ES([0,0,0,0,0,0,0,1]))
-
     print("\n\n")
     # '''
 
     '''
     # Known problems
     print("Combinations known to cause problems:")
-    evaluate_ES([0,0,0,0,1,0,0,1])
-    evaluate_ES([0,0,1,0,0,0,0,1])
-    evaluate_ES([0,0,1,0,1,0,0,1])
+    evaluate_ES(None, opts={'base-sampler': 'quasi-sobol', 'orthogonal': True})
+    evaluate_ES(None, opts={'base-sampler': 'quasi-sobol', 'threshold': True})
+    evaluate_ES(None, opts={'base-sampler': 'quasi-sobol', 'threshold': True, 'orthogonal': True})
 
     print("\n\n")
     # '''
 
     '''
     print("Mirrored vs Mirrored-pairwise")
-    evaluate_ES([0,0,0,1,0,0,0,0])
-    evaluate_ES([0,0,0,1,0,0,1,0])
+    evaluate_ES(None, opts={'mirrored': True})
+    evaluate_ES(None, opts={'mirrored': True, 'selection': 'pairwise'})
     # '''
 
 

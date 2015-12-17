@@ -25,3 +25,17 @@ num_options = [len(opt[1]) for opt in options]
 def getOpts(bitstring):
     opts = {option[0]: option[1][bitstring[i]] for i, option in enumerate(options)}
     return opts
+
+def getBitString(opts):
+    bitstring = []
+    for i, option in enumerate(options):
+        name, choices = option
+        if name in opts:
+            if opts[name] in choices:
+                bitstring.append(choices.index(opts[name]))
+            else:
+                bitstring.append(0)
+        else:
+            bitstring.append(0)
+
+    return bitstring
