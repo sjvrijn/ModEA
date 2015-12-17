@@ -36,7 +36,7 @@ class Parameters(BaseParameters):
 
     def __init__(self, n, budget,
                  mu=None, lambda_=None, weights_option=None,
-                 active=False, elitist=False, sequential=False):
+                 active=False, elitist=False, sequential=False, tpa=False):
         """
             Setup the set of parameters
 
@@ -48,6 +48,7 @@ class Parameters(BaseParameters):
             :param active:          Boolean switch on using an active update. Default: False
             :param elitist:         Boolean switch on using a (mu, l) strategy rather than (mu + l). Default: False
             :param sequential:      Boolean switch on using sequential evaluation. Default: False
+            :param tpa:             Boolean switch on using two-point step-size adaptation. Default: False
         """
 
         if lambda_ is None:
@@ -67,6 +68,7 @@ class Parameters(BaseParameters):
         self.active = active
         self.elitist = elitist
         self.sequential = sequential
+        self.tpa = tpa
         self.weights = self.getWeights(weights_option)
         self.mu_eff = 1 / sum(square(self.weights))
 

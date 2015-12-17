@@ -283,12 +283,17 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
     select = functions['select']
     mutateParameters = functions['mutateParameters']
     sequential_evaluation = parameters.sequential
+    two_point_adaptation = parameters.tpa
 
     # Single recombination outside the eval loop to create the new population
     new_population = recombine(population)
 
     # The main evaluation loop
     while used_budget < budget:
+
+        if two_point_adaptation:
+            tpa_individuals = new_population[:-2]
+            new_population = new_population[-2:]
 
         for i, individual in enumerate(new_population):
             mutate(individual)  # Mutation
