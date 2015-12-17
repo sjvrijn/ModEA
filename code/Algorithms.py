@@ -180,10 +180,12 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
         lambda_ = 16
 
     # Boolean defaults, if not given
-    if 'elitism' not in opts:
-        opts['elitism'] = False
     if 'active' not in opts:
         opts['active'] = False
+    if 'elitism' not in opts:
+        opts['elitism'] = False
+    if 'sequential' not in opts:
+        opts['sequential'] = False
     if 'threshold' not in opts:
         opts['threshold'] = False
 
@@ -215,8 +217,8 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
         selector = Sel.best
 
 
-    parameters = Parameters(n, budget, mu, lambda_,
-                            elitist=opts['elitism'], active=opts['active'], weights_option=opts['weights'])
+    parameters = Parameters(n, budget, mu, lambda_,weights_option=opts['weights'],
+                            active=opts['active'], elitist=opts['elitism'], sequential=opts['sequential'])
     population = [Individual(n) for _ in range(mu)]
 
     # Artificial init: in hopes of fixing CMA-ES
@@ -271,6 +273,8 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
     sigma_over_time = [parameters.sigma_mean]
     best_fitness_over_time = [population[0].fitness]
     best_individual = population[0]
+    # Variable to track whether a better individual has been found. Used for sequential evaluation
+    improvement_found = False
 
     # Initialization
     used_budget = 0
@@ -278,6 +282,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
     mutate = functions['mutate']
     select = functions['select']
     mutateParameters = functions['mutateParameters']
+    sequential_evaluation = parameters.sequential
 
     # Single recombination outside the eval loop to create the new population
     new_population = recombine(population)
@@ -285,12 +290,26 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
     # The main evaluation loop
     while used_budget < budget:
 
-        for individual in new_population:
+        for i, individual in enumerate(new_population):
             # Mutation
             mutate(individual)
             # Evaluation
-            individual.fitness = fitnessFunction(individual.dna)[0]
-            used_budget += 1
+            individual.fitness = fitnessFunction(individual.dna)[0]  # fitnessFunction returns as a list, as it allows
+            used_budget += 1                                         # simultaneous evaluation for multiple individuals
+
+            # Sequential evaluation: we interrupt once a better individual has been found
+            if sequential_evaluation:
+                # Check if the latest individual is better
+                if individual.fitness < best_individual.fitness:
+                    improvement_found = True
+
+                # Only stop if we have at least evaluated mu mutated individuals
+                if i >= parameters.mu and improvement_found:
+                    improvement_found = False
+                    break
+
+                if used_budget == budget:
+                    break
 
         # Selection
         population = select(population, new_population, used_budget)
@@ -300,8 +319,8 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
         mutateParameters(used_budget)
 
         # Track parameters
-        sigma_over_time.append(parameters.sigma_mean)
-        best_fitness_over_time.append(population[0].fitness)
+        sigma_over_time.extend([parameters.sigma_mean] * (used_budget - len(sigma_over_time)))
+        best_fitness_over_time.extend([population[0].fitness] * (used_budget - len(best_fitness_over_time)))
 
         if population[0].fitness < best_individual.fitness:
             best_individual = copy(population[0])

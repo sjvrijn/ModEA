@@ -200,7 +200,7 @@ def run():
     print("\n\n")
     # '''
 
-    # '''
+    '''
     # Known problems
     print("Combinations known to cause problems:")
     evaluate_ES([0,0,0,0,1,0,0,1])
@@ -220,6 +220,7 @@ def run():
     # '''
     # Exhaustive/brute-force search over *all* possible combinations
     # NB: THIS ASSUMES OPTIONS ARE SORTED ASCENDING BY NUMBER OF VALUES
+    print("Brute-force exhaustive search of *all* available ES-combinations.")
     print("Number of possible ES-combinations currently available: {}".format(np.product(num_options)))
     from collections import Counter
     from itertools import product

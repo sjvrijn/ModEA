@@ -54,7 +54,7 @@ class QuasiGaussianSobolSampling(object):
         vec = vec.reshape(self.shape)
         return vec
 
-
+# '''
 class QuasiGaussianHaltonSampling(object):
     """ A quasi-Gaussian sampler """
     def __init__(self, n, shape='col'):
@@ -78,7 +78,7 @@ class QuasiGaussianHaltonSampling(object):
         vec = array(norm_dist.ppf(vec))
         vec = vec.reshape(self.shape)
         return vec
-
+# '''
 
 class OrthogonalSampling(object):
     """ A sampler to create orthogonal samples using some base sampler (Gaussian as default) """

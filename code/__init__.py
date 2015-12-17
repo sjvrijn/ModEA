@@ -13,7 +13,7 @@ options = (
     ('threshold',    (False, True)),
     ('mirrored',     (False, True)),
     ('orthogonal',   (False, True)),
-    # ('sequential',   (False, True)),
+    ('sequential',   (False, True)),
     # ('two-point',    (False, True)),
     ('selection',    ('default', 'pairwise')),
     ('weights',      ('default', '1/n',         '1/2^n')),
