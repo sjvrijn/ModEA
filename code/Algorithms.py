@@ -188,6 +188,8 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
         opts['sequential'] = False
     if 'threshold' not in opts:
         opts['threshold'] = False
+    if 'two-point' not in opts:
+        opts['two-point'] = False
 
     # String defaults, if not given
     if 'weights' not in opts:
@@ -217,8 +219,8 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
         selector = Sel.best
 
 
-    parameters = Parameters(n, budget, mu, lambda_,weights_option=opts['weights'],
-                            active=opts['active'], elitist=opts['elitism'], sequential=opts['sequential'])
+    parameters = Parameters(n, budget, mu, lambda_,weights_option=opts['weights'], active=opts['active'],
+                            elitist=opts['elitism'], sequential=opts['sequential'], tpa=opts['two-point'])
     population = [Individual(n) for _ in range(mu)]
 
     # Artificial init: in hopes of fixing CMA-ES
@@ -233,7 +235,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
         'recombine': lambda pop: Rec.weighted(pop, parameters),
         'mutate': lambda ind: Mut.CMAMutation(ind, parameters, sampler, threshold_convergence=opts['threshold']),
         'select': lambda pop, new_pop, _: selector(pop, new_pop, parameters),
-        'mutateParameters': lambda t: parameters.adaptCovarianceMatrix(t),
+        'mutateParameters': lambda t, tpa: parameters.adaptCovarianceMatrix(t, tpa),
     }
 
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
@@ -273,8 +275,9 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
     sigma_over_time = [parameters.sigma_mean]
     best_fitness_over_time = [population[0].fitness]
     best_individual = population[0]
-    # Variable to track whether a better individual has been found. Used for sequential evaluation
-    improvement_found = False
+
+    improvement_found = False  # Has a better individual has been found? Used for sequential evaluation
+    tpa_result = None          # Is the ideal step size larger (True) or smaller (False)? None if TPA is not used
 
     # Initialization
     used_budget = 0
@@ -292,8 +295,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
     while used_budget < budget:
 
         if two_point_adaptation:
-            tpa_individuals = new_population[:-2]
-            new_population = new_population[-2:]
+            new_population = new_population[:-2]
 
         for i, individual in enumerate(new_population):
             mutate(individual)  # Mutation
@@ -312,7 +314,23 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
 
         population = select(population, new_population, used_budget)  # Selection
         new_population = recombine(population)                        # Recombination
-        mutateParameters(used_budget)                                 # Parameter mutation
+
+        # TODO: Move the following TPA-code to >= 1 separate function(s)
+        if two_point_adaptation:
+            wcm = parameters.wcm
+            tpa_vector = (wcm - parameters.wcm_old) * parameters.tpa_factor
+
+            tpa_fitness_plus = fitnessFunction(wcm + tpa_vector)[0]
+            tpa_fitness_min = fitnessFunction(wcm - tpa_vector)[0]
+
+            used_budget += 2
+
+            if tpa_fitness_plus < tpa_fitness_min:
+                tpa_result = 1
+            else:
+                tpa_result = -1
+
+        mutateParameters(used_budget, tpa_result)                     # Parameter mutation
 
         # Track parameters
         sigma_over_time.extend([parameters.sigma_mean] * (used_budget - len(sigma_over_time)))

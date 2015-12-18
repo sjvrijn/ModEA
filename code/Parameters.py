@@ -115,6 +115,13 @@ class Parameters(BaseParameters):
             self.c_c = 2 / (n+sqrt(2))**2
         self.beta = (4*mu - 2) / ((n+12)**2 + 4*mu)
 
+        ## Two Point Step Size Adaptation ##
+        self.alpha = 0.5
+        self.tpa_factor = 0.5
+        self.alpha_s = 0
+        self.beta_tpa = 0
+        self.c_alpha = 0.3
+
         ### CMSA-ES ###
         self.tau = 1 / sqrt(2*n)
         self.tau_c = 1 + ((n**2 + n) / (2*mu))
@@ -184,7 +191,7 @@ class Parameters(BaseParameters):
             self.fitness_history = self.fitness_history[1:]
 
 
-    def adaptCovarianceMatrix(self, t):
+    def adaptCovarianceMatrix(self, t, tpa_result):
         """
             Adapt the covariance matrix according to the CMA-ES
             :param t:   Number of evaluations used by the algorithm so far
@@ -213,7 +220,13 @@ class Parameters(BaseParameters):
                       + c_mu * (dot(offset, self.weights*offset.T) - dot(offset_bad, self.weights*offset_bad.T))
 
         # Adapt step size sigma
-        self.sigma = self.sigma * exp((norm(self.p_sigma)/self.chiN - 1) * self.c_sigma/self.damps)
+        if self.tpa:
+            alpha_act = tpa_result * self.alpha
+            alpha_act += self.beta_tpa if tpa_result > 1 else 0
+            self.alpha_s += self.c_alpha * (alpha_act - self.alpha_s)
+            self.sigma *= exp(self.alpha_s)
+        else:
+            self.sigma = self.sigma * exp((norm(self.p_sigma)/self.chiN - 1) * self.c_sigma/self.damps)
         self.sigma_mean = self.sigma
 
         ### Update BD ###
