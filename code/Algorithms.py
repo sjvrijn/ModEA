@@ -324,6 +324,8 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
             tpa_fitness_min = fitnessFunction(wcm - tpa_vector)[0]
 
             used_budget += 2
+            if used_budget > budget and sequential_evaluation:
+                used_budget = budget
 
             if tpa_fitness_plus < tpa_fitness_min:
                 tpa_result = 1

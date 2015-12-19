@@ -200,6 +200,8 @@ def run():
     evaluate_ES(None, opts={'base-sampler': 'quasi-sobol', 'threshold': True})
     evaluate_ES(None, opts={'base-sampler': 'quasi-sobol', 'threshold': True, 'orthogonal': True})
 
+    evaluate_ES(None, opts={'sequential': True, 'two-point': True})
+
     print("\n\n")
     # '''
 

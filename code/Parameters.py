@@ -36,7 +36,7 @@ class Parameters(BaseParameters):
 
     def __init__(self, n, budget,
                  mu=None, lambda_=None, weights_option=None,
-                 active=False, elitist=False, sequential=False, tpa=False):
+                 active=False, elitist=False, ipop=False, sequential=False, tpa=False):
         """
             Setup the set of parameters
 
@@ -67,6 +67,7 @@ class Parameters(BaseParameters):
         self.sigma = 1
         self.active = active
         self.elitist = elitist
+        self.ipop = ipop
         self.sequential = sequential
         self.tpa = tpa
         self.weights = self.getWeights(weights_option)
