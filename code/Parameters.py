@@ -4,8 +4,8 @@
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
-from numpy import any, arange, dot, exp, eye, isfinite, isinf, isreal, ones, log,\
-                  mean, newaxis, outer, real, sqrt, square, sum, triu, zeros
+from numpy import any, append, arange, ceil, diag, dot, exp, eye, floor, isfinite, isinf, isreal, ones, log,\
+                  mean, mod, newaxis, outer, real, sqrt, square, sum, triu, zeros
 from numpy.linalg import cond, eig, eigh, norm, LinAlgError
 from numpy.random import randn
 
@@ -52,7 +52,7 @@ class Parameters(BaseParameters):
         """
 
         if lambda_ is None:
-            lambda_ = int(4 + np.floor(3 * log(n)))
+            lambda_ = int(4 + floor(3 * log(n)))
         if mu is None:
             mu = int(lambda_//2)
 
@@ -121,6 +121,14 @@ class Parameters(BaseParameters):
         self.alpha_s = 0
         self.beta_tpa = 0
         self.c_alpha = 0.3
+
+        ## IPOP ##
+        self.pop_inc_factor = 2
+        self.nbin = 10 + ceil(30*n/lambda_)
+        self.histfunevals = zeros(self.nbin)
+        self.tolfun = 10 ** (-12)
+        self.tolX = 10 ** (-12) * self.sigma
+        self.conditioncov = 10 ** 14
 
         ### CMSA-ES ###
         self.tau = 1 / sqrt(2*n)
@@ -232,6 +240,14 @@ class Parameters(BaseParameters):
         ### Update BD ###
         C = self.C  # lastest setting for
         C = triu(C) + triu(C, 1).T                  # eigen decomposition
+
+
+        if self.ipop:
+            ipop_restart = False
+            # ipop_restart = self.ipopTest(t)
+            if ipop_restart:
+                self.lambda_ *= self.pop_inc_factor
+                # TODO: Any further resets/restarts required here?
 
         degenerated = False
         if any(isinf(C)) > 1:                           # interval
@@ -368,14 +384,7 @@ class Parameters(BaseParameters):
                 degenerated = True
 
         if degenerated:
-            n = self.n
-
-            self.C = eye(n)
-            self.B = eye(n)
-            self.D = ones((n,1))
-            self.sigma_mean = 1          # TODO: make this depend on any input default sigma value
-
-            # TODO: add feedback of resetting sigma to the sigma per individual
+            self.restart()
 
 
     def checkCholeskyDegenerated(self):
@@ -458,3 +467,56 @@ class Parameters(BaseParameters):
 
         budget = self.budget
         self.threshold = self.init_threshold * self.diameter * ((budget-t) / self.budget)**self.decay_factor
+
+
+    def restart(self):
+
+        n = self.n
+
+        self.C = eye(n)
+        self.B = eye(n)
+        self.D = ones((n,1))
+        self.sigma_mean = 1          # TODO: make this depend on any input default sigma value
+
+            # TODO: add feedback of resetting sigma to the sigma per individual
+
+
+    def ipopTest(self, evalcount):
+
+        restart_required = False
+
+        diagC = diag(self.C).reshape(-1, 1)
+        self.histfunval[mod(evalcount/self.lambda_-1, self.nbin)] = fitness[sel[0]]
+        if mod(evalcount, self.lambda_) == self.nbin and \
+            max(self.histfunval) - min(self.histfunval) < self.tolfun:
+            # stop_list.append('tolfun')
+            restart_required = True
+
+        # TolX
+        tmp = append(abs(self.p_c), sqrt(diagC), axis=1)
+        if all(self.sigma*(max(tmp, axis=1)) < self.tolx):
+            # stop_list.append('TolX')
+            restart_required = True
+
+        # TolUPX
+        if any(self.sigma*sqrt(diagC)) > self.tolupx:
+            # stop_list.append('TolUPX')
+            restart_required = True
+
+        # No effective axis
+        a = mod(evalcount/self.lambda_-1, self.n)
+        if all(0.1*self.sigma*e_value_sqrt[a, 0]*e_vector[:, a] + self.wcm == self.wcm):
+            # stop_list.append('noeffectaxis')
+            restart_required = True
+
+        # No effective coordinate
+        if any(0.2*self.sigma*sqrt(diagC) + self.wcm == self.wcm):
+            # stop_list.append('noeffectcoord')
+            restart_required = True
+
+        # Adjust step size in case of equal function values
+        if fitness[sel[0]] == fitness[sel[int(min([ceil(0.1+self.lambda_/4.0), self.mu-1]))]]:
+            # stop_list.append('flatfitness')
+            restart_required = True
+
+        return restart_required

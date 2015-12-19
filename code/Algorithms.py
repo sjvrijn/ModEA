@@ -35,7 +35,7 @@ def onePlusOneES(n, fitnessFunction, budget):
         'recombine': lambda pop: Rec.onePlusOne(pop),  # simply copy the only existing individual and return as a list
         'mutate': lambda ind: Mut.x1(ind, parameters, Sam.GaussianSampling(n)),
         'select': lambda pop, new_pop, t: Sel.onePlusOneSelection(pop, new_pop, t, parameters),
-        'mutateParameters': lambda t: parameters.oneFifthRule(t),
+        'mutateParameters': lambda t, _: parameters.oneFifthRule(t),
     }
 
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
@@ -70,7 +70,7 @@ def CMA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
         'recombine': lambda pop: Rec.weighted(pop, parameters),
         'mutate': lambda ind: Mut.CMAMutation(ind, parameters, Sam.GaussianSampling(n)),
         'select': lambda pop, new_pop, _: Sel.best(pop, new_pop, parameters),
-        'mutateParameters': lambda t: parameters.adaptCovarianceMatrix(t),
+        'mutateParameters': lambda t, _: parameters.adaptCovarianceMatrix(t, None),
     }
 
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
@@ -96,7 +96,7 @@ def onePlusOneCholeskyCMAES(n, fitnessFunction, budget):
         'recombine': lambda pop: Rec.onePlusOne(pop),  # simply copy the only existing individual and return as a list
         'mutate': lambda ind: Mut.choleskyCMAMutation(ind, parameters, Sam.GaussianSampling(n)),
         'select': lambda pop, new_pop, _: Sel.onePlusOneCholeskySelection(pop, new_pop, parameters),
-        'mutateParameters': lambda t: parameters.adaptCholeskyCovarianceMatrix(),
+        'mutateParameters': lambda t, _: parameters.adaptCholeskyCovarianceMatrix(),
     }
 
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
@@ -123,7 +123,7 @@ def onePlusOneActiveCMAES(n, fitnessFunction, budget):
         'recombine': lambda pop: Rec.onePlusOne(pop),  # simply copy the only existing individual and return as a list
         'mutate': lambda ind: Mut.choleskyCMAMutation(ind, parameters, Sam.GaussianSampling(n)),
         'select': lambda pop, new_pop, _: Sel.onePlusOneActiveSelection(pop, new_pop, parameters),
-        'mutateParameters': lambda t: parameters.adaptActiveCovarianceMatrix(),
+        'mutateParameters': lambda t, _: parameters.adaptActiveCovarianceMatrix(),
     }
 
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
@@ -153,7 +153,7 @@ def CMSA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
         'recombine': lambda pop: Rec.average(pop, parameters),
         'mutate': lambda ind: Mut.CMAMutation(ind, parameters, Sam.GaussianSampling(n)),
         'select': lambda pop, new_pop, _: Sel.best(pop, new_pop, parameters),
-        'mutateParameters': lambda t: parameters.selfAdaptCovarianceMatrix(),
+        'mutateParameters': lambda t, _: parameters.selfAdaptCovarianceMatrix(),
     }
 
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)

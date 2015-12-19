@@ -78,7 +78,7 @@ def GA(n=10, budget=100, fitness_function='sphere'):
         'recombine': lambda pop: Rec.onePlusOne(pop),  # simply copy the only existing individual and return as a list
         'mutate': lambda ind: mutateIntList(ind, num_options),
         'select': lambda pop, new_pop, _: Sel.best(pop, new_pop, parameters),
-        'mutateParameters': lambda t: parameters.oneFifthRule(t),
+        'mutateParameters': lambda t, _: parameters.oneFifthRule(t),
     }
 
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
@@ -253,7 +253,7 @@ def run():
           "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
     # '''
 
-    '''
+    # '''
     pop, sigmas, fitness, best = GA()
     print()
     print("Best Individual:     {}\n"
