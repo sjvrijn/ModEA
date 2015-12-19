@@ -196,11 +196,8 @@ def run():
     '''
     # Known problems
     print("Combinations known to cause problems:")
-    evaluate_ES(None, opts={'base-sampler': 'quasi-sobol', 'orthogonal': True})
-    evaluate_ES(None, opts={'base-sampler': 'quasi-sobol', 'threshold': True})
-    evaluate_ES(None, opts={'base-sampler': 'quasi-sobol', 'threshold': True, 'orthogonal': True})
 
-    evaluate_ES(None, opts={'sequential': True, 'two-point': True})
+    print("None! Good job :D")
 
     print("\n\n")
     # '''

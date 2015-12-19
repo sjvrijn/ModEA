@@ -43,7 +43,7 @@ class QuasiGaussianSobolSampling(object):
         """
         self.n = n
         self.shape = (n,1) if shape == 'col' else (1,n)
-        self.seed = 1
+        self.seed = 2  # seed=1 will give a null-vector as first result
 
     def next(self):
         """
