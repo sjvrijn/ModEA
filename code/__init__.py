@@ -39,3 +39,20 @@ def getBitString(opts):
             bitstring.append(0)
 
     return bitstring
+
+def getFullOpts(opts):
+
+    for name, choice in opts:
+        if name not in options:
+            del opts[name]
+        elif choice not in options[name]:
+            opts[name] = options[choice][0]
+
+    for name, choices in options:
+        if name not in opts:
+            opts[name] = choices[0]
+        # Optional, should already be checked above
+        # elif opts[name] not in choices:
+        #     opts[name] = choices[0]
+
+    return opts
