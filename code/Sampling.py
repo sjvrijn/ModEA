@@ -6,7 +6,7 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 import numpy as np
 from numpy import array, dot
 from numpy.linalg import norm
-from numpy.random import randn
+from numpy.random import randn, randint
 from scipy.stats import norm as norm_dist
 from sobol_seq import i4_sobol
 try:
@@ -36,14 +36,18 @@ class GaussianSampling(object):
 
 class QuasiGaussianSobolSampling(object):
     """ A quasi-Gaussian sampler """
-    def __init__(self, n, shape='col'):
+    def __init__(self, n, shape='col', seed=None):
         """
             :param n:       Dimensionality of the vectors to be sampled
             :param shape:   String to select between 'col' and 'row'. Default: 'col'
         """
         self.n = n
         self.shape = (n,1) if shape == 'col' else (1,n)
-        self.seed = 2  # seed=1 will give a null-vector as first result
+        # TODO: set seed to random or as keyword argument in __init__
+        if seed is None or seed < 2:
+            self.seed = randint(2, n**2)  # seed=1 will give a null-vector as first result
+        else:
+            self.seed = seed
 
     def next(self):
         """
@@ -52,7 +56,7 @@ class QuasiGaussianSobolSampling(object):
             :return:    A new vector sampled from a Gaussian distribution with mean 0 and standard deviation 1
         """
         vec, seed = i4_sobol(self.n, self.seed)
-        self.seed = seed
+        self.seed = seed if seed > 1 else 2
 
         vec = array(norm_dist.ppf(vec))
         vec = vec.reshape(self.shape)
