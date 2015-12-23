@@ -282,6 +282,8 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
 
     # Initialization
     used_budget = 0
+    used_budget_at_last_restart = 0
+    restart_budget = budget
     recombine = functions['recombine']
     mutate = functions['mutate']
     select = functions['select']
@@ -314,6 +316,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
                 if used_budget == budget:
                     break
 
+        new_population = new_population[:i+1]  # Any un-used individuals in the new population are discarded
         population = select(population, new_population, used_budget)  # Selection
         new_population = recombine(population)                        # Recombination
 
@@ -339,14 +342,24 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
 
         # (B)IPOP
         if parameters.ipop:
-            restart = parameters.ipopTest(used_budget)
+            used_budget_since_restart = used_budget - used_budget_at_last_restart
+            restart = True if parameters.ipop == 'BIPOP' and used_budget_since_restart > restart_budget else False
+            if not restart:
+                restart = parameters.ipopTest(used_budget)
 
             if restart:
+                used_budget_at_last_restart = used_budget
                 if parameters.ipop == 'IPOP':
                     pop_change = 'large'
                 elif parameters.ipop == 'BIPOP':
-                    # TODO: implement choice of this or other method
-                    pop_change = 'small'
+
+                    if used_budget_since_restart//2 < budget-used_budget:
+                        restart_budget = used_budget_since_restart//2
+                        pop_change = 'small'
+                    else:
+                        restart_budget = budget
+                        pop_change = 'large'
+
                 else:
                     pop_change = None
 
