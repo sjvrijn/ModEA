@@ -17,6 +17,7 @@ options = (
     ('two-point',    (False, True)),
     ('selection',    ('default', 'pairwise')),
     ('base-sampler', ('default', 'quasi-sobol', 'quasi-halton')),
+    ('ipop',         ('default', 'IPOP',        'BIPOP')),
     ('weights',      ('default', '1/n',         '1/2^n')),
 )
 
