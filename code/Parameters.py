@@ -124,6 +124,7 @@ class Parameters(BaseParameters):
         self.c_alpha = 0.3
 
         ## IPOP ##
+        self.lambda_orig = self.lambda_large = self.lambda_small = self.lambda_
         self.pop_inc_factor = 2
         self.nbin = 10 + ceil(30*n/lambda_)
         self.histfunevals = zeros(self.nbin)
@@ -242,14 +243,6 @@ class Parameters(BaseParameters):
         C = self.C  # lastest setting for
         C = triu(C) + triu(C, 1).T                  # eigen decomposition
 
-
-        if self.ipop:
-            ipop_restart = False
-            # ipop_restart = self.ipopTest(t)
-            if ipop_restart:
-                self.lambda_ *= self.pop_inc_factor
-                # TODO: Any further resets/restarts required here?
-
         degenerated = False
         if any(isinf(C)) > 1:                           # interval
             degenerated = True
@@ -272,11 +265,7 @@ class Parameters(BaseParameters):
                 raise Exception(e)
 
         if degenerated:
-            self.count_degenerations += 1
-            self.C = eye(n)
-            self.B = eye(n)
-            self.D = ones((n,1))
-            self.sigma_mean = 1
+            self.restart()
 
 
     def selfAdaptCovarianceMatrix(self):
@@ -473,18 +462,18 @@ class Parameters(BaseParameters):
     def restart(self):
 
         n = self.n
-
         self.C = eye(n)
         self.B = eye(n)
         self.D = ones((n,1))
         self.sigma_mean = 1          # TODO: make this depend on any input default sigma value
-
-            # TODO: add feedback of resetting sigma to the sigma per individual
+        # TODO: add feedback of resetting sigma to the sigma per individual
 
 
     def ipopTest(self, evalcount):
 
         restart_required = False
+
+        return restart_required
 
         diagC = diag(self.C).reshape(-1, 1)
         self.histfunval[mod(evalcount/self.lambda_-1, self.nbin)] = fitness[sel[0]]
@@ -520,4 +509,18 @@ class Parameters(BaseParameters):
             # stop_list.append('flatfitness')
             restart_required = True
 
-        return restart_required
+
+    def local_restart(self, pop_change='large'):
+        if pop_change == 'large':
+            self.lambda_large *= self.pop_inc_factor
+            self.lambda_ = self.lambda_large
+        elif pop_change == 'small':
+            rand_val = np.random.random() ** 2
+            self.lambda_small = self.lambda_orig * floor(.5 * (self.lambda_large/self.lambda_orig)**rand_val)
+            self.lambda_ = self.lambda_small
+
+        n = self.n
+        self.C = eye(n)
+        self.B = eye(n)
+        self.D = ones((n,1))
+        self.sigma_mean = 1  # TODO: replace with BIPOP formula

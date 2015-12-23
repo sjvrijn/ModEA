@@ -4,6 +4,7 @@
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 # External libraries
 from copy import copy
+from numpy.random import randn
 # Internal classes
 from .Individual import Individual
 from .Parameters import Parameters
@@ -303,6 +304,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
             individual.fitness = fitnessFunction(individual.dna)[0]  # fitnessFunction returns as a list, as it allows
             used_budget += 1                                         # simultaneous evaluation for multiple individuals
 
+            # Sequential Evaluation
             if sequential_evaluation:  # Sequential evaluation: we interrupt once a better individual has been found
                 if individual.fitness < best_individual.fitness:
                     improvement_found = True  # Is the latest individual better?
@@ -315,6 +317,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
         population = select(population, new_population, used_budget)  # Selection
         new_population = recombine(population)                        # Recombination
 
+        # Two-Point step-size Adaptation
         # TODO: Move the following TPA-code to >= 1 separate function(s)
         if two_point_adaptation:
             wcm = parameters.wcm
@@ -333,6 +336,27 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
                 tpa_result = -1
 
         mutateParameters(used_budget, tpa_result)                     # Parameter mutation
+
+        # (B)IPOP
+        if parameters.ipop:
+            restart = parameters.ipopTest(used_budget)
+
+            if restart:
+                if parameters.ipop == 'IPOP':
+                    pop_change = 'large'
+                elif parameters.ipop == 'BIPOP':
+                    # TODO: implement choice of this or other method
+                    pop_change = 'small'
+                else:
+                    pop_change = None
+
+                parameters.local_restart(pop_change=pop_change)
+                # Set population to start from a new random search point
+                new_search_point = randn(parameters.n,1)
+                for ind in new_population:
+                    ind.dna = new_search_point
+
+
 
         # Track parameters
         sigma_over_time.extend([parameters.sigma_mean] * (used_budget - len(sigma_over_time)))
