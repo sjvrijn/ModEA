@@ -79,7 +79,8 @@ def roulette(population, new_population, parameters):
     parameters.all_offspring = offspring
 
     # Create a discrete sampler using the PageRank values as probabilities
-    roulette_sampler = stats.rv_discrete(name='RPN', values=[1/ind.fitness for ind in new_population])
+    roulette_sampler = stats.rv_discrete(name='RPN', values=(list(range(len(new_population))),
+                                                             [1/ind.fitness for ind in new_population]))
 
     indices = set()
     while len(indices) < parameters.mu:
