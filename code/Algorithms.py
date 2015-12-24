@@ -313,7 +313,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
         new_population = recombine(population)                        # Recombination
 
         # Two-Point step-size Adaptation
-        # TODO: Move the following TPA-code to >= 1 separate function(s)
+        # TODO: Move the following code to >= 1 separate function(s)
         if two_point_adaptation:
             wcm = parameters.wcm
             tpa_vector = (wcm - parameters.wcm_old) * parameters.tpa_factor
@@ -333,6 +333,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
         mutateParameters(used_budget, tpa_result)                     # Parameter mutation
 
         # (B)IPOP
+        # TODO: Move the following code to >= 1 separate function(s)
         if parameters.ipop:
             used_budget_since_restart = used_budget - used_budget_at_last_restart
             restart = True if parameters.ipop == 'BIPOP' and used_budget_since_restart > restart_budget else False
@@ -344,14 +345,12 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
                 if parameters.ipop == 'IPOP':
                     pop_change = 'large'
                 elif parameters.ipop == 'BIPOP':
-
                     if used_budget_since_restart//2 < budget-used_budget:
                         restart_budget = used_budget_since_restart//2
                         pop_change = 'small'
                     else:
                         restart_budget = budget
                         pop_change = 'large'
-
                 else:
                     pop_change = None
 
@@ -360,7 +359,6 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
                 new_search_point = randn(parameters.n,1)
                 for ind in new_population:
                     ind.dna = new_search_point
-
 
 
         # Track parameters
