@@ -73,15 +73,14 @@ def GA(n=10, budget=100, fitness_function='sphere'):
     parameters = Parameters(n, budget, GA_mu, GA_lambda)
     # Initialize the first individual in the population
     population = [Individual(n)]
-    # TODO: rewrite to generic randint() version depending on len(options[i])
-    population[0].dna = np.random.randint(2, size=len(options))
+    population[0].dna = np.array([np.random.randint(len(x[1])) for x in options])
     population[0].fitness = fitnessFunction(population[0].dna)[0]
 
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
         'recombine': lambda pop: Rec.onePlusOne(pop),  # simply copy the only existing individual and return as a list
         'mutate': lambda ind: mutateIntList(ind, num_options),
-        'select': lambda pop, new_pop, _: Sel.best(pop, new_pop, parameters),
+        'select': lambda pop, new_pop, _: Sel.roulette(pop, new_pop, parameters),
         'mutateParameters': lambda t, _: parameters.oneFifthRule(t),
     }
 
