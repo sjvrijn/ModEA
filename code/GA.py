@@ -60,12 +60,14 @@ def mutateIntList(individual, num_options):
             int_list[i] = new_int
 
 
-def GA(n=10, budget=100, fitness_function='sphere'):
+def GA(n=10, budget=250, fitness_function='sphere'):
     """ Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function """
 
+    storage_file = open('GA_results_{}_{}.tdat'.format(n, fitness_function), 'w')
+
     # Fitness function to be passed on to the baseAlgorithm
-    def fitnessFunction(x):
-        return evaluate_ES(x, fitness_function)
+    def fitnessFunction(bitstring):
+        return evaluate_ES(bitstring=bitstring, fitness_function=fitness_function, storage_file=storage_file)
 
     # Assuming a dimensionality of 11 (8 boolean + 3 triples)
     GA_mu = 3
@@ -84,11 +86,12 @@ def GA(n=10, budget=100, fitness_function='sphere'):
         'select': lambda pop, new_pop, _: Sel.roulette(pop, new_pop, parameters),
         'mutateParameters': lambda t, _: parameters.oneFifthRule(t),
     }
+    results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+    storage_file.close()
+    return results
 
-    return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
 
-
-def evaluate_ES(bitstring, fitness_function='sphere', opts=None, n=10, budget=None):
+def evaluate_ES(bitstring, fitness_function='sphere', opts=None, n=10, budget=None, storage_file=None):
     """ Single function to run all desired combinations of algorithms * fitness functions """
 
     # Set parameters
@@ -110,7 +113,7 @@ def evaluate_ES(bitstring, fitness_function='sphere', opts=None, n=10, budget=No
     def algorithm(n, evalfun, budget):
         return customizedES(n, evalfun, budget, opts=opts)
 
-    # '''
+    '''
     # Actually running the algorithm is encapsulated in a try-except for now... math errors
     try:
         # Run the actual ES for <num_runs> times
@@ -118,6 +121,8 @@ def evaluate_ES(bitstring, fitness_function='sphere', opts=None, n=10, budget=No
 
         # From all different runs, retrieve the median fitness to be used as fitness for this ES
         min_fitnesses = np.min(fitnesses, axis=0)
+        if storage_file:
+            storage_file.write('{}:\t{}\n'.format(bitstring, min_fitnesses))
         median = np.median(min_fitnesses)
         print("\t\t{}".format(median))
 
@@ -125,15 +130,17 @@ def evaluate_ES(bitstring, fitness_function='sphere', opts=None, n=10, budget=No
         # print(" {}  \t({})".format(mean_best_fitness, median))
     # '''
 
-    # _, fitnesses = runAlgorithm(fitness_function, algorithm, n, num_runs, f, budget, opts)
-    #
-    # # From all different runs, retrieve the median fitness to be used as fitness for this ES
-    # min_fitnesses = np.min(fitnesses, axis=0)
-    # median = np.median(min_fitnesses)
-    # print("\t\t{}".format(median))
+    _, fitnesses = runAlgorithm(fitness_function, algorithm, n, num_runs, f, budget, opts)
+
+    # From all different runs, retrieve the median fitness to be used as fitness for this ES
+    min_fitnesses = np.min(fitnesses, axis=0)
+    if storage_file:
+        storage_file.write('{}:\t{}\n'.format(bitstring, min_fitnesses))
+    median = np.median(min_fitnesses)
+    print("\t\t{}".format(median))
 
 
-    # '''
+    '''
     except Exception as e:
         # Give this ES fitness INF in case of runtime errors
         print(" np.inf: {}".format(e))
@@ -177,6 +184,7 @@ def runAlgorithm(fit_name, algorithm, n, num_runs, f, budget, opts):
     # Preprocess/unpack results
     _, sigmas, fitnesses, best_individual = (list(x) for x in zip(*results))
     sigmas = np.array(sigmas).T
+    # Subtract the target fitness value from all returned fitnesses to only get the absolute distance
     fitnesses = np.subtract(np.array(fitnesses).T, np.array(targets)[np.newaxis,:])
 
     return sigmas, fitnesses
@@ -231,10 +239,11 @@ def run():
     for num, count in sorted(counts.items(), key=lambda x: x[0]):
         products.append(product(range(num), repeat=count))
 
+    storage_file = open('bruteforce_10_sphere.tdat', 'w')
     x = datetime.now()
     for combo in product(*products):
         opts = list(sum(combo, ()))
-        result = evaluate_ES(opts)[0]
+        result = evaluate_ES(opts, storage_file=storage_file)[0]
 
         if result < best_result:
             best_result = result
@@ -265,6 +274,6 @@ def run():
     # '''
 
 if __name__ == '__main__':
-    np.set_printoptions(linewidth=200)
+    np.set_printoptions(linewidth=1000)
     # np.random.seed(42)
     run()
