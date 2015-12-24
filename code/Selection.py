@@ -4,6 +4,7 @@
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
+from scipy import stats
 
 """
 This Module contains a collection of Selection operators to be used in the ES-Framework
@@ -58,6 +59,35 @@ def pairwise(population, new_population, parameters):
 
     # After pairwise filtering, we can re-use the regular selection function
     return best(population, pairwise_filtered, parameters)
+
+
+def roulette(population, new_population, parameters):
+    """
+        Given the population, return mu individuals, selected by roulette, using 1/fitness as probability
+
+        :param population:      List of :py:class:code.Individual objects containing the previous generation
+        :param new_population:  List of :py:class:code.Individual objects containing the new generation
+        :param parameters:      :py:class:code.Parameters object for storing all parameters, options, etc.
+        :returns:               A slice of the sorted new_population list.
+    """
+    if parameters.elitist:
+        new_population.extend(population)
+
+    new_population.sort(key=lambda individual: individual.fitness)  # sort descending
+    offspring = np.column_stack((ind.dna for ind in new_population))
+    parameters.all_offspring = offspring
+
+    # Create a discrete sampler using the PageRank values as probabilities
+    roulette_sampler = stats.rv_discrete(name='RPN', values=[1/ind.fitness for ind in new_population])
+
+    indices = set()
+    while len(indices) < parameters.mu:
+        to_be_sampled = parameters.mu - len(indices)
+        # Draw <to_be_sampled> samples from the defined distribution
+        sample = roulette_sampler.rvs(size=to_be_sampled)
+        indices.update(sample)
+
+    return [new_population[index] for index in indices]
 
 
 def onePlusOneSelection(population, new_population, t, parameters):
