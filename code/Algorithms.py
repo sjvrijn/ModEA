@@ -214,7 +214,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
     parameters = Parameters(n, budget, mu, lambda_, weights_option=opts['weights'], active=opts['active'],
                             elitist=opts['elitism'], ipop=opts['ipop'], sequential=opts['sequential'],
                             tpa=opts['two-point'])
-    population = [Individual(n) for _ in range(mu)]
+    population = [Individual(n) for _ in range(parameters.mu)]
 
     # Artificial init: in hopes of fixing CMA-ES
     wcm = parameters.wcm
