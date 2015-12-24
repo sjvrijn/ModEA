@@ -66,7 +66,11 @@ def GA(n=10, budget=100, fitness_function='sphere'):
     def fitnessFunction(x):
         return evaluate_ES(x, fitness_function)
 
-    parameters = Parameters(n, budget, 1, 3)
+    # Assuming a dimensionality of 11 (8 boolean + 3 triples)
+    GA_mu = 3
+    GA_lambda = 12
+
+    parameters = Parameters(n, budget, GA_mu, GA_lambda)
     # Initialize the first individual in the population
     population = [Individual(n)]
     # TODO: rewrite to generic randint() version depending on len(options[i])
@@ -84,12 +88,12 @@ def GA(n=10, budget=100, fitness_function='sphere'):
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
 
 
-def evaluate_ES(bitstring, fitness_function='sphere', opts=None):
+def evaluate_ES(bitstring, fitness_function='sphere', opts=None, n=10, budget=None):
     """ Single function to run all desired combinations of algorithms * fitness functions """
 
     # Set parameters
-    n = 10
-    budget = 500
+    if budget is None:
+        budget = 10**3 * n
     num_runs = 15
 
     # Setup the bbob logger
