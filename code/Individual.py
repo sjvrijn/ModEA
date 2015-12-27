@@ -22,10 +22,20 @@ class Individual(object):
         self.n = n
         self.dna = np.ones((n,1))               # Column vector
         self.fitness = None                     # Default 'unset' value
+
+        self.maxStepSize = 0.5
+        self.initStepSize = 0.2
         self.sigma = 1
 
         self.last_z = np.zeros((n,1))
         self.mutation_vector = np.zeros((n,1))
+
+        if n > 5:
+            self.baseStepSize = 1 / n
+        else:
+            self.baseStepSize = 0.175  # Random guess value, may need to be updated
+        # The actual stepSize is the base + offset, so final starting stepSize = initStepSize
+        self.stepSizeOffset = self.initStepSize - self.baseStepSize
 
 
     def __copy__(self):
@@ -40,6 +50,11 @@ class Individual(object):
         return_copy.dna = copy(self.dna)
         return_copy.fitness = self.fitness
         return_copy.sigma = self.sigma
+
+        return_copy.maxStepSize = self.maxStepSize
+        return_copy.baseStepSize = self.baseStepSize
+        return_copy.initStepSize = self.initStepSize
+        return_copy.stepSizeOffset = self.stepSizeOffset
 
         return_copy.last_z = copy(self.last_z)
         return_copy.mutation_vector = copy(self.mutation_vector)

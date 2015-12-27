@@ -27,9 +27,6 @@ class BaseParameters(object):
     c_p = 1/12
     p_thresh = 0.44
 
-    ### Self-Adaptive GA Mutation ###
-    gamme = 0.22
-
 
 
 class Parameters(BaseParameters):

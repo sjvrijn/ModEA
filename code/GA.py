@@ -12,6 +12,7 @@ from code import getOpts, getBitString, options, num_options
 from code.Algorithms import customizedES, baseAlgorithm
 from code.Individual import Individual
 from code.Parameters import Parameters
+import code.Mutation as Mut
 import code.Selection as Sel
 import code.Recombination as Rec
 
@@ -48,10 +49,12 @@ def mutateBitstring(individual):
 
 def mutateIntList(individual, num_options):
     """ extremely simple 1/n random integer mutation """
+
+    Mut.adaptStepSize(individual)
+    p = individual.baseStepSize + individual.stepSizeOffset
+
     int_list = individual.dna
-    n = len(int_list)
-    p = 1/n
-    for i in range(n):
+    for i in range(individual.n):
         if np.random.random() < p:
             # -1 as random_integers is [1, val], -1 to simulate leaving out the current value
             new_int = np.random.random_integers(num_options[i]-1)-1

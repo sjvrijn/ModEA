@@ -17,7 +17,23 @@ A Mutation operator mutates an Individual's DNA inline, thus returning nothing.
 import numpy as np
 from numpy import add, dot, exp
 from numpy.linalg import norm
-from random import getrandbits
+from random import gauss, getrandbits
+
+
+def adaptStepSize(individual):
+    """
+        Given the current step size for a candidate, randomly determine a new step size offset,
+        that can be no greater than maxStepSize - baseStepSize
+
+        :param individual:  The Individual object whose step size should be adapted
+    """
+    # Empirically determined, see paper
+    gamma = 0.22
+
+    offset = individual.stepSizeOffset
+    offset = 1 + ((1 - offset) / offset)
+    offset = 1 / (offset * exp(gamma * gauss(0, 1)))
+    individual.stepSizeOffset = min(offset, (individual.maxStepSize - individual.baseStepSize))
 
 
 # TODO: come up with a better name for this mutation function
