@@ -14,6 +14,17 @@ that are to form the new population
 import numpy as np
 from copy import copy
 from numpy import dot, mean, sqrt
+from random import choice
+
+def random(pop, param):
+    """
+        Create a new population by selecting random parents from the given population.
+        To be used when no actual recombination occurs
+    """
+
+    new_population = [choice(pop) for _ in param.lambda_]
+    return new_population
+
 
 def onePlusOne(population):
     """
@@ -23,26 +34,6 @@ def onePlusOne(population):
         :returns:           A copy of the first individual in the given population
     """
     return [copy(population[0])]
-
-
-# TODO: remove, is implemented in weighted with weights = 1/n?
-def average(pop, param):
-    """
-        Given the new population, return the average of the mu best individuals
-
-        :param pop:     The population to be recombined
-        :param param:   Parameter object
-        :returns:       A list of lambda individuals, the dna of each set to the numerical mean of the given population
-    """
-
-    avg = copy(pop[0])
-    avg.dna, param.s_mean, param.sigma_mean = mean([(ind.dna, ind.mutation_vector, ind.sigma) for ind in pop],axis=0)
-
-    new_population = [avg]
-    for _ in range(param.lambda_-1):
-        new_population.append(copy(avg))
-
-    return new_population
 
 
 def weighted(pop, param):
