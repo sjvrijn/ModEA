@@ -16,6 +16,13 @@ from copy import copy
 from numpy import dot, mean, sqrt
 from random import choice
 
+
+def onePointCrossover(ind_a, ind_b, parameters):
+    crossover_point = np.random.randint(1, len(ind_a.dna) - 2)  # -1 as randint is inclusive, -1 to not choose the last element
+    ind_a[:crossover_point], ind_b[:crossover_point] = ind_b[:crossover_point], ind_a[:crossover_point]
+    return ind_a, ind_b
+
+
 def random(pop, param):
     """
         Create a new population by selecting random parents from the given population.

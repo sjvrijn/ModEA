@@ -33,12 +33,6 @@ def x1(individual, parameters, sampler):
     individual.dna += parameters.sigma * sampler.next()
 
 
-def onePointCrossover(ind_a, ind_b, parameters):
-    crossover_point = np.random.randint(1, len(ind_a.dna) - 2)  # -1 as randint is inclusive, -1 to not choose the last element
-    ind_a[:crossover_point], ind_b[:crossover_point] = ind_b[:crossover_point], ind_a[:crossover_point]
-    return ind_a, ind_b
-
-
 def CMAMutation(individual, parameters, sampler, threshold_convergence=False):
     """
         CMA mutation: x = x + (sigma * B*D*N(0,I))
