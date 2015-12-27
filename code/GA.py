@@ -7,6 +7,7 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 import numpy as np
 import sys
 from bbob import bbobbenchmarks, fgeneric
+from copy import copy
 from code import getOpts, getBitString, options, num_options
 from code.Algorithms import customizedES, baseAlgorithm
 from code.Individual import Individual
@@ -63,6 +64,7 @@ def mutateIntList(individual, num_options):
 def GA(n=10, budget=250, fitness_function='sphere'):
     """ Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function """
 
+    # Where to store genotype-fitness information
     storage_file = open('GA_results_{}_{}.tdat'.format(n, fitness_function), 'w')
 
     # Fitness function to be passed on to the baseAlgorithm
@@ -78,6 +80,9 @@ def GA(n=10, budget=250, fitness_function='sphere'):
     population = [Individual(n)]
     population[0].dna = np.array([np.random.randint(len(x[1])) for x in options])
     population[0].fitness = fitnessFunction(population[0].dna)[0]
+
+    while len(population) < GA_mu:
+        population.append(copy(population[0]))
 
     # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
     functions = {
