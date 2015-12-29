@@ -213,14 +213,10 @@ def run():
     print("\n\n")
     # '''
 
-    # '''
+    '''
     # Known problems
     print("Combinations known to cause problems:")
-
-    evaluate_ES(None, opts={'two-point': True})
-    evaluate_ES(None, opts={'selection': 'pairwise'})
-    evaluate_ES(None, opts={'selection': 'pairwise', 'two-point': True})
-    # print("None! Good job :D")
+    print("None! Good job :D")
 
     print("\n\n")
     # '''
@@ -232,7 +228,7 @@ def run():
     # '''
 
 
-    '''
+    # '''
     # Exhaustive/brute-force search over *all* possible combinations
     # NB: THIS ASSUMES OPTIONS ARE SORTED ASCENDING BY NUMBER OF VALUES
     print("Brute-force exhaustive search of *all* available ES-combinations.")
@@ -276,7 +272,7 @@ def run():
           "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
     # '''
 
-    '''
+    # '''
     pop, sigmas, fitness, best = GA()
     print()
     print("Best Individual:     {}\n"
