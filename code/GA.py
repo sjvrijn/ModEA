@@ -104,7 +104,7 @@ def evaluate_ES(bitstring, fitness_function='sphere', opts=None, n=10, budget=No
 
     # Set parameters
     if budget is None:
-        budget = 10**3 * n
+        budget = 10**2 * n
     num_runs = 15
 
     # Setup the bbob logger
@@ -213,11 +213,14 @@ def run():
     print("\n\n")
     # '''
 
-    '''
+    # '''
     # Known problems
     print("Combinations known to cause problems:")
 
-    print("None! Good job :D")
+    evaluate_ES(None, opts={'two-point': True})
+    evaluate_ES(None, opts={'selection': 'pairwise'})
+    evaluate_ES(None, opts={'selection': 'pairwise', 'two-point': True})
+    # print("None! Good job :D")
 
     print("\n\n")
     # '''
@@ -229,7 +232,7 @@ def run():
     # '''
 
 
-    # '''
+    '''
     # Exhaustive/brute-force search over *all* possible combinations
     # NB: THIS ASSUMES OPTIONS ARE SORTED ASCENDING BY NUMBER OF VALUES
     print("Brute-force exhaustive search of *all* available ES-combinations.")
@@ -273,7 +276,7 @@ def run():
           "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
     # '''
 
-    # '''
+    '''
     pop, sigmas, fitness, best = GA()
     print()
     print("Best Individual:     {}\n"
