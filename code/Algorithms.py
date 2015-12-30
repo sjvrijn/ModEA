@@ -328,7 +328,22 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
 
         new_population = new_population[:i+1]  # Any un-used individuals in the new population are discarded
         population = select(population, new_population, used_budget)  # Selection
-        new_population = recombine(population)                        # Recombination
+
+        # Track parameters
+        sigma_over_time.extend([parameters.sigma_mean] * (used_budget - len(sigma_over_time)))
+        best_fitness_over_time.extend([population[0].fitness] * (used_budget - len(best_fitness_over_time)))
+        if population[0].fitness < best_individual.fitness:
+            best_individual = copy(population[0])
+
+        # We can stop here if we know we reached our budget
+        if used_budget >= budget:
+            break
+
+        if len(population) == parameters.mu:
+            new_population = recombine(population)                        # Recombination
+        else:
+            print('Bad population size! size: {} instead of {} at used budget {}'.format(len(population),
+                                                                                         parameters.mu, used_budget))
 
         # Two-Point step-size Adaptation
         # TODO: Move the following code to >= 1 separate function(s)
@@ -377,13 +392,6 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
                 new_search_point = randn(parameters.n,1)
                 for ind in new_population:
                     ind.dna = new_search_point
-
-
-        # Track parameters
-        sigma_over_time.extend([parameters.sigma_mean] * (used_budget - len(sigma_over_time)))
-        best_fitness_over_time.extend([population[0].fitness] * (used_budget - len(best_fitness_over_time)))
-        if population[0].fitness < best_individual.fitness:
-            best_individual = copy(population[0])
 
     # Debug print statement, displaying the number of degenerations that occurred during the run of this algorithm
     if parameters.count_degenerations:

@@ -5,8 +5,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
-from numpy import any, append, arange, ceil, diag, dot, exp, eye, floor, isfinite, isinf, isreal, ones, log,\
-                  mean, mod, newaxis, outer, real, sqrt, square, sum, triu, zeros
+from numpy import abs, all, any, append, arange, ceil, diag, dot, exp, eye, floor, isfinite, isinf, isreal, ones, log,\
+                  max, mean, mod, newaxis, outer, real, sqrt, square, sum, triu, zeros
 from numpy.linalg import cond, eig, eigh, norm, LinAlgError
 from numpy.random import randn
 
@@ -26,6 +26,11 @@ class BaseParameters(object):
     p_target = 2/11
     c_p = 1/12
     p_thresh = 0.44
+
+    ### (B)IPOP Restart parameters ###
+    tolfun = 1e-12
+    conditioncov = 1e14
+    tolupsigma = 1e20
 
 
 
@@ -130,9 +135,8 @@ class Parameters(BaseParameters):
         self.pop_inc_factor = 2
         self.nbin = 10 + ceil(30*n/lambda_)
         self.histfunevals = zeros(self.nbin)
-        self.tolfun = 10 ** (-12)
-        self.tolX = 10 ** (-12) * self.sigma
-        self.conditioncov = 10 ** 14
+        self.tolx = 1e-12 * self.sigma
+        self.tolupx = 1e3 * self.sigma
 
         ### CMSA-ES ###
         self.tau = 1 / sqrt(2*n)
@@ -497,7 +501,7 @@ class Parameters(BaseParameters):
 
         # No effective axis
         a = mod(evalcount/self.lambda_-1, self.n)
-        if all(0.1*self.sigma*e_value_sqrt[a, 0]*e_vector[:, a] + self.wcm == self.wcm):
+        if all(0.1*self.sigma*self.D[a, 0]*self.B[:, a] + self.wcm == self.wcm):
             # stop_list.append('noeffectaxis')
             restart_required = True
 

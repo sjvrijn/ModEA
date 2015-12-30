@@ -68,7 +68,7 @@ def GA(n=10, budget=250, fitness_function='sphere'):
     """ Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function """
 
     # Where to store genotype-fitness information
-    storage_file = open('GA_results_{}_{}.tdat'.format(n, fitness_function), 'w')
+    storage_file = open('{}GA_results_{}_{}.tdat'.format(datapath, n, fitness_function), 'w')
 
     # Fitness function to be passed on to the baseAlgorithm
     def fitnessFunction(bitstring):
@@ -104,7 +104,7 @@ def evaluate_ES(bitstring, fitness_function='sphere', opts=None, n=10, budget=No
 
     # Set parameters
     if budget is None:
-        budget = 10**2 * n
+        budget = 1e2 * n
     num_runs = 15
 
     # Setup the bbob logger
@@ -213,10 +213,18 @@ def run():
     print("\n\n")
     # '''
 
-    '''
+    # '''
     # Known problems
     print("Combinations known to cause problems:")
-    print("None! Good job :D")
+
+    evaluate_ES(None, opts={'sequential': True})
+    evaluate_ES(None, opts={'two-point': True})
+    evaluate_ES(None, opts={'selection': 'pairwise'})
+    evaluate_ES(None, opts={'two-point': True, 'selection': 'pairwise'})
+    # these are the actual failures
+    evaluate_ES(None, opts={'sequential': True, 'selection': 'pairwise'})
+    evaluate_ES(None, opts={'sequential': True, 'two-point': True, 'selection': 'pairwise'})
+    # print("None! Good job :D")
 
     print("\n\n")
     # '''
@@ -246,7 +254,7 @@ def run():
     for num, count in sorted(counts.items(), key=lambda x: x[0]):
         products.append(product(range(num), repeat=count))
 
-    storage_file = open('bruteforce_10_sphere.tdat', 'w')
+    storage_file = open('{}bruteforce_10_sphere.tdat'.format(datapath), 'w')
     x = datetime.now()
     for combo in product(*products):
         opts = list(sum(combo, ()))
@@ -272,7 +280,7 @@ def run():
           "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
     # '''
 
-    # '''
+    '''
     pop, sigmas, fitness, best = GA()
     print()
     print("Best Individual:     {}\n"
