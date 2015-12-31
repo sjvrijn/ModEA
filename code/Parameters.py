@@ -483,41 +483,46 @@ class Parameters(BaseParameters):
     def ipopTest(self, evalcount):
 
         restart_required = False
-
-        return restart_required
-
         diagC = diag(self.C).reshape(-1, 1)
-        self.histfunval[mod(evalcount/self.lambda_-1, self.nbin)] = fitness[sel[0]]
-        if mod(evalcount, self.lambda_) == self.nbin and \
-            max(self.histfunval) - min(self.histfunval) < self.tolfun:
-            # stop_list.append('tolfun')
-            restart_required = True
 
         # TolX
         tmp = append(abs(self.p_c), sqrt(diagC), axis=1)
         if all(self.sigma*(max(tmp, axis=1)) < self.tolx):
-            # stop_list.append('TolX')
+            print('TolX')
             restart_required = True
 
         # TolUPX
         if any(self.sigma*sqrt(diagC)) > self.tolupx:
-            # stop_list.append('TolUPX')
+            print('TolUPX')
             restart_required = True
 
         # No effective axis
         a = mod(evalcount/self.lambda_-1, self.n)
         if all(0.1*self.sigma*self.D[a, 0]*self.B[:, a] + self.wcm == self.wcm):
-            # stop_list.append('noeffectaxis')
+            print('noeffectaxis')
             restart_required = True
 
         # No effective coordinate
         if any(0.2*self.sigma*sqrt(diagC) + self.wcm == self.wcm):
-            # stop_list.append('noeffectcoord')
+            print('noeffectcoord')
+            restart_required = True
+
+        # Condition of C
+        if cond(self.C) > self.conditioncov:
+            print('condcov')
+            restart_required = True
+
+        return restart_required
+
+        self.histfunval[mod(evalcount/self.lambda_-1, self.nbin)] = fitness[sel[0]]
+        if mod(evalcount, self.lambda_) == self.nbin and \
+            max(self.histfunval) - min(self.histfunval) < self.tolfun:
+            print('tolfun')
             restart_required = True
 
         # Adjust step size in case of equal function values
         if fitness[sel[0]] == fitness[sel[int(min([ceil(0.1+self.lambda_/4.0), self.mu-1]))]]:
-            # stop_list.append('flatfitness')
+            print('flatfitness')
             restart_required = True
 
 

@@ -213,6 +213,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
 
     if opts['selection'] == 'pairwise':
         selector = Sel.pairwise
+        # TODO FIXME: are these fixes correct?!
         # Explicitly force lambda_ to be even
         if lambda_ % 2 == 1:
             lambda_ += 1
@@ -384,7 +385,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
                     pop_change = 'small'
                 # In the remaining (B)IPOP cases we increase the population
                 elif parameters.ipop in ['IPOP', 'BIPOP']:
-                    restart_budget = parameters.max_iter
+                    restart_budget = parameters.max_iter * parameters.lambda_  # TODO FIXME: add * parameters.lambda_ factor?!
                     pop_change = 'large'
                 # Otherwise, we just use a local restart TODO FIXME: DOES NOT CURRENTLY OCCUR?
                 else:
