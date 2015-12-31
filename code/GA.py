@@ -192,6 +192,12 @@ def runAlgorithm(fit_name, algorithm, n, num_runs, f, budget, opts):
     # Preprocess/unpack results
     _, sigmas, fitnesses, best_individual = (list(x) for x in zip(*results))
     sigmas = np.array(sigmas).T
+
+    fit_lengths = set([len(x) for x in fitnesses])
+    if len(fit_lengths) > 1:
+        min_length = min(fit_lengths)
+        fitnesses = [x[:min_length] for x in fitnesses]
+
     # Subtract the target fitness value from all returned fitnesses to only get the absolute distance
     fitnesses = np.subtract(np.array(fitnesses).T, np.array(targets)[np.newaxis,:])
 
