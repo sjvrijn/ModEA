@@ -47,16 +47,21 @@ def pairwise(population, new_population, parameters):
         :param parameters:      :py:class:code.Parameters object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
+    pairwise_filtered = []
+    num_pairs = len(new_population) // 2
+
     if len(new_population) % 2 != 0:
-        raise Exception("Error: attempting to perform pairwise selection on an odd number of individuals")
+        # raise Exception("Error: attempting to perform pairwise selection on an odd number of individuals")
+        pairwise_filtered.append(new_population[-1])  # TODO FIXME: TEMP FIX, OFTEN INCORRECT
+        num_pairs -= 1
 
     # Select the best (=lowest) fitness for each consecutive pair of individuals
-    pairwise_filtered = []
-    for i in range(0, len(new_population), 2):
-        if new_population[i].fitness < new_population[i+1].fitness:
-            pairwise_filtered.append(new_population[i])
+    for i in range(0, num_pairs):
+        index = i*2
+        if new_population[index].fitness < new_population[index+1].fitness:
+            pairwise_filtered.append(new_population[index])
         else:
-            pairwise_filtered.append(new_population[i+1])
+            pairwise_filtered.append(new_population[index+1])
 
     # After pairwise filtering, we can re-use the regular selection function
     return best(population, pairwise_filtered, parameters)
