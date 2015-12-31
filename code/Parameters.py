@@ -76,6 +76,7 @@ class Parameters(BaseParameters):
         self.elitist = elitist
         self.ipop = ipop
         self.sequential = sequential
+        self.seq_cutoff = mu + 1
         self.tpa = tpa
         self.weights = self.getWeights(weights_option)
         self.mu_eff = 1 / sum(square(self.weights))
@@ -438,16 +439,18 @@ class Parameters(BaseParameters):
             :returns:               Returns a np.array of weights, adding to 1
         """
 
+        mu = self.mu
+
         if weights_option == '1/n':
-            weights = ones((self.mu, 1)) * (1/self.mu)
+            weights = ones((mu, 1)) * (1/mu)
         elif weights_option == '1/2^n':
             # The idea here is to give weights (1/2, 1/4, ..., 1/2**mu) + (1/2**mu / mu) so it all sums to 1
-            leftover = (1 / (2**self.mu)) / self.mu
-            weights = 1 / 2**arange(1, self.mu+1) + leftover
-            weights.shape = (self.mu, 1)
+            leftover = (1 / (2**mu)) / mu
+            weights = 1 / 2**arange(1, mu+1) + leftover
+            weights.shape = (mu, 1)
         else:
             _mu_prime = (self.lambda_-1) / 2.0
-            weights = log(_mu_prime+1.0)-log(arange(1, self.mu+1)[:, newaxis])
+            weights = log(_mu_prime+1.0)-log(arange(1, mu+1)[:, newaxis])
             weights = weights / sum(weights)
 
         return weights

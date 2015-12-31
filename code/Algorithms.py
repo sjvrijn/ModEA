@@ -232,6 +232,8 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
     parameters = Parameters(n, budget, mu, lambda_, weights_option=opts['weights'], active=opts['active'],
                             elitist=opts['elitism'], ipop=opts['ipop'], sequential=opts['sequential'],
                             tpa=opts['two-point'])
+    if opts['sequential'] and opts['selection'] == 'pairwise':
+        parameters.seq_cutoff = 2*mu
     population = [Individual(n) for _ in range(parameters.mu)]
 
     # Artificial init: in hopes of fixing CMA-ES
@@ -320,7 +322,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
             if sequential_evaluation:  # Sequential evaluation: we interrupt once a better individual has been found
                 if individual.fitness < best_individual.fitness:
                     improvement_found = True  # Is the latest individual better?
-                if i >= parameters.mu and improvement_found:
+                if i >= parameters.seq_cutoff and improvement_found:
                     improvement_found = False  # Have we evaluated at least mu mutated individuals?
                     break
                 if used_budget == budget:
