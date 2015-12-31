@@ -192,7 +192,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
     string_default_opts = ['base-sampler', 'ipop', 'selection', 'weights']
     for op in string_default_opts:
         if op not in opts:
-            opts[op] = 'default'
+            opts[op] = None
 
 
     # Pick the lowest-level sampler
@@ -295,7 +295,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
     # Initialization
     used_budget = 0
     used_budget_at_last_restart = 0
-    restart_budget = budget
+    restart_budget = parameters.max_iter
     recombine = functions['recombine']
     mutate = functions['mutate']
     select = functions['select']
@@ -371,24 +371,26 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
         # TODO: Move the following code to >= 1 separate function(s)
         if parameters.ipop:
             used_budget_since_restart = used_budget - used_budget_at_last_restart
-            restart = True if parameters.ipop == 'BIPOP' and used_budget_since_restart > restart_budget else False
+            restart = True if used_budget_since_restart > restart_budget else False
             if not restart:
                 restart = parameters.ipopTest(used_budget)
 
             if restart:
                 used_budget_at_last_restart = used_budget
-                if parameters.ipop == 'IPOP':
+                # Most restrictive restart scheme
+                if parameters.ipop == 'BIPOP' and parameters.last_pop == 'large'\
+                                              and used_budget_since_restart//2 < budget-used_budget:
+                    restart_budget = used_budget_since_restart//2
+                    pop_change = 'small'
+                # In the remaining (B)IPOP cases we increase the population
+                elif parameters.ipop in ['IPOP', 'BIPOP']:
+                    restart_budget = parameters.max_iter
                     pop_change = 'large'
-                elif parameters.ipop == 'BIPOP':
-                    if used_budget_since_restart//2 < budget-used_budget:
-                        restart_budget = used_budget_since_restart//2
-                        pop_change = 'small'
-                    else:
-                        restart_budget = budget
-                        pop_change = 'large'
+                # Otherwise, we just use a local restart TODO FIXME: DOES NOT CURRENTLY OCCUR?
                 else:
                     pop_change = None
 
+                print("restart! {}".format(pop_change))
                 parameters.local_restart(pop_change=pop_change)
                 # Set population to start from a new random search point
                 new_search_point = randn(parameters.n,1)

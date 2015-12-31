@@ -43,7 +43,7 @@ class Parameters(BaseParameters):
 
     def __init__(self, n, budget,
                  mu=None, lambda_=None, weights_option=None,
-                 active=False, elitist=False, ipop=False, sequential=False, tpa=False):
+                 active=False, elitist=False, ipop=None, sequential=False, tpa=False):
         """
             Setup the set of parameters
 
@@ -132,10 +132,12 @@ class Parameters(BaseParameters):
         self.c_alpha = 0.3
 
         ## IPOP ##
+        self.last_pop = None
         self.lambda_orig = self.lambda_large = self.lambda_small = self.lambda_
         self.pop_inc_factor = 2
         self.nbin = 10 + ceil(30*n/lambda_)
         self.histfunevals = zeros(self.nbin)
+        self.max_iter = 100 + 50*(n+3)**2 / sqrt(lambda_)
         self.tolx = 1e-12 * self.sigma
         self.tolupx = 1e3 * self.sigma
 
@@ -525,11 +527,18 @@ class Parameters(BaseParameters):
             self.lambda_ = self.lambda_large
         elif pop_change == 'small':
             rand_val = np.random.random() ** 2
-            self.lambda_small = self.lambda_orig * floor(.5 * (self.lambda_large/self.lambda_orig)**rand_val)
-            self.lambda_ = self.lambda_small
+            self.lambda_small = floor(self.lambda_orig * (.5 * self.lambda_large/self.lambda_orig)**rand_val)
+            self.lambda_ = int(self.lambda_small)
 
+        self.last_pop = pop_change
         n = self.n
         self.C = eye(n)
         self.B = eye(n)
         self.D = ones((n,1))
-        self.sigma_mean = 1  # TODO: replace with BIPOP formula
+        self.sqrt_C = dot(self.B, self.D**-1 * self.B.T)
+        self.sigma_mean = self.sigma = 1  # TODO: replace with BIPOP formula
+
+        self.p_sigma = zeros((n,1))
+        self.p_c = zeros((n,1))
+        self.weighted_mutation_vector = zeros((n,1))   # weighted average of the last generation of offset vectors
+        self.y_w_squared = zeros((n,1))

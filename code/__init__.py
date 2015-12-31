@@ -16,10 +16,10 @@ options = (
     ('orthogonal',   (False, True)),
     ('sequential',   (False, True)),
     ('two-point',    (False, True)),
-    ('selection',    ('default', 'pairwise')),
-    ('base-sampler', ('default', 'quasi-sobol', 'quasi-halton')),
-    ('ipop',         ('default', 'IPOP',        'BIPOP')),
-    ('weights',      ('default', '1/n',         '1/2^n')),
+    ('selection',    (None, 'pairwise')),
+    ('base-sampler', (None, 'quasi-sobol', 'quasi-halton')),
+    ('ipop',         (None, 'IPOP',        'BIPOP')),
+    ('weights',      (None, '1/n',         '1/2^n')),
 )
 
 num_options = [len(opt[1]) for opt in options]
