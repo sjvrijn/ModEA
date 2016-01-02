@@ -218,11 +218,11 @@ class Parameters(BaseParameters):
 
         cc, cs, c_1, c_mu, n = self.c_c, self.c_sigma, self.c_1, self.c_mu, self.n
         wcm, wcm_old, mueff, invsqrt_C = self.wcm, self.wcm_old, self.mu_eff, self.sqrt_C
-        evalcount, _lambda = t, self.lambda_
+        evalcount, lambda_ = t, self.lambda_
 
         self.p_sigma = (1-cs) * self.p_sigma + \
                        sqrt(cs*(2-cs)*mueff) * dot(invsqrt_C, (wcm - wcm_old) / self.sigma)
-        hsig = sum(self.p_sigma**2)/(1-(1-cs)**(2*evalcount/_lambda))/n < 2 + 4/(n+1)
+        hsig = sum(self.p_sigma**2)/(1-(1-cs)**(2*evalcount/lambda_))/n < 2 + 4/(n+1)
         self.p_c = (1-cc) * self.p_c + hsig * sqrt(cc*(2-cc)*mueff) * (wcm - wcm_old) / self.sigma
         offset = (self.offspring - wcm_old) / self.sigma
 
