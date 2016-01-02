@@ -33,12 +33,21 @@ def onePlusOneES(n, fitnessFunction, budget):
     population = [Individual(n)]
     population[0].fitness = fitnessFunction(population[0].dna)
 
-    # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
+    # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
+    def recombine(pop):
+        return Rec.onePlusOne(pop)  # simply copy the only existing individual and return as a list
+    def mutate(ind):
+        return Mut.x1(ind, parameters, Sam.GaussianSampling(n))
+    def select(pop, new_pop, t):
+        return Sel.onePlusOneSelection(pop, new_pop, t, parameters)
+    def mutateParameters(t, _):
+        return parameters.oneFifthRule(t)
+
     functions = {
-        'recombine': lambda pop: Rec.onePlusOne(pop),  # simply copy the only existing individual and return as a list
-        'mutate': lambda ind: Mut.x1(ind, parameters, Sam.GaussianSampling(n)),
-        'select': lambda pop, new_pop, t: Sel.onePlusOneSelection(pop, new_pop, t, parameters),
-        'mutateParameters': lambda t, _: parameters.oneFifthRule(t),
+        'recombine': recombine,
+        'mutate': mutate,
+        'select': select,
+        'mutateParameters': mutateParameters,
     }
 
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
@@ -68,12 +77,21 @@ def CMA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
         individual.dna = wcm
         individual.fitness = fitness
 
-    # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
+    # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
+    def recombine(pop):
+        return Rec.weighted(pop, parameters)
+    def mutate(ind):
+        return Mut.CMAMutation(ind, parameters, Sam.GaussianSampling(n))
+    def select(pop, new_pop, t):
+        return Sel.best(pop, new_pop, parameters)
+    def mutateParameters(t, _):
+        return parameters.adaptCovarianceMatrix(t, None)
+
     functions = {
-        'recombine': lambda pop: Rec.weighted(pop, parameters),
-        'mutate': lambda ind: Mut.CMAMutation(ind, parameters, Sam.GaussianSampling(n)),
-        'select': lambda pop, new_pop, _: Sel.best(pop, new_pop, parameters),
-        'mutateParameters': lambda t, _: parameters.adaptCovarianceMatrix(t, None),
+        'recombine': recombine,
+        'mutate': mutate,
+        'select': select,
+        'mutateParameters': mutateParameters,
     }
 
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
@@ -94,12 +112,21 @@ def onePlusOneCholeskyCMAES(n, fitnessFunction, budget):
     population = [Individual(n)]
     population[0].fitness = fitnessFunction(population[0].dna)
 
-    # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
+    # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
+    def recombine(pop):
+        return Rec.onePlusOne(pop)  # simply copy the only existing individual and return as a list
+    def mutate(ind):
+        return Mut.choleskyCMAMutation(ind, parameters, Sam.GaussianSampling(n))
+    def select(pop, new_pop, t):
+        return Sel.onePlusOneCholeskySelection(pop, new_pop, parameters)
+    def mutateParameters(t, _):
+        return parameters.adaptCholeskyCovarianceMatrix()
+
     functions = {
-        'recombine': lambda pop: Rec.onePlusOne(pop),  # simply copy the only existing individual and return as a list
-        'mutate': lambda ind: Mut.choleskyCMAMutation(ind, parameters, Sam.GaussianSampling(n)),
-        'select': lambda pop, new_pop, _: Sel.onePlusOneCholeskySelection(pop, new_pop, parameters),
-        'mutateParameters': lambda t, _: parameters.adaptCholeskyCovarianceMatrix(),
+        'recombine': recombine,
+        'mutate': mutate,
+        'select': select,
+        'mutateParameters': mutateParameters,
     }
 
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
@@ -121,12 +148,21 @@ def onePlusOneActiveCMAES(n, fitnessFunction, budget):
     population[0].fitness = fitnessFunction(population[0].dna)
     parameters.addToFitnessHistory(population[0].fitness)
 
-    # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
+    # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
+    def recombine(pop):
+        return Rec.onePlusOne(pop)  # simply copy the only existing individual and return as a list
+    def mutate(ind):
+        return Mut.choleskyCMAMutation(ind, parameters, Sam.GaussianSampling(n))
+    def select(pop, new_pop, _):
+        return Sel.onePlusOneActiveSelection(pop, new_pop, parameters)
+    def mutateParameters(t, _):
+        return parameters.adaptActiveCovarianceMatrix()
+
     functions = {
-        'recombine': lambda pop: Rec.onePlusOne(pop),  # simply copy the only existing individual and return as a list
-        'mutate': lambda ind: Mut.choleskyCMAMutation(ind, parameters, Sam.GaussianSampling(n)),
-        'select': lambda pop, new_pop, _: Sel.onePlusOneActiveSelection(pop, new_pop, parameters),
-        'mutateParameters': lambda t, _: parameters.adaptActiveCovarianceMatrix(),
+        'recombine': recombine,
+        'mutate': mutate,
+        'select': select,
+        'mutateParameters': mutateParameters,
     }
 
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
@@ -151,12 +187,21 @@ def CMSA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
     for individual in population:
         individual.fitness = fitnessFunction(individual.dna)
 
-    # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
+    # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
+    def recombine(pop):
+        return Rec.weighted(pop, parameters)
+    def mutate(ind):
+        return Mut.CMAMutation(ind, parameters, Sam.GaussianSampling(n))
+    def select(pop, new_pop, _):
+        return Sel.best(pop, new_pop, parameters)
+    def mutateParameters(t, _):
+        return parameters.selfAdaptCovarianceMatrix()
+
     functions = {
-        'recombine': lambda pop: Rec.weighted(pop, parameters),
-        'mutate': lambda ind: Mut.CMAMutation(ind, parameters, Sam.GaussianSampling(n)),
-        'select': lambda pop, new_pop, _: Sel.best(pop, new_pop, parameters),
-        'mutateParameters': lambda t, _: parameters.selfAdaptCovarianceMatrix(),
+        'recombine': recombine,
+        'mutate': mutate,
+        'select': select,
+        'mutateParameters': mutateParameters,
     }
 
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
@@ -244,12 +289,21 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
         individual.dna = wcm
         individual.fitness = fitness
 
-    # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
+    # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
+    def recombine(pop):
+        return Rec.weighted(pop, parameters)
+    def mutate(ind):
+        return Mut.CMAMutation(ind, parameters, sampler, threshold_convergence=opts['threshold'])
+    def select(pop, new_pop, _):
+        return selector(pop, new_pop, parameters)
+    def mutateParameters(t, tpa):
+        return parameters.adaptCovarianceMatrix(t, tpa)
+
     functions = {
-        'recombine': lambda pop: Rec.weighted(pop, parameters),
-        'mutate': lambda ind: Mut.CMAMutation(ind, parameters, sampler, threshold_convergence=opts['threshold']),
-        'select': lambda pop, new_pop, _: selector(pop, new_pop, parameters),
-        'mutateParameters': lambda t, tpa: parameters.adaptCovarianceMatrix(t, tpa),
+        'recombine': recombine,
+        'mutate': mutate,
+        'select': select,
+        'mutateParameters': mutateParameters,
     }
 
     return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
