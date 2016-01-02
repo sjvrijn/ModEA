@@ -168,8 +168,6 @@ class cma_es(object):
             z = np.column_stack((z, randn(dim, 1)))
 
         self.z = z
-        print("vec", self.e_vector, "val", self.e_value.T[0], "z", self.z.T[0], sep='\n')
-        print("mut-vector H", sigma * dot(self.e_vector, self.e_value*self.z).T[0])
         self.offspring = add(self.wcm, sigma * dot(self.e_vector, self.e_value*self.z))
 
     def evaluation(self):
@@ -188,20 +186,15 @@ class cma_es(object):
         self.ps = (1-cs) * self.ps + sqrt(cs*(2-cs)*mueff) \
             * dot(invsqrt_C, (wcm - wcm_old) / self.sigma)
         hsig = sum(self.ps**2.)/(1.-(1.-cs)**(2.*evalcount/_lambda))/self.dim < 2. + 4./(self.dim+1.)
-        print("wmc", (wcm - wcm_old).T)
         self.pc = (1-cc) * self.pc + \
             hsig * sqrt(cc*(2.-cc)*mueff) * (wcm - wcm_old) / self.sigma
-        print("p_c", self.pc.T)
         offset = (self.offspring[:, self.sel] - wcm_old) / self.sigma
 
         self.C = (1.0-c_1-c_mu) * self.C \
                   + c_1 * (outer(self.pc, self.pc) + (1.-hsig) * cc*(2-cc) * self.C) \
                   + c_mu * dot(offset, self.weights*offset.T)
-        print("C\n", self.C)
         # Adapt step size sigma
         self.sigma = self.sigma * exp((norm(self.ps)/self.chiN - 1) * self.cs/self.damps)
-
-        # print("ps: {}".format(self.ps.T), "pc: {}".format(self.pc.T), "C: {}".format(self.C), sep='\n')
 
     def updateBD(self):
         # Eigen decomposition
@@ -212,7 +205,6 @@ class cma_es(object):
         else:
             try:
                 w, e_vector = eigh(C)
-                print(w, e_vector, sep='\n')
                 e_value = sqrt(list(map(complex, w))).reshape(-1, 1)
                 if any(~isreal(e_value)) or any(isinf(e_value)):
                     if self.is_stop_on_warning:
@@ -228,7 +220,6 @@ class cma_es(object):
                     self.stop_dict['linalgerror'] = True
                 else:
                     self.flg_warning ^= 2**1
-        print()
 
     def stop_criteria(self):
         #-------------------------- Restart criterion ------------------------------
@@ -299,6 +290,7 @@ class cma_es(object):
                     sigma *= exp(0.05 + self.cs/self.damps)
 
             # Adjust step size in case of equal function values
+            print(int(min([ceil(0.1+_lambda/4.0), self._mu-1])))
             if fitness[self.sel[0]] == fitness[self.sel[int(min([ceil(0.1+_lambda/4.0), self._mu-1]))]]:
                 if is_stop_on_warning:
                     self.stop_dict['flatfitness'] = True
@@ -332,6 +324,7 @@ class cma_es(object):
 
             #--------------------------- Comma selection -------------------------------
             self.sel = self.fitness_rank[0:self._mu]
+            print("sel:", self.sel)
 
             # ------------------------- Weighted recombination -------------------------
             self.wcm_old = self.wcm
@@ -359,10 +352,10 @@ def sphereFitness(individual):
 if __name__ == '__main__':
     np.set_printoptions(linewidth=200)
     np.random.seed(42)
-    mu =       1
-    _lambda =  2
-    n =        4
-    budget =   10
+    mu =       9
+    _lambda =  20
+    n =        5
+    budget =   1000
     sig_init = 1
     target =   10**-8
 

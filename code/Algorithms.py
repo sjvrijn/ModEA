@@ -384,6 +384,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
                     break
 
         new_population = new_population[:i+1]  # Any un-used individuals in the new population are discarded
+        fitnesses = sorted([individual.fitness for individual in new_population])
         population = select(population, new_population, used_budget)  # Selection
 
         # Track parameters
@@ -428,7 +429,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
             used_budget_since_restart = used_budget - used_budget_at_last_restart
             restart = True if used_budget_since_restart > restart_budget else False
             if not restart:
-                restart = parameters.ipopTest(used_budget)
+                restart = parameters.ipopTest(used_budget, fitnesses)
 
             if restart:
                 used_budget_at_last_restart = used_budget

@@ -135,6 +135,7 @@ class Parameters(BaseParameters):
         self.last_pop = None
         self.lambda_orig = self.lambda_large = self.lambda_small = self.lambda_
         self.pop_inc_factor = 2
+        self.flat_fitness_index = int(min([ceil(0.1+self.lambda_/4.0), self.mu-1]))
         self.nbin = 10 + ceil(30*n/lambda_)
         self.histfunevals = zeros(self.nbin)
         self.max_iter = 100 + 50*(n+3)**2 / sqrt(lambda_)
@@ -480,7 +481,7 @@ class Parameters(BaseParameters):
         # TODO: add feedback of resetting sigma to the sigma per individual
 
 
-    def ipopTest(self, evalcount):
+    def ipopTest(self, evalcount, fitnesses):
 
         restart_required = False
         diagC = diag(self.C).reshape(-1, 1)
@@ -512,18 +513,18 @@ class Parameters(BaseParameters):
             print('condcov')
             restart_required = True
 
-        return restart_required
-
-        self.histfunval[mod(evalcount/self.lambda_-1, self.nbin)] = fitness[sel[0]]
+        self.histfunevals[mod(evalcount/self.lambda_-1, self.nbin)] = fitnesses[0]
         if mod(evalcount, self.lambda_) == self.nbin and \
-            max(self.histfunval) - min(self.histfunval) < self.tolfun:
+            max(self.histfunevals) - min(self.histfunevals) < self.tolfun:
             print('tolfun')
             restart_required = True
 
         # Adjust step size in case of equal function values
-        if fitness[sel[0]] == fitness[sel[int(min([ceil(0.1+self.lambda_/4.0), self.mu-1]))]]:
+        if fitnesses[0] == fitnesses[self.flat_fitness_index]:
             print('flatfitness')
             restart_required = True
+
+        return restart_required
 
 
     def local_restart(self, pop_change='large'):

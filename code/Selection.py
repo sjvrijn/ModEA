@@ -14,7 +14,7 @@ A Selection operator accepts (mu + lambda) individuals and returns (mu) individu
 that are chosen to be the best of this generation.
 """
 
-def _getFitness(individual):
+def getFitness(individual):
     return individual.fitness
 
 
@@ -30,7 +30,7 @@ def best(population, new_population, parameters):
     if parameters.elitist:
         new_population.extend(population)
 
-    new_population.sort(key=_getFitness)  # sort descending
+    new_population.sort(key=getFitness)  # sort descending
 
     offspring = np.column_stack((ind.dna for ind in new_population))
     parameters.all_offspring = offspring
@@ -82,7 +82,7 @@ def roulette(population, new_population, parameters):
     if parameters.elitist:
         new_population.extend(population)
 
-    new_population.sort(key=_getFitness)  # sort descending
+    new_population.sort(key=getFitness)  # sort descending
     offspring = np.column_stack((ind.dna for ind in new_population))
     parameters.all_offspring = offspring
 
