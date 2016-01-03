@@ -37,24 +37,24 @@ def adaptStepSize(individual):
 
 
 # TODO: come up with a better name for this mutation function
-def x1(individual, parameters, sampler):
+def x1(individual, param, sampler):
     """
         Mutation 1: x = x + sigma*N(0,I)
 
-        :param individual:              Individual to be mutated
-        :param parameters:              Parameters object to store settings
-        :param sampler:                 Sampler from which the random values should be drawn
+        :param individual:  Individual to be mutated
+        :param param:       Parameters object to store settings
+        :param sampler:     Sampler from which the random values should be drawn
     """
 
-    individual.dna += parameters.sigma * sampler.next()
+    individual.dna += param.sigma * sampler.next()
 
 
-def CMAMutation(individual, parameters, sampler, threshold_convergence=False):
+def CMAMutation(individual, param, sampler, threshold_convergence=False):
     """
         CMA mutation: x = x + (sigma * B*D*N(0,I))
 
         :param individual:              Individual to be mutated
-        :param parameters:              Parameters object to store settings
+        :param param:                   Parameters object to store settings
         :param sampler:                 Sampler from which the random values should be drawn
         :param threshold_convergence:   Boolean: Should threshold convergence be applied. Default: False
     """
@@ -62,27 +62,27 @@ def CMAMutation(individual, parameters, sampler, threshold_convergence=False):
     individual.last_z = sampler.next()
 
     if threshold_convergence:
-        individual.last_z = _scaleWithThreshold(individual.last_z, parameters.threshold)
+        individual.last_z = _scaleWithThreshold(individual.last_z, param.threshold)
 
-    individual.mutation_vector = dot(parameters.B, (parameters.D * individual.last_z))  # y_k in cmatutorial.pdf)
-    mutation_vector = individual.mutation_vector * parameters.sigma
+    individual.mutation_vector = dot(param.B, (param.D * individual.last_z))  # y_k in cmatutorial.pdf)
+    mutation_vector = individual.mutation_vector * param.sigma
 
     individual.dna = add(individual.dna, mutation_vector)
 
 
-def choleskyCMAMutation(individual, parameters, sampler):
+def choleskyCMAMutation(individual, param, sampler):
     """
         Cholesky CMA based mutation
 
         :param individual:  Individual to be mutated
-        :param parameters:  Parameters object to store settings
+        :param param:       Parameters object to store settings
         :param sampler:     Sampler from which the random values should be drawn
     """
 
-    parameters.last_z = sampler.next()
-    mutation_vector = np.dot(parameters.A, parameters.last_z.T)
+    param.last_z = sampler.next()
+    mutation_vector = np.dot(param.A, param.last_z.T)
 
-    individual.dna += parameters.sigma * mutation_vector
+    individual.dna += param.sigma * mutation_vector
 
 
 def _scaleWithThreshold(mutation_vector, threshold):

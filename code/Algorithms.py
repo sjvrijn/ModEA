@@ -36,8 +36,7 @@ def onePlusOneES(n, fitnessFunction, budget):
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.onePlusOne
-    def mutate(ind):
-        return Mut.x1(ind, parameters, Sam.GaussianSampling(n))
+    mutate = partial(Mut.x1, param=parameters, sampler=Sam.GaussianSampling(n))
     def select(pop, new_pop, t):
         return Sel.onePlusOneSelection(pop, new_pop, t, parameters)
     def mutateParameters(t):
@@ -79,8 +78,7 @@ def CMA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = partial(Rec.weighted, param=parameters)
-    def mutate(ind):
-        return Mut.CMAMutation(ind, parameters, Sam.GaussianSampling(n))
+    mutate = partial(Mut.CMAMutation, param=parameters, sampler=Sam.GaussianSampling(n))
     def select(pop, new_pop, t):
         return Sel.best(pop, new_pop, parameters)
     def mutateParameters(t):
@@ -113,8 +111,7 @@ def onePlusOneCholeskyCMAES(n, fitnessFunction, budget):
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.onePlusOne
-    def mutate(ind):
-        return Mut.choleskyCMAMutation(ind, parameters, Sam.GaussianSampling(n))
+    mutate = partial(Mut.choleskyCMAMutation, param=parameters, sampler=Sam.GaussianSampling(n))
     def select(pop, new_pop, t):
         return Sel.onePlusOneCholeskySelection(pop, new_pop, parameters)
     def mutateParameters(t):
@@ -148,8 +145,7 @@ def onePlusOneActiveCMAES(n, fitnessFunction, budget):
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.onePlusOne
-    def mutate(ind):
-        return Mut.choleskyCMAMutation(ind, parameters, Sam.GaussianSampling(n))
+    mutate = partial(Mut.choleskyCMAMutation, param=parameters, sampler=Sam.GaussianSampling(n))
     def select(pop, new_pop, _):
         return Sel.onePlusOneActiveSelection(pop, new_pop, parameters)
     def mutateParameters(t):
@@ -186,8 +182,7 @@ def CMSA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = partial(Rec.weighted, param=parameters)
-    def mutate(ind):
-        return Mut.CMAMutation(ind, parameters, Sam.GaussianSampling(n))
+    mutate = partial(Mut.CMAMutation, param=parameters, sampler=Sam.GaussianSampling(n))
     def select(pop, new_pop, _):
         return Sel.best(pop, new_pop, parameters)
     def mutateParameters(t):
@@ -287,8 +282,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = partial(Rec.weighted, param=parameters)
-    def mutate(ind):
-        return Mut.CMAMutation(ind, parameters, sampler, threshold_convergence=opts['threshold'])
+    mutate = partial(Mut.CMAMutation, param=parameters, sampler=sampler, threshold_convergence=opts['threshold'])
     def select(pop, new_pop, _):
         return selector(pop, new_pop, parameters)
     def mutateParameters(t):
