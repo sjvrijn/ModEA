@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 # External libraries
 from copy import copy
+from functools import partial
 from numpy import floor, log
 from numpy.random import randn
 # Internal classes
@@ -34,8 +35,7 @@ def onePlusOneES(n, fitnessFunction, budget):
     population[0].fitness = fitnessFunction(population[0].dna)
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
-    def recombine(pop):
-        return Rec.onePlusOne(pop)  # simply copy the only existing individual and return as a list
+    recombine = Rec.onePlusOne
     def mutate(ind):
         return Mut.x1(ind, parameters, Sam.GaussianSampling(n))
     def select(pop, new_pop, t):
@@ -78,8 +78,7 @@ def CMA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
         individual.fitness = fitness
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
-    def recombine(pop):
-        return Rec.weighted(pop, parameters)
+    recombine = partial(Rec.weighted, param=parameters)
     def mutate(ind):
         return Mut.CMAMutation(ind, parameters, Sam.GaussianSampling(n))
     def select(pop, new_pop, t):
@@ -113,8 +112,7 @@ def onePlusOneCholeskyCMAES(n, fitnessFunction, budget):
     population[0].fitness = fitnessFunction(population[0].dna)
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
-    def recombine(pop):
-        return Rec.onePlusOne(pop)  # simply copy the only existing individual and return as a list
+    recombine = Rec.onePlusOne
     def mutate(ind):
         return Mut.choleskyCMAMutation(ind, parameters, Sam.GaussianSampling(n))
     def select(pop, new_pop, t):
@@ -149,8 +147,7 @@ def onePlusOneActiveCMAES(n, fitnessFunction, budget):
     parameters.addToFitnessHistory(population[0].fitness)
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
-    def recombine(pop):
-        return Rec.onePlusOne(pop)  # simply copy the only existing individual and return as a list
+    recombine = Rec.onePlusOne
     def mutate(ind):
         return Mut.choleskyCMAMutation(ind, parameters, Sam.GaussianSampling(n))
     def select(pop, new_pop, _):
@@ -188,8 +185,7 @@ def CMSA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
         individual.fitness = fitnessFunction(individual.dna)
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
-    def recombine(pop):
-        return Rec.weighted(pop, parameters)
+    recombine = partial(Rec.weighted, param=parameters)
     def mutate(ind):
         return Mut.CMAMutation(ind, parameters, Sam.GaussianSampling(n))
     def select(pop, new_pop, _):
@@ -290,8 +286,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
         individual.fitness = fitness
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
-    def recombine(pop):
-        return Rec.weighted(pop, parameters)
+    recombine = partial(Rec.weighted, param=parameters)
     def mutate(ind):
         return Mut.CMAMutation(ind, parameters, sampler, threshold_convergence=opts['threshold'])
     def select(pop, new_pop, _):
