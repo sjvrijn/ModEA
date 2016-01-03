@@ -6,15 +6,17 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
 import sys
-from bbob import bbobbenchmarks, fgeneric
 from copy import copy
+from functools import partial
+
+import code.Mutation as Mut
+import code.Selection as Sel
+import code.Recombination as Rec
+from bbob import bbobbenchmarks, fgeneric
 from code import getOpts, getBitString, options, num_options
 from code.Algorithms import customizedES, baseAlgorithm
 from code.Individual import Individual
 from code.Parameters import Parameters
-import code.Mutation as Mut
-import code.Selection as Sel
-import code.Recombination as Rec
 
 
 # BBOB parameters: Sets of noise-free and noisy benchmarks
@@ -61,12 +63,10 @@ def GA(n=10, budget=250, fitness_function='sphere'):
         population.append(copy(population[0]))
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
-    def recombine(pop):
-        return Rec.random(pop, parameters),  # simply copy the only existing individual and return as a list
-    def mutate(ind):
-        return Mut.mutateIntList(ind, num_options),
+    recombine = partial(Rec.random, param=parameters)
+    mutate = partial(Mut.mutateIntList, num_options=num_options)
     def select(pop, new_pop, _):
-        return Sel.roulette(pop, new_pop, parameters),
+        return Sel.roulette(pop, new_pop, parameters)
     def mutateParameters(t, _):
         pass  # The only actual parameter mutation is the self-adaptive step-size of each individual
 
