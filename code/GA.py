@@ -39,7 +39,7 @@ def sysPrint(string):
     sys.stdout.flush()
 
 
-def GA(n=10, budget=250, fitness_function='sphere'):
+def GA(n=None, budget=None, fitness_function='sphere'):
     """ Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function """
 
     # Where to store genotype-fitness information
@@ -52,6 +52,10 @@ def GA(n=10, budget=250, fitness_function='sphere'):
     # Assuming a dimensionality of 11 (8 boolean + 3 triples)
     GA_mu = 3
     GA_lambda = 12
+    if n is None:
+        n = 10
+    if budget is None:
+        budget = 250
 
     parameters = Parameters(n, budget, GA_mu, GA_lambda)
     # Initialize the first individual in the population
@@ -65,8 +69,9 @@ def GA(n=10, budget=250, fitness_function='sphere'):
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = partial(Rec.random, param=parameters)
     mutate = partial(Mut.mutateIntList, num_options=num_options)
+    roulette = partial(Sel.roulette, param=parameters)
     def select(pop, new_pop, _):
-        return Sel.roulette(pop, new_pop, parameters)
+        return roulette(pop, new_pop)
     def mutateParameters(t):
         pass  # The only actual parameter mutation is the self-adaptive step-size of each individual
 
@@ -100,8 +105,8 @@ def evaluate_ES(bitstring, fitness_function='sphere', opts=None, n=10, budget=No
         opts = getOpts(bitstring)
 
     # define local function of the algorithm to be used, fixing certain parameters
-    def algorithm(n, evalfun, budget):
-        return customizedES(n, evalfun, budget, opts=opts)
+    algorithm = partial(customizedES, opts=opts)
+
 
     '''
     # Actually running the algorithm is encapsulated in a try-except for now... math errors
@@ -165,8 +170,8 @@ def runAlgorithm(fit_name, algorithm, n, num_runs, f, budget, opts):
 
     '''  # Multi-core version ## TODO: Fix using dill/pathos/something else
     from multiprocessing import Pool
-    p = Pool(4)
-    function = lambda x: fetchResults(fun_id, x, n, budget, opts)
+    p = Pool(12)
+    function = partial(fetchResults, fun_id, n=n, budget=budget, opts=opts)
     run_data = p.map(function, range(num_runs))
     targets, results = zip(*run_data)
     #'''
@@ -283,6 +288,7 @@ def run():
     # exampleRuns()
     bruteForce()
     # runGA()
+    pass
 
 
 if __name__ == '__main__':
