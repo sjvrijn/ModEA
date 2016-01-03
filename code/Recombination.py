@@ -17,7 +17,7 @@ from numpy import dot, mean, sqrt
 from random import choice
 
 
-def onePointCrossover(ind_a, ind_b, parameters):
+def onePointCrossover(ind_a, ind_b):
     crossover_point = np.random.randint(1, len(ind_a.dna) - 2)  # -1 as randint is inclusive, -1 to not choose the last element
     ind_a[:crossover_point], ind_b[:crossover_point] = ind_b[:crossover_point], ind_a[:crossover_point]
     return ind_a, ind_b
@@ -27,20 +27,24 @@ def random(pop, param):
     """
         Create a new population by selecting random parents from the given population.
         To be used when no actual recombination occurs
+
+        :param pop:     The population to be recombined
+        :param param:   Parameter object
+        :returns:       A list of lambda individuals, each a copy of a randomly chosen individual from the population
     """
 
     new_population = [choice(pop) for _ in range(param.lambda_)]
     return new_population
 
 
-def onePlusOne(population):
+def onePlusOne(pop):
     """
         Utility function for 1+1 ES strategies where the recombination is merely a copy
 
-        :param population:  The population to be recombined
-        :returns:           A copy of the first individual in the given population
+        :param pop:     The population to be recombined
+        :returns:       A copy of the first individual in the given population
     """
-    return [copy(population[0])]
+    return [copy(pop[0])]
 
 
 def weighted(pop, param):
