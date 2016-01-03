@@ -18,27 +18,27 @@ def getFitness(individual):
     return individual.fitness
 
 
-def best(population, new_population, parameters):
+def best(population, new_population, param):
     """
         Given the population, return the (mu) best
 
         :param population:      List of :py:class:code.Individual objects containing the previous generation
         :param new_population:  List of :py:class:code.Individual objects containing the new generation
-        :param parameters:      :py:class:code.Parameters object for storing all parameters, options, etc.
+        :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
-    if parameters.elitist:
+    if param.elitist:
         new_population.extend(population)
 
     new_population.sort(key=getFitness)  # sort descending
 
     offspring = np.column_stack((ind.dna for ind in new_population))
-    parameters.all_offspring = offspring
+    param.all_offspring = offspring
 
-    return new_population[:parameters.mu]
+    return new_population[:param.mu]
 
 
-def pairwise(population, new_population, parameters):
+def pairwise(population, new_population, param):
     """
         Perform a pairwise selection on a population.
         Intended for use with a mirrored sampling strategy to prevent bias.
@@ -47,7 +47,7 @@ def pairwise(population, new_population, parameters):
 
         :param population:      List of :py:class:code.Individual objects containing the previous generation
         :param new_population:  List of :py:class:code.Individual objects containing the new generation
-        :param parameters:      :py:class:code.Parameters object for storing all parameters, options, etc.
+        :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
     pairwise_filtered = []
@@ -67,32 +67,32 @@ def pairwise(population, new_population, parameters):
             pairwise_filtered.append(new_population[index+1])
 
     # After pairwise filtering, we can re-use the regular selection function
-    return best(population, pairwise_filtered, parameters)
+    return best(population, pairwise_filtered, param)
 
 
-def roulette(population, new_population, parameters):
+def roulette(population, new_population, param):
     """
         Given the population, return mu individuals, selected by roulette, using 1/fitness as probability
 
         :param population:      List of :py:class:code.Individual objects containing the previous generation
         :param new_population:  List of :py:class:code.Individual objects containing the new generation
-        :param parameters:      :py:class:code.Parameters object for storing all parameters, options, etc.
+        :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
-    if parameters.elitist:
+    if param.elitist:
         new_population.extend(population)
 
     new_population.sort(key=getFitness)  # sort descending
     offspring = np.column_stack((ind.dna for ind in new_population))
-    parameters.all_offspring = offspring
+    param.all_offspring = offspring
 
     # Create a discrete sampler using the PageRank values as probabilities
     roulette_sampler = stats.rv_discrete(name='roulette', values=(list(range(len(new_population))),
                                                              [1/ind.fitness for ind in new_population]))
 
     indices = set()
-    while len(indices) < parameters.mu:
-        to_be_sampled = parameters.mu - len(indices)
+    while len(indices) < param.mu:
+        to_be_sampled = param.mu - len(indices)
         # Draw <to_be_sampled> samples from the defined distribution
         sample = roulette_sampler.rvs(size=to_be_sampled)
         indices.update(sample)
@@ -100,14 +100,14 @@ def roulette(population, new_population, parameters):
     return [new_population[index] for index in indices]
 
 
-def onePlusOneSelection(population, new_population, t, parameters):
+def onePlusOneSelection(population, new_population, t, param):
     """
         (1+1)-selection (with success history)
 
         :param population:      List of :py:class:code.Individual objects containing the previous generation
         :param new_population:  List of :py:class:code.Individual objects containing the new generation
         :param t:               Timestamp of the current generation being evaluated
-        :param parameters:      :py:class:code.Parameters object for storing all parameters, options, etc.
+        :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
 
@@ -115,23 +115,23 @@ def onePlusOneSelection(population, new_population, t, parameters):
     individual = population[0]
 
     if new_individual.fitness < individual.fitness:
-        parameters.best_fitness = new_individual.fitness
+        param.best_fitness = new_individual.fitness
         result = new_population
-        parameters.addToSuccessHistory(t, True)
+        param.addToSuccessHistory(t, True)
     else:
         result = population
-        parameters.addToSuccessHistory(t, False)
+        param.addToSuccessHistory(t, False)
 
     return result
 
 
-def onePlusOneCholeskySelection(population, new_population, parameters):
+def onePlusOneCholeskySelection(population, new_population, param):
     """
         (1+1)-selection (with success history)
 
         :param population:      List of :py:class:code.Individual objects containing the previous generation
         :param new_population:  List of :py:class:code.Individual objects containing the new generation
-        :param parameters:      :py:class:code.Parameters object for storing all parameters, options, etc.
+        :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
 
@@ -139,23 +139,23 @@ def onePlusOneCholeskySelection(population, new_population, parameters):
     individual = population[0]
 
     if new_individual.fitness < individual.fitness:
-        parameters.best_fitness = new_individual.fitness
+        param.best_fitness = new_individual.fitness
         result = new_population
-        parameters.lambda_success = True
+        param.lambda_success = True
     else:
         result = population
-        parameters.lambda_success = False
+        param.lambda_success = False
 
     return result
 
 
-def onePlusOneActiveSelection(population, new_population, parameters):
+def onePlusOneActiveSelection(population, new_population, param):
     """
         (1+1)-selection (with success history)
 
         :param population:      List of :py:class:code.Individual objects containing the previous generation
         :param new_population:  List of :py:class:code.Individual objects containing the new generation
-        :param parameters:      :py:class:code.Parameters object for storing all parameters, options, etc.
+        :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
 
@@ -163,13 +163,13 @@ def onePlusOneActiveSelection(population, new_population, parameters):
     individual = population[0]
 
     if new_fitness < individual.fitness:
-        parameters.best_fitness = new_fitness
+        param.best_fitness = new_fitness
         result = new_population
-        parameters.lambda_success = True
+        param.lambda_success = True
     else:
         result = population
-        parameters.lambda_success = False
+        param.lambda_success = False
 
-    parameters.addToFitnessHistory(new_fitness)
+    param.addToFitnessHistory(new_fitness)
 
     return result
