@@ -46,8 +46,7 @@ def GA(n=None, budget=None, fitness_function='sphere'):
     storage_file = open('{}GA_results_{}_{}.tdat'.format(datapath, n, fitness_function), 'w')
 
     # Fitness function to be passed on to the baseAlgorithm
-    def fitnessFunction(bitstring):
-        return evaluate_ES(bitstring=bitstring, fitness_function=fitness_function, storage_file=storage_file)
+    fitnessFunction = partial(evaluate_ES, fitness_function=fitness_function, storage_file=storage_file)
 
     # Assuming a dimensionality of 11 (8 boolean + 3 triples)
     GA_mu = 3
@@ -81,7 +80,7 @@ def GA(n=None, budget=None, fitness_function='sphere'):
         'select': select,
         'mutateParameters': mutateParameters,
     }
-    results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+    results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters, debug=True)
     storage_file.close()
     return results
 
@@ -237,7 +236,7 @@ def bruteForce():
     print("Number of possible ES-combinations currently available: {}".format(np.product(num_options)))
     from collections import Counter
     from itertools import product
-    from datetime import datetime, timedelta
+    from datetime import datetime
 
     best_ES = None
     best_result = np.inf
@@ -275,11 +274,23 @@ def bruteForce():
 
 
 def runGA():
+
+    from datetime import datetime
+    x = datetime.now()
     pop, sigmas, fitness, best = GA()
+    y = datetime.now()
     print()
     print("Best Individual:     {}\n"
           "        Fitness:     {}\n"
           "Fitnesses over time: {}".format(best.dna, best.fitness, fitness))
+    z = y - x
+    days = z.days
+    hours = z.seconds//3600
+    minutes = (z.seconds % 3600) // 60
+    seconds = (z.seconds % 60)
+    print("Time at start:       {}\n"
+          "Time at end:         {}\n"
+          "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
 
 
 def run():
