@@ -39,8 +39,7 @@ def onePlusOneES(n, fitnessFunction, budget):
     mutate = partial(Mut.x1, param=parameters, sampler=Sam.GaussianSampling(n))
     def select(pop, new_pop, t):
         return Sel.onePlusOneSelection(pop, new_pop, t, parameters)
-    def mutateParameters(t):
-        return parameters.oneFifthRule(t)
+    mutateParameters = parameters.oneFifthRule
 
     functions = {
         'recombine': recombine,
@@ -81,8 +80,7 @@ def CMA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
     mutate = partial(Mut.CMAMutation, param=parameters, sampler=Sam.GaussianSampling(n))
     def select(pop, new_pop, t):
         return Sel.best(pop, new_pop, parameters)
-    def mutateParameters(t):
-        return parameters.adaptCovarianceMatrix(t)
+    mutateParameters = parameters.adaptCovarianceMatrix
 
     functions = {
         'recombine': recombine,
@@ -114,8 +112,7 @@ def onePlusOneCholeskyCMAES(n, fitnessFunction, budget):
     mutate = partial(Mut.choleskyCMAMutation, param=parameters, sampler=Sam.GaussianSampling(n))
     def select(pop, new_pop, t):
         return Sel.onePlusOneCholeskySelection(pop, new_pop, parameters)
-    def mutateParameters(t):
-        return parameters.adaptCholeskyCovarianceMatrix()
+    mutateParameters = parameters.adaptCholeskyCovarianceMatrix
 
     functions = {
         'recombine': recombine,
@@ -148,8 +145,7 @@ def onePlusOneActiveCMAES(n, fitnessFunction, budget):
     mutate = partial(Mut.choleskyCMAMutation, param=parameters, sampler=Sam.GaussianSampling(n))
     def select(pop, new_pop, _):
         return Sel.onePlusOneActiveSelection(pop, new_pop, parameters)
-    def mutateParameters(t):
-        return parameters.adaptActiveCovarianceMatrix()
+    mutateParameters = parameters.adaptActiveCovarianceMatrix
 
     functions = {
         'recombine': recombine,
@@ -285,8 +281,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
     mutate = partial(Mut.CMAMutation, param=parameters, sampler=sampler, threshold_convergence=opts['threshold'])
     def select(pop, new_pop, _):
         return selector(pop, new_pop, parameters)
-    def mutateParameters(t):
-        return parameters.adaptCovarianceMatrix(t)
+    mutateParameters = parameters.adaptCovarianceMatrix
 
     functions = {
         'recombine': recombine,
