@@ -131,3 +131,31 @@ def _getXi():
         return 5/7
     else:
         return 7/5
+
+
+### GA MUTATIONS ###
+def mutateBitstring(individual):
+    """ Extremely simple 1/n bit-flip mutation """
+    bitstring = individual.dna
+    n = len(bitstring)
+    p = 1/n
+    for i in range(n):
+        if np.random.random() < p:
+            bitstring[i] = 1-bitstring[i]
+
+
+def mutateIntList(individual, num_options):
+    """ self-adaptive random integer mutation """
+
+    adaptStepSize(individual)
+    p = individual.baseStepSize + individual.stepSizeOffset
+
+    int_list = individual.dna
+    for i in range(individual.n):
+        if np.random.random() < p:
+            # -1 as random_integers is [1, val], -1 to simulate leaving out the current value
+            new_int = np.random.random_integers(num_options[i]-1)-1
+            if int_list[i] == new_int:
+                new_int = num_options[i] - 1  # If we randomly selected the same value, pick the value we left out
+
+            int_list[i] = new_int

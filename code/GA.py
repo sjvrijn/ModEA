@@ -37,33 +37,6 @@ def sysPrint(string):
     sys.stdout.flush()
 
 
-def mutateBitstring(individual):
-    """ Extremely simple 1/n bit-flip mutation """
-    bitstring = individual.dna
-    n = len(bitstring)
-    p = 1/n
-    for i in range(n):
-        if np.random.random() < p:
-            bitstring[i] = 1-bitstring[i]
-
-
-def mutateIntList(individual, num_options):
-    """ extremely simple 1/n random integer mutation """
-
-    Mut.adaptStepSize(individual)
-    p = individual.baseStepSize + individual.stepSizeOffset
-
-    int_list = individual.dna
-    for i in range(individual.n):
-        if np.random.random() < p:
-            # -1 as random_integers is [1, val], -1 to simulate leaving out the current value
-            new_int = np.random.random_integers(num_options[i]-1)-1
-            if int_list[i] == new_int:
-                new_int = num_options[i] - 1  # If we randomly selected the same value, pick the value we left out
-
-            int_list[i] = new_int
-
-
 def GA(n=10, budget=250, fitness_function='sphere'):
     """ Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function """
 
@@ -87,12 +60,21 @@ def GA(n=10, budget=250, fitness_function='sphere'):
     while len(population) < GA_mu:
         population.append(copy(population[0]))
 
-    # We use lambda functions here to 'hide' the additional passing of parameters that are algorithm specific
+    # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
+    def recombine(pop):
+        return Rec.random(pop, parameters),  # simply copy the only existing individual and return as a list
+    def mutate(ind):
+        return Mut.mutateIntList(ind, num_options),
+    def select(pop, new_pop, _):
+        return Sel.roulette(pop, new_pop, parameters),
+    def mutateParameters(t, _):
+        pass  # The only actual parameter mutation is the self-adaptive step-size of each individual
+
     functions = {
-        'recombine': lambda pop: Rec.onePlusOne(pop),  # simply copy the only existing individual and return as a list
-        'mutate': lambda ind: mutateIntList(ind, num_options),
-        'select': lambda pop, new_pop, _: Sel.roulette(pop, new_pop, parameters),
-        'mutateParameters': lambda t, _: parameters.oneFifthRule(t),
+        'recombine': recombine,
+        'mutate': mutate,
+        'select': select,
+        'mutateParameters': mutateParameters,
     }
     results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
     storage_file.close()
