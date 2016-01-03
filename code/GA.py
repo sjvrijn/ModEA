@@ -67,7 +67,7 @@ def GA(n=10, budget=250, fitness_function='sphere'):
     mutate = partial(Mut.mutateIntList, num_options=num_options)
     def select(pop, new_pop, _):
         return Sel.roulette(pop, new_pop, parameters)
-    def mutateParameters(t, _):
+    def mutateParameters(t):
         pass  # The only actual parameter mutation is the self-adaptive step-size of each individual
 
     functions = {
