@@ -274,7 +274,9 @@ class Parameters(BaseParameters):
                     self.B = e_vector
                     self.sqrt_C = dot(e_vector, e_value**-1 * e_vector.T)
             except LinAlgError as e:
-                raise Exception(e)
+                # raise Exception(e)
+                print("Restarting, degeneration detected: {}".format(e))
+                degenerated = True
 
         if degenerated:
             self.restart()
