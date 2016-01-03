@@ -29,7 +29,7 @@ def random(pop, param):
         To be used when no actual recombination occurs
     """
 
-    new_population = [choice(pop) for _ in param.lambda_]
+    new_population = [choice(pop) for _ in range(param.lambda_)]
     return new_population
 
 
