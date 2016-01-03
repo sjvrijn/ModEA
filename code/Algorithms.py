@@ -40,7 +40,7 @@ def onePlusOneES(n, fitnessFunction, budget):
         return Mut.x1(ind, parameters, Sam.GaussianSampling(n))
     def select(pop, new_pop, t):
         return Sel.onePlusOneSelection(pop, new_pop, t, parameters)
-    def mutateParameters(t, _):
+    def mutateParameters(t):
         return parameters.oneFifthRule(t)
 
     functions = {
@@ -84,8 +84,8 @@ def CMA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
         return Mut.CMAMutation(ind, parameters, Sam.GaussianSampling(n))
     def select(pop, new_pop, t):
         return Sel.best(pop, new_pop, parameters)
-    def mutateParameters(t, _):
-        return parameters.adaptCovarianceMatrix(t, None)
+    def mutateParameters(t):
+        return parameters.adaptCovarianceMatrix(t)
 
     functions = {
         'recombine': recombine,
@@ -119,7 +119,7 @@ def onePlusOneCholeskyCMAES(n, fitnessFunction, budget):
         return Mut.choleskyCMAMutation(ind, parameters, Sam.GaussianSampling(n))
     def select(pop, new_pop, t):
         return Sel.onePlusOneCholeskySelection(pop, new_pop, parameters)
-    def mutateParameters(t, _):
+    def mutateParameters(t):
         return parameters.adaptCholeskyCovarianceMatrix()
 
     functions = {
@@ -155,7 +155,7 @@ def onePlusOneActiveCMAES(n, fitnessFunction, budget):
         return Mut.choleskyCMAMutation(ind, parameters, Sam.GaussianSampling(n))
     def select(pop, new_pop, _):
         return Sel.onePlusOneActiveSelection(pop, new_pop, parameters)
-    def mutateParameters(t, _):
+    def mutateParameters(t):
         return parameters.adaptActiveCovarianceMatrix()
 
     functions = {
@@ -194,7 +194,7 @@ def CMSA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
         return Mut.CMAMutation(ind, parameters, Sam.GaussianSampling(n))
     def select(pop, new_pop, _):
         return Sel.best(pop, new_pop, parameters)
-    def mutateParameters(t, _):
+    def mutateParameters(t):
         return parameters.selfAdaptCovarianceMatrix()
 
     functions = {
@@ -296,8 +296,8 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
         return Mut.CMAMutation(ind, parameters, sampler, threshold_convergence=opts['threshold'])
     def select(pop, new_pop, _):
         return selector(pop, new_pop, parameters)
-    def mutateParameters(t, tpa):
-        return parameters.adaptCovarianceMatrix(t, tpa)
+    def mutateParameters(t):
+        return parameters.adaptCovarianceMatrix(t)
 
     functions = {
         'recombine': recombine,
@@ -345,7 +345,6 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
     best_individual = population[0]
 
     improvement_found = False  # Has a better individual has been found? Used for sequential evaluation
-    tpa_result = None          # Is the ideal step size larger (True) or smaller (False)? None if TPA is not used
 
     # Initialization
     used_budget = 0
@@ -416,12 +415,13 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
             if used_budget > budget and sequential_evaluation:
                 used_budget = budget
 
+            # Is the ideal step size larger (True) or smaller (False)? None if TPA is not used
             if tpa_fitness_plus < tpa_fitness_min:
-                tpa_result = 1
+                parameters.tpa_result = 1
             else:
-                tpa_result = -1
+                parameters.tpa_result = -1
 
-        mutateParameters(used_budget, tpa_result)                     # Parameter mutation
+        mutateParameters(used_budget)                     # Parameter mutation
 
         # (B)IPOP
         # TODO: Move the following code to >= 1 separate function(s)

@@ -130,6 +130,7 @@ class Parameters(BaseParameters):
         self.alpha_s = 0
         self.beta_tpa = 0
         self.c_alpha = 0.3
+        self.tpa_result = None
 
         ## IPOP ##
         self.last_pop = None
@@ -212,7 +213,7 @@ class Parameters(BaseParameters):
             self.fitness_history = self.fitness_history[1:]
 
 
-    def adaptCovarianceMatrix(self, t, tpa_result):
+    def adaptCovarianceMatrix(self, evalcount):
         """
             Adapt the covariance matrix according to the CMA-ES
             :param t:   Number of evaluations used by the algorithm so far
@@ -220,7 +221,7 @@ class Parameters(BaseParameters):
 
         cc, cs, c_1, c_mu, n = self.c_c, self.c_sigma, self.c_1, self.c_mu, self.n
         wcm, wcm_old, mueff, invsqrt_C = self.wcm, self.wcm_old, self.mu_eff, self.sqrt_C
-        evalcount, lambda_ = t, self.lambda_
+        lambda_ =self.lambda_
 
         self.p_sigma = (1-cs) * self.p_sigma + \
                        sqrt(cs*(2-cs)*mueff) * dot(invsqrt_C, (wcm - wcm_old) / self.sigma)
@@ -242,8 +243,8 @@ class Parameters(BaseParameters):
 
         # Adapt step size sigma
         if self.tpa:
-            alpha_act = tpa_result * self.alpha
-            alpha_act += self.beta_tpa if tpa_result > 1 else 0
+            alpha_act = self.tpa_result * self.alpha
+            alpha_act += self.beta_tpa if self.tpa_result > 1 else 0
             self.alpha_s += self.c_alpha * (alpha_act - self.alpha_s)
             self.sigma *= exp(self.alpha_s)
         else:
