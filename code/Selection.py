@@ -86,9 +86,12 @@ def roulette(population, new_population, param):
     offspring = np.column_stack((ind.dna for ind in new_population))
     param.all_offspring = offspring
 
+    # Use normalized 1/fitness as probability for picking a certain individual
+    norm_inverses = [1/ind.fitness for ind in new_population]
+    norm_inverses /= sum(norm_inverses)
+
     # Create a discrete sampler using the PageRank values as probabilities
-    roulette_sampler = stats.rv_discrete(name='roulette', values=(list(range(len(new_population))),
-                                                             [1/ind.fitness for ind in new_population]))
+    roulette_sampler = stats.rv_discrete(name='roulette', values=(list(range(len(new_population))), norm_inverses))
 
     indices = set()
     while len(indices) < param.mu:
