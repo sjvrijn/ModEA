@@ -6,7 +6,7 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
 from numpy import abs, all, any, append, arange, ceil, diag, dot, exp, eye, floor, isfinite, isinf, isreal, ones, log,\
-                  max, mean, mod, newaxis, outer, real, sqrt, square, sum, triu, zeros
+                  max, mean, median, mod, newaxis, outer, real, sqrt, square, sum, triu, zeros
 from numpy.linalg import cond, eig, eigh, norm, LinAlgError
 from numpy.random import randn
 
@@ -138,6 +138,7 @@ class Parameters(BaseParameters):
         self.flat_fitness_index = int(min([ceil(0.1+self.lambda_/4.0), self.mu-1]))
         self.nbin = 10 + ceil(30*n/lambda_)
         self.histfunevals = zeros(self.nbin)
+        self.stagnation_list = []
         self.max_iter = 100 + 50*(n+3)**2 / sqrt(lambda_)
         self.tolx = 1e-12 * self.sigma
         self.tolupx = 1e3 * self.sigma
@@ -485,43 +486,55 @@ class Parameters(BaseParameters):
 
         restart_required = False
         diagC = diag(self.C).reshape(-1, 1)
+        tmp = append(abs(self.p_c), sqrt(diagC), axis=1)
+        a = mod(evalcount/self.lambda_-1, self.n)
+        self.histfunevals[mod(evalcount/self.lambda_-1, self.nbin)] = fitnesses[0]
+        self.stagnation_list.extend(fitnesses)
+        self.stagnation_list = self.stagnation_list[-int(ceil(0.2*evalcount + 120 + 30*self.n/self.lambda_)):]
 
         # TolX
-        tmp = append(abs(self.p_c), sqrt(diagC), axis=1)
         if all(self.sigma*(max(tmp, axis=1)) < self.tolx):
-            print('TolX')
+            # print('TolX')
             restart_required = True
 
         # TolUPX
-        if any(self.sigma*sqrt(diagC)) > self.tolupx:
-            print('TolUPX')
+        elif any(self.sigma*sqrt(diagC)) > self.tolupx:
+            # print('TolUPX')
             restart_required = True
 
         # No effective axis
-        a = mod(evalcount/self.lambda_-1, self.n)
-        if all(0.1*self.sigma*self.D[a, 0]*self.B[:, a] + self.wcm == self.wcm):
-            print('noeffectaxis')
+        elif all(0.1*self.sigma*self.D[a, 0]*self.B[:, a] + self.wcm == self.wcm):
+            # print('noeffectaxis')
             restart_required = True
 
         # No effective coordinate
-        if any(0.2*self.sigma*sqrt(diagC) + self.wcm == self.wcm):
-            print('noeffectcoord')
+        elif any(0.2*self.sigma*sqrt(diagC) + self.wcm == self.wcm):
+            # print('noeffectcoord')
             restart_required = True
 
         # Condition of C
-        if cond(self.C) > self.conditioncov:
-            print('condcov')
+        elif cond(self.C) > self.conditioncov:
+            # print('condcov')
             restart_required = True
 
-        self.histfunevals[mod(evalcount/self.lambda_-1, self.nbin)] = fitnesses[0]
-        if mod(evalcount, self.lambda_) == self.nbin and \
+        elif mod(evalcount, self.lambda_) == self.nbin and \
             max(self.histfunevals) - min(self.histfunevals) < self.tolfun:
-            print('tolfun')
+            # print('tolfun')
             restart_required = True
 
         # Adjust step size in case of equal function values
-        if fitnesses[0] == fitnesses[self.flat_fitness_index]:
-            print('flatfitness')
+        elif fitnesses[0] == fitnesses[self.flat_fitness_index]:
+            # print('flatfitness')
+            restart_required = True
+
+        # A mismatch between sigma increase and decrease of all eigenvalues in C
+        elif self.sigma / 1 > self.tolupsigma*max(self.D):
+            # print('tolupsigma')
+            restart_required = True
+
+        # Stagnation, median of most recent 20 values is no better than that of the oldest 20
+        elif median(self.stagnation_list[-20:]) > median(self.stagnation_list[:20]):
+            # print('stagnation')
             restart_required = True
 
         return restart_required

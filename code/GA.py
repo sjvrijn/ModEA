@@ -104,7 +104,7 @@ def evaluate_ES(bitstring, fitness_function='sphere', opts=None, n=10, budget=No
 
     # Set parameters
     if budget is None:
-        budget = 3e3 * n
+        budget = 1e3 * n
     num_runs = 15
 
     # Setup the bbob logger

@@ -446,7 +446,6 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters):
                 else:
                     pop_change = None
 
-                print("restart! {}".format(pop_change))
                 parameters.local_restart(pop_change=pop_change)
                 # Set population to start from a new random search point
                 new_search_point = randn(parameters.n,1)
