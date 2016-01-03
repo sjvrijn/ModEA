@@ -186,9 +186,11 @@ def runAlgorithm(fit_name, algorithm, n, num_runs, f, budget, opts):
     return sigmas, fitnesses
 
 
-def run():
-    pass
-    '''
+
+################################################################################
+################################ Run Functions #################################
+################################################################################
+def testEachOption():
     # Test all individual options
     n = len(options)
     evaluate_ES([0]*n)
@@ -199,9 +201,9 @@ def run():
             evaluate_ES(dna)
 
     print("\n\n")
-    # '''
 
-    '''
+
+def problemCases():
     # Known problems
     print("Combinations known to cause problems:")
 
@@ -215,16 +217,15 @@ def run():
     # print("None! Good job :D")
 
     print("\n\n")
-    # '''
 
-    '''
+
+def exampleRuns():
     print("Mirrored vs Mirrored-pairwise")
     evaluate_ES(None, opts={'mirrored': True})
     evaluate_ES(None, opts={'mirrored': True, 'selection': 'pairwise'})
-    # '''
 
 
-    # '''
+def bruteForce():
     # Exhaustive/brute-force search over *all* possible combinations
     # NB: THIS ASSUMES OPTIONS ARE SORTED ASCENDING BY NUMBER OF VALUES
     print("Brute-force exhaustive search of *all* available ES-combinations.")
@@ -266,15 +267,23 @@ def run():
     print("Time at start:       {}\n"
           "Time at end:         {}\n"
           "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
-    # '''
 
-    '''
+
+def runGA():
     pop, sigmas, fitness, best = GA()
     print()
     print("Best Individual:     {}\n"
           "        Fitness:     {}\n"
           "Fitnesses over time: {}".format(best.dna, best.fitness, fitness))
-    # '''
+
+
+def run():
+    # testEachOption()
+    # problemCases()
+    # exampleRuns()
+    bruteForce()
+    # runGA()
+
 
 if __name__ == '__main__':
     np.set_printoptions(linewidth=1000)
