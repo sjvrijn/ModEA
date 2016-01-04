@@ -87,7 +87,7 @@ def roulette(population, new_population, param):
     param.all_offspring = offspring
 
     # Use normalized 1/fitness as probability for picking a certain individual
-    norm_inverses = [1/ind.fitness for ind in new_population]
+    norm_inverses = [1/abs(ind.fitness) for ind in new_population]  # we take the absolute just to be sure it works
     norm_inverses /= sum(norm_inverses)
 
     # Create a discrete sampler using the PageRank values as probabilities
