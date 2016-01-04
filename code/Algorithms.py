@@ -6,12 +6,13 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 # External libraries
 from copy import copy
 from functools import partial
-from multiprocessing import Pool, cpu_count
+from multiprocessing import Pool
 from numpy import floor, log
 from numpy.random import randn
 # Internal classes
 from .Individual import Individual
 from .Parameters import Parameters
+from code import allow_parallel, num_threads
 # Internal modules
 import code.Mutation as Mut
 import code.Recombination as Rec
@@ -348,17 +349,12 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
     sequential_evaluation = parameters.sequential
     two_point_adaptation = parameters.tpa
     if parallel:
-        try:
-            num_threads = cpu_count()
-            if num_threads > 1:
-                num_threads = min(num_threads, parameters.lambda_)
-                p = Pool(num_threads)
-            else:
-                parallel = False
-                print("Warning: Thread count returned 1, defaulting to non-parallel evaluation.")
-        except NotImplementedError:
+        if allow_parallel:
+            num_workers = min(num_threads, parameters.lambda_)
+            p = Pool(num_workers)
+        else:
             parallel = False
-            print("Warning: Thread count for multiprocessing failed, defaulting to non-parallel evaluation.")
+            print("Warning: Parallel execution not available, defaulting to non-parallel evaluation.")
 
     # Single recombination outside the eval loop to create the new population
     new_population = recombine(population)

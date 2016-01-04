@@ -8,12 +8,13 @@ import numpy as np
 import sys
 from copy import copy
 from functools import partial
+from multiprocessing import Pool
 
 import code.Mutation as Mut
 import code.Selection as Sel
 import code.Recombination as Rec
 from bbob import bbobbenchmarks, fgeneric
-from code import getOpts, getBitString, options, num_options
+from code import allow_parallel, getOpts, getBitString, options, num_options, num_threads
 from code.Algorithms import customizedES, baseAlgorithm
 from code.Individual import Individual
 from code.Parameters import Parameters
@@ -154,27 +155,25 @@ def fetchResults(fun_id, instance, n, budget, opts):
     return f_target, results
 
 
-def runAlgorithm(fit_name, algorithm, n, num_runs, f, budget, opts):
+def runAlgorithm(fit_name, algorithm, n, num_runs, f, budget, opts, parallel=False):
 
     fun_id = fitness_functions[fit_name]
 
     # Perform the actual run of the algorithm
-    # '''  # Single-core version
-    results = []
-    targets = []
-    for j in range(num_runs):
-        # sysPrint('    Run: {}\r'.format(j))  # I want the actual carriage return here! No output clutter
-        f_target = f.setfun(*bbobbenchmarks.instantiate(fun_id, iinstance=j)).ftarget
-        targets.append(f_target)
-        results.append(algorithm(n, f.evalfun, budget))
-
-    '''  # Multi-core version ## TODO: Fix using dill/pathos/something else
-    from multiprocessing import Pool
-    p = Pool(12)
-    function = partial(fetchResults, fun_id, n=n, budget=budget, opts=opts)
-    run_data = p.map(function, range(num_runs))
-    targets, results = zip(*run_data)
-    #'''
+    if parallel and allow_parallel:  # Multi-core version
+        num_workers = min(num_threads, num_runs)
+        p = Pool(num_workers)
+        function = partial(fetchResults, fun_id, n=n, budget=budget, opts=opts)
+        run_data = p.map(function, range(num_runs))
+        targets, results = zip(*run_data)
+    else:  # Single-core version
+        results = []
+        targets = []
+        for j in range(num_runs):
+            # sysPrint('    Run: {}\r'.format(j))  # I want the actual carriage return here! No output clutter
+            f_target = f.setfun(*bbobbenchmarks.instantiate(fun_id, iinstance=j)).ftarget
+            targets.append(f_target)
+            results.append(algorithm(n, f.evalfun, budget))
 
     # Preprocess/unpack results
     _, sigmas, fitnesses, best_individual = (list(x) for x in zip(*results))
