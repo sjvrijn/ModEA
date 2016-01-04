@@ -25,10 +25,23 @@ options = (
 num_options = [len(opt[1]) for opt in options]
 
 def getOpts(bitstring):
+    """
+        Transformation from integer 'bitstring' to options dictionary
+
+        :param bitstring:   A list/array of integers that serve as index for the options tuple
+        :return:            Dictionary with all option names and the chosen option
+    """
+
     opts = {option[0]: option[1][bitstring[i]] for i, option in enumerate(options)}
     return opts
 
 def getBitString(opts):
+    """
+        Reverse of getOpts, transforms options dictionary to integer 'bitstring'
+
+        :param opts:    Dictionary with option names and the chosen option
+        :return:        A list of integers that serve as index for the options tuple
+    """
     bitstring = []
     for i, option in enumerate(options):
         name, choices = option
@@ -43,6 +56,11 @@ def getBitString(opts):
     return bitstring
 
 def getFullOpts(opts):
+    """
+        Ensures that an options dictionary actually contains all options that have been defined
+
+        :param opts:    Dictionary to be checked for option names and the chosen option
+    """
 
     for name, choice in opts:
         if name not in options:
@@ -53,8 +71,7 @@ def getFullOpts(opts):
     for name, choices in options:
         if name not in opts:
             opts[name] = choices[0]
+
         # Optional, should already be checked above
         # elif opts[name] not in choices:
         #     opts[name] = choices[0]
-
-    return opts
