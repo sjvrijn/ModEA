@@ -250,10 +250,14 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
         # TODO FIXME: are these fixes correct?!
         # Explicitly force lambda_ to be even
         if lambda_ % 2 == 1:
-            lambda_ += 1
+            lambda_ -= 1
+            if lambda_ == 0:
+                lambda_ += 2
 
         # Both pairwise selection and TPA are lambda-reducing procedures. Change mu if naively using default settings
         if opts['two-point']:
+            if lambda_ == 2:
+                lambda_ += 2
             eff_lambda = lambda_ - 2
         else:
             eff_lambda = lambda_
@@ -267,6 +271,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
     parameters = Parameters(n, budget, mu, lambda_, weights_option=opts['weights'], active=opts['active'],
                             elitist=opts['elitism'], ipop=opts['ipop'], sequential=opts['sequential'],
                             tpa=opts['two-point'])
+    # In case of pairwise selection, sequential evaluation may only stop after 2mu instead of mu individuals
     if opts['sequential'] and opts['selection'] == 'pairwise':
         parameters.seq_cutoff = 2*mu
     population = [Individual(n) for _ in range(parameters.mu)]
