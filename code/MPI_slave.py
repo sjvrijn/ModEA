@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
-from code.GA import fetchResults  # Do not remove! Required for the partial in the MPI call from GA.runAlgorithm
+from code.GA import fetchResults, evaluate_ES  # Do not remove! Required for the MPI calls for the GA
 
 from mpi4py import MPI
 comm = MPI.COMM_SELF.Get_parent()
@@ -17,6 +17,8 @@ def runSlaveRun():
 
     function = None
     options = None
+
+    # print("Process {}/{} reporting for duty!".format(rank, size))
 
     function = comm.bcast(function, root=0)
     arguments = comm.scatter(options, root=0)

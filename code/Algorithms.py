@@ -6,13 +6,15 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 # External libraries
 from copy import copy
 from functools import partial
+from mpi4py import MPI
 from multiprocessing import Pool
 from numpy import floor, log
 from numpy.random import randn
+import sys
 # Internal classes
 from .Individual import Individual
 from .Parameters import Parameters
-from code import allow_parallel, num_threads
+from code import allow_parallel, num_threads, Config
 # Internal modules
 import code.Mutation as Mut
 import code.Recombination as Rec
@@ -371,7 +373,16 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
         if two_point_adaptation:
             new_population = new_population[:-2]
 
-        if parallel:
+        if parallel and Config.use_MPI:
+            run_data = None
+
+            # mpi4py
+            comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=parameters.lambda_)  # Init
+            comm.bcast(mutEval, root=MPI.ROOT)           # Equal for all processes
+            comm.scatter(new_population, root=MPI.ROOT)  # Different for each process
+            comm.Barrier()                               # Wait for everything to finish...
+            _ = comm.gather(run_data, root=MPI.ROOT)     # And gather everything up
+        elif parallel:
             p.map(mutEval, new_population)
             used_budget += parameters.lambda_
             i=parameters.lambda_

@@ -84,7 +84,7 @@ def GA(n=None, budget=None, fit_func_id=1):
         'mutateParameters': mutateParameters,
     }
     # TODO FIXME: parallel currently causes ValueError: I/O operation on closed file
-    results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters, parallel=False, debug=True)
+    results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters, parallel=True, debug=True)
     storage_file.close()
     return results
 
@@ -132,8 +132,8 @@ def evaluate_ES(bitstring, fit_func_id=1, opts=None, n=10, budget=None, storage_
 
     # From all different runs, retrieve the median fitness to be used as fitness for this ES
     min_fitnesses = np.min(fitnesses, axis=0)
-    if storage_file:
-        storage_file.write('{}:\t{}\n'.format(bitstring, min_fitnesses))
+    # if storage_file:
+    #     storage_file.write('{}:\t{}\n'.format(bitstring, min_fitnesses))
     median = np.median(min_fitnesses)
     print("\t\t{}".format(median))
 
