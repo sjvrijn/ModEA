@@ -41,11 +41,11 @@ def sysPrint(string):
     sys.stdout.flush()
 
 
-def GA(n=None, budget=None, fitness_function='sphere'):
+def GA(n=None, budget=None, fit_func_id=1):
     """ Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function """
 
     # Where to store genotype-fitness information
-    storage_file = open('{}GA_results_{}_{}.tdat'.format(datapath, n, fit_func_id), 'w')
+    storage_file = open('{}GA_results_{}dim_{}.tdat'.format(datapath, n, fit_func_id), 'w')
 
     # Fitness function to be passed on to the baseAlgorithm
     fitnessFunction = partial(evaluate_ES, fit_func_id=fit_func_id, storage_file=storage_file)
@@ -292,12 +292,21 @@ def runGA():
           "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
 
 
+def runExperiments():
+    results = {}
+    for dim in Config.experiment_dims:
+        results[dim] = {}
+        for func_id in Config.experiment_funcs:
+            results[dim][func_id] = GA(n=dim, fit_func_id=func_id)
+
+
 def run():
     # testEachOption()
     # problemCases()
     # exampleRuns()
     # bruteForce()
     runGA()
+    # runExperiments()
     pass
 
 
