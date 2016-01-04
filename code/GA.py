@@ -9,6 +9,7 @@ import sys
 from copy import copy
 from functools import partial
 from multiprocessing import Pool
+from mpi4py import MPI
 
 
 import code.Mutation as Mut
@@ -127,7 +128,7 @@ def evaluate_ES(bitstring, fit_func_id=1, opts=None, n=10, budget=None, storage_
         # print(" {}  \t({})".format(mean_best_fitness, median))
     # '''
 
-    _, fitnesses = runAlgorithm(fit_func_id, algorithm, n, num_runs, f, budget, opts)
+    _, fitnesses = runAlgorithm(fit_func_id, algorithm, n, num_runs, f, budget, opts, parallel=True)
 
     # From all different runs, retrieve the median fitness to be used as fitness for this ES
     min_fitnesses = np.min(fitnesses, axis=0)
@@ -159,11 +160,27 @@ def fetchResults(fun_id, instance, n, budget, opts):
 def runAlgorithm(fit_func_id, algorithm, n, num_runs, f, budget, opts, parallel=False):
 
     # Perform the actual run of the algorithm
-    if parallel and allow_parallel:  # Multi-core version
-        num_workers = min(num_threads, num_runs)
-        p = Pool(num_workers)
+    if parallel and Config.use_MPI:
         function = partial(fetchResults, fit_func_id, n=n, budget=budget, opts=opts)
+        arguments = range(num_runs)
+        run_data = None
+
+        # mpi4py
+        comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=num_runs)  # Init
+        comm.bcast(function, root=MPI.ROOT)     # Equal for all processes
+        comm.scatter(arguments, root=MPI.ROOT)  # Different for each process
+        comm.Barrier()                          # Wait for everything to finish...
+        run_data = comm.gather(run_data, root=MPI.ROOT)  # And gather everything up
+
+        targets, results = zip(*run_data)
+    elif parallel and allow_parallel:  # Multi-core version
+        num_workers = min(num_threads, num_runs)
+        function = partial(fetchResults, fit_func_id, n=n, budget=budget, opts=opts)
+
+        # multiprocessing
+        p = Pool(num_workers)
         run_data = p.map(function, range(num_runs))
+
         targets, results = zip(*run_data)
     else:  # Single-core version
         results = []

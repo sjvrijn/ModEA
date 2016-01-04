@@ -17,7 +17,7 @@ GA_parallel = True
 ### ES Settings ###
 ES_budget_factor = 1e3
 ES_num_runs = 15
-ES_parallel = False
+ES_parallel = True
 
 ### Experiment Settings ###
 experiment_dims = (2, 3, 5, 10, 20)  # Problem dimensionalities to be tested
