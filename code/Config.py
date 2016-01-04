@@ -4,6 +4,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
+### General Settings ###
+use_MPI = True
+
+
 ### GA Settings ###
 GA_mu = 3        # Assuming a dimensionality of 11
 GA_lambda = 12   # (8 boolean + 3 triples)
