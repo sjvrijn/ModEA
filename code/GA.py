@@ -80,7 +80,8 @@ def GA(n=None, budget=None, fitness_function='sphere'):
         'select': select,
         'mutateParameters': mutateParameters,
     }
-    results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters, debug=True)
+    # TODO FIXME: parallel currently causes ValueError: I/O operation on closed file
+    results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters, parallel=False, debug=True)
     storage_file.close()
     return results
 
@@ -297,8 +298,8 @@ def run():
     # testEachOption()
     # problemCases()
     # exampleRuns()
-    bruteForce()
-    # runGA()
+    # bruteForce()
+    runGA()
     pass
 
 
