@@ -6,7 +6,7 @@ from multiprocessing import cpu_count
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 __version__ = '0.1.1'
 
-num_threads = 1
+num_threads = 1  # Default case, always true
 try:
     num_threads = cpu_count()
     if num_threads > 1:

@@ -10,11 +10,12 @@ from copy import copy
 from functools import partial
 from multiprocessing import Pool
 
+
 import code.Mutation as Mut
 import code.Selection as Sel
 import code.Recombination as Rec
 from bbob import bbobbenchmarks, fgeneric
-from code import allow_parallel, getOpts, getBitString, options, num_options, num_threads
+from code import allow_parallel, getOpts, getBitString, options, num_options, num_threads, Config
 from code.Algorithms import customizedES, baseAlgorithm
 from code.Individual import Individual
 from code.Parameters import Parameters
@@ -44,18 +45,18 @@ def GA(n=None, budget=None, fitness_function='sphere'):
     """ Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function """
 
     # Where to store genotype-fitness information
-    storage_file = open('{}GA_results_{}_{}.tdat'.format(datapath, n, fitness_function), 'w')
+    storage_file = open('{}GA_results_{}_{}.tdat'.format(datapath, n, fit_func_id), 'w')
 
     # Fitness function to be passed on to the baseAlgorithm
-    fitnessFunction = partial(evaluate_ES, fitness_function=fitness_function, storage_file=storage_file)
+    fitnessFunction = partial(evaluate_ES, fit_func_id=fit_func_id, storage_file=storage_file)
 
     # Assuming a dimensionality of 11 (8 boolean + 3 triples)
-    GA_mu = 3
-    GA_lambda = 12
+    GA_mu = Config.GA_mu
+    GA_lambda = Config.GA_lambda
     if n is None:
         n = 10
     if budget is None:
-        budget = 250
+        budget = Config.GA_budget
 
     parameters = Parameters(n, budget, GA_mu, GA_lambda)
     # Initialize the first individual in the population
@@ -87,16 +88,16 @@ def GA(n=None, budget=None, fitness_function='sphere'):
     return results
 
 
-def evaluate_ES(bitstring, fitness_function='sphere', opts=None, n=10, budget=None, storage_file=None):
+def evaluate_ES(bitstring, fit_func_id=1, opts=None, n=10, budget=None, storage_file=None):
     """ Single function to run all desired combinations of algorithms * fitness functions """
 
     # Set parameters
     if budget is None:
-        budget = 1e3 * n
-    num_runs = 15
+        budget = Config.ES_budget_factor * n
+    num_runs = Config.ES_num_runs
 
     # Setup the bbob logger
-    bbob_opts['algid'] = bitstring
+    bbob_opts['algid'] = bitstring  # Save the bitstring of the ES we are currently evaluating
     f = fgeneric.LoggingFunction(datapath, **bbob_opts)
 
     if opts:
@@ -126,7 +127,7 @@ def evaluate_ES(bitstring, fitness_function='sphere', opts=None, n=10, budget=No
         # print(" {}  \t({})".format(mean_best_fitness, median))
     # '''
 
-    _, fitnesses = runAlgorithm(fitness_function, algorithm, n, num_runs, f, budget, opts)
+    _, fitnesses = runAlgorithm(fit_func_id, algorithm, n, num_runs, f, budget, opts)
 
     # From all different runs, retrieve the median fitness to be used as fitness for this ES
     min_fitnesses = np.min(fitnesses, axis=0)
@@ -155,15 +156,13 @@ def fetchResults(fun_id, instance, n, budget, opts):
     return f_target, results
 
 
-def runAlgorithm(fit_name, algorithm, n, num_runs, f, budget, opts, parallel=False):
-
-    fun_id = fitness_functions[fit_name]
+def runAlgorithm(fit_func_id, algorithm, n, num_runs, f, budget, opts, parallel=False):
 
     # Perform the actual run of the algorithm
     if parallel and allow_parallel:  # Multi-core version
         num_workers = min(num_threads, num_runs)
         p = Pool(num_workers)
-        function = partial(fetchResults, fun_id, n=n, budget=budget, opts=opts)
+        function = partial(fetchResults, fit_func_id, n=n, budget=budget, opts=opts)
         run_data = p.map(function, range(num_runs))
         targets, results = zip(*run_data)
     else:  # Single-core version
@@ -171,7 +170,7 @@ def runAlgorithm(fit_name, algorithm, n, num_runs, f, budget, opts, parallel=Fal
         targets = []
         for j in range(num_runs):
             # sysPrint('    Run: {}\r'.format(j))  # I want the actual carriage return here! No output clutter
-            f_target = f.setfun(*bbobbenchmarks.instantiate(fun_id, iinstance=j)).ftarget
+            f_target = f.setfun(*bbobbenchmarks.instantiate(fit_func_id, iinstance=j)).ftarget
             targets.append(f_target)
             results.append(algorithm(n, f.evalfun, budget))
 
@@ -277,7 +276,7 @@ def runGA():
 
     from datetime import datetime
     x = datetime.now()
-    pop, sigmas, fitness, best = GA()
+    pop, sigmas, fitness, best = GA()  # This line does all the work!
     y = datetime.now()
     print()
     print("Best Individual:     {}\n"
