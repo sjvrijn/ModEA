@@ -259,6 +259,8 @@ class Parameters(BaseParameters):
         if any(isinf(C)) > 1:                           # interval
             degenerated = True
             # raise Exception("Values in C are infinite")
+        elif not 1e-16 < self.sigma_mean < 1e6:
+            degenerated = True
         else:
             try:
                 w, e_vector = eigh(C)

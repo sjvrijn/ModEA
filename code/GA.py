@@ -297,6 +297,7 @@ def runExperiments():
     for dim in Config.experiment_dims:
         results[dim] = {}
         for func_id in Config.experiment_funcs:
+            print("Optimizing for function ID {} in {}-dimensional space:".format(func_id, dim))
             results[dim][func_id] = GA(n=dim, fit_func_id=func_id)
 
 
