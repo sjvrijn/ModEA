@@ -4,7 +4,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
-from code.GA import fetchResults, evaluate_ES  # Do not remove! Required for the MPI calls for the GA
+### NOTE: Do not remove these 'unused' imports! ###
+# The following are imports that are required by the functions that are passed to this MPI slave in order to run
+from code.GA import fetchResults, evaluate_ES  # Required for the MPI calls for the GA
 
 from mpi4py import MPI
 comm = MPI.COMM_SELF.Get_parent()
