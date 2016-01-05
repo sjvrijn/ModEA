@@ -21,7 +21,7 @@ class Individual(object):
         """
         self.n = n
         self.dna = np.ones((n,1))               # Column vector
-        self.fitness = None                     # Default 'unset' value
+        self.fitness = np.inf                   # Default 'unset' value
 
         self.maxStepSize = 0.5
         self.initStepSize = 0.2
