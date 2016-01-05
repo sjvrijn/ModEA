@@ -42,11 +42,12 @@ def sysPrint(string):
     sys.stdout.flush()
 
 
-def GA(n=None, budget=None, fit_func_id=1):
+def GA(n, budget=None, fit_func_id=1):
     """ Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function """
 
     # Where to store genotype-fitness information
-    storage_file = open('{}GA_results_{}dim_{}.tdat'.format(datapath, n, fit_func_id), 'w')
+    # storage_file = open('{}GA_results_{}dim_{}.tdat'.format(datapath, n, fit_func_id), 'w')
+    storage_file = '{}GA_results_{}dim_f{}.tdat'.format(datapath, n, fit_func_id)
 
     # Fitness function to be passed on to the baseAlgorithm
     fitnessFunction = partial(evaluate_ES, fit_func_id=fit_func_id, storage_file=storage_file)
@@ -54,8 +55,6 @@ def GA(n=None, budget=None, fit_func_id=1):
     # Assuming a dimensionality of 11 (8 boolean + 3 triples)
     GA_mu = Config.GA_mu
     GA_lambda = Config.GA_lambda
-    if n is None:
-        n = 10
     if budget is None:
         budget = Config.GA_budget
 
@@ -84,7 +83,8 @@ def GA(n=None, budget=None, fit_func_id=1):
         'mutateParameters': mutateParameters,
     }
     # TODO FIXME: parallel currently causes ValueError: I/O operation on closed file
-    results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters, parallel=True, debug=True)
+    results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters,
+                            parallel=Config.GA_parallel, debug=True)
     storage_file.close()
     return results
 
@@ -128,12 +128,13 @@ def evaluate_ES(bitstring, fit_func_id=1, opts=None, n=10, budget=None, storage_
         # print(" {}  \t({})".format(mean_best_fitness, median))
     # '''
 
-    _, fitnesses = runAlgorithm(fit_func_id, algorithm, n, num_runs, f, budget, opts, parallel=True)
+    _, fitnesses = runAlgorithm(fit_func_id, algorithm, n, num_runs, f, budget, opts, parallel=Config.ES_parallel)
 
     # From all different runs, retrieve the median fitness to be used as fitness for this ES
     min_fitnesses = np.min(fitnesses, axis=0)
-    # if storage_file:
-    #     storage_file.write('{}:\t{}\n'.format(bitstring, min_fitnesses))
+    if storage_file:
+        with open(storage_file, 'a') as f:
+            f.write("{}\t{}\n".format(bitstring.tolist(), min_fitnesses.tolist()))
     median = np.median(min_fitnesses)
     print("\t\t{}".format(median))
 
@@ -293,7 +294,7 @@ def runGA():
 
     from datetime import datetime
     x = datetime.now()
-    pop, sigmas, fitness, best = GA()  # This line does all the work!
+    pop, sigmas, fitness, best = GA(n=10)  # This line does all the work!
     y = datetime.now()
     print()
     print("Best Individual:     {}\n"
