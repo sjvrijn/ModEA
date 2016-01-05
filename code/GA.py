@@ -46,7 +46,6 @@ def GA(n, budget=None, fit_func_id=1):
     """ Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function """
 
     # Where to store genotype-fitness information
-    # storage_file = open('{}GA_results_{}dim_{}.tdat'.format(datapath, n, fit_func_id), 'w')
     storage_file = '{}GA_results_{}dim_f{}.tdat'.format(datapath, n, fit_func_id)
 
     # Fitness function to be passed on to the baseAlgorithm
@@ -62,7 +61,6 @@ def GA(n, budget=None, fit_func_id=1):
     # Initialize the first individual in the population
     population = [Individual(n)]
     population[0].dna = np.array([np.random.randint(len(x[1])) for x in options])
-    population[0].fitness = fitnessFunction(population[0].dna)[0]
 
     while len(population) < GA_mu:
         population.append(copy(population[0]))
@@ -84,8 +82,7 @@ def GA(n, budget=None, fit_func_id=1):
     }
     # TODO FIXME: parallel currently causes ValueError: I/O operation on closed file
     results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters,
-                            parallel=Config.GA_parallel, debug=True)
-    storage_file.close()
+                            parallel=Config.GA_parallel, debug=Config.GA_debug)
     return results
 
 
@@ -120,7 +117,8 @@ def evaluate_ES(bitstring, fit_func_id=1, opts=None, n=10, budget=None, storage_
         # From all different runs, retrieve the median fitness to be used as fitness for this ES
         min_fitnesses = np.min(fitnesses, axis=0)
         if storage_file:
-            storage_file.write('{}:\t{}\n'.format(bitstring, min_fitnesses))
+            with open(storage_file, 'a') as f:
+                f.write("{}\t{}\n".format(bitstring.tolist(), min_fitnesses.tolist()))
         median = np.median(min_fitnesses)
         print("\t\t{}".format(median))
 
@@ -311,12 +309,14 @@ def runGA():
 
 
 def runExperiments():
-    results = {}
     for dim in Config.experiment_dims:
-        results[dim] = {}
         for func_id in Config.experiment_funcs:
             print("Optimizing for function ID {} in {}-dimensional space:".format(func_id, dim))
-            results[dim][func_id] = GA(n=dim, fit_func_id=func_id)
+            generation_sizes, sigma_over_time, best_fitness_over_time, best_individual = GA(n=dim, fit_func_id=func_id)
+
+            np.savez("{}final_GA_results_{}dim_f{}".format(datapath, dim, func_id),
+                     sigma=sigma_over_time, best_fitness=best_fitness_over_time,
+                     best_result=best_individual.dna, generation_sizes=generation_sizes)
 
 
 def run():
@@ -324,8 +324,8 @@ def run():
     # problemCases()
     # exampleRuns()
     # bruteForce()
-    runGA()
-    # runExperiments()
+    # runGA()
+    runExperiments()
     pass
 
 

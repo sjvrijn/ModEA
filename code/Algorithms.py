@@ -36,7 +36,6 @@ def onePlusOneES(n, fitnessFunction, budget):
 
     parameters = Parameters(n, budget, 1, 1)
     population = [Individual(n)]
-    population[0].fitness = fitnessFunction(population[0].dna)
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.onePlusOne
@@ -74,10 +73,8 @@ def CMA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
 
     # Artificial init: in hopes of fixing CMA-ES
     wcm = parameters.wcm
-    fitness = fitnessFunction(wcm)[0]
     for individual in population:
         individual.dna = wcm
-        individual.fitness = fitness
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = partial(Rec.weighted, param=parameters)
@@ -109,7 +106,6 @@ def onePlusOneCholeskyCMAES(n, fitnessFunction, budget):
 
     parameters = Parameters(n, budget, 1, 1)
     population = [Individual(n)]
-    population[0].fitness = fitnessFunction(population[0].dna)
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.onePlusOne
@@ -141,8 +137,6 @@ def onePlusOneActiveCMAES(n, fitnessFunction, budget):
 
     parameters = Parameters(n, budget, 1, 1)
     population = [Individual(n)]
-    population[0].fitness = fitnessFunction(population[0].dna)
-    parameters.addToFitnessHistory(population[0].fitness)
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.onePlusOne
@@ -177,8 +171,6 @@ def CMSA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
 
     parameters = Parameters(n, budget, mu, lambda_, elitist=elitist, weights_option='1/n')
     population = [Individual(n) for _ in range(mu)]
-    for individual in population:
-        individual.fitness = fitnessFunction(individual.dna)
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = partial(Rec.weighted, param=parameters)
@@ -280,10 +272,8 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
 
     # Artificial init: in hopes of fixing CMA-ES
     wcm = parameters.wcm
-    fitness = fitnessFunction(wcm)[0]
     for individual in population:
         individual.dna = wcm
-        individual.fitness = fitness
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = partial(Rec.weighted, param=parameters)
@@ -306,6 +296,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
 def mutateAndEvaluate(ind, mutate, fitFunc):
     mutate(ind)
     ind.fitness = fitFunc(ind.dna)[0]
+    return ind
 
 def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, parallel=False, debug=False):
     """
@@ -339,8 +330,9 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
     """
 
     # Parameter tracking
-    sigma_over_time = [parameters.sigma_mean]
-    best_fitness_over_time = [population[0].fitness]
+    sigma_over_time = []
+    best_fitness_over_time = []
+    generation_size = []
     best_individual = population[0]
 
     improvement_found = False  # Has a better individual has been found? Used for sequential evaluation
@@ -381,9 +373,9 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
             comm.bcast(mutEval, root=MPI.ROOT)           # Equal for all processes
             comm.scatter(new_population, root=MPI.ROOT)  # Different for each process
             comm.Barrier()                               # Wait for everything to finish...
-            _ = comm.gather(run_data, root=MPI.ROOT)     # And gather everything up
+            new_population = comm.gather(run_data, root=MPI.ROOT)     # And gather everything up
         elif parallel:
-            p.map(mutEval, new_population)
+            new_population = p.map(mutEval, new_population)
             used_budget += parameters.lambda_
             i=parameters.lambda_
         else:
@@ -408,6 +400,8 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
         population = select(population, new_population, used_budget)  # Selection
 
         # Track parameters
+        gen_size = used_budget - len(best_fitness_over_time)
+        generation_size.append(gen_size)
         sigma_over_time.extend([parameters.sigma_mean] * (used_budget - len(sigma_over_time)))
         best_fitness_over_time.extend([population[0].fitness] * (used_budget - len(best_fitness_over_time)))
         if population[0].fitness < best_individual.fitness:
@@ -477,4 +471,4 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
     if parameters.count_degenerations:
         print(parameters.count_degenerations, end=' ')
 
-    return population, sigma_over_time, best_fitness_over_time, best_individual
+    return generation_size, sigma_over_time, best_fitness_over_time, best_individual
