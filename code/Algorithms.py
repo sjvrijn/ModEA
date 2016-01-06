@@ -347,6 +347,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
     mutateParameters = functions['mutateParameters']
     sequential_evaluation = parameters.sequential
     two_point_adaptation = parameters.tpa
+    run_data = None
     if parallel:
         if allow_parallel:
             num_workers = min(num_threads, parameters.lambda_)
@@ -365,21 +366,30 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
         if two_point_adaptation:
             new_population = new_population[:-2]
 
-        if parallel and Config.use_MPI:
-            run_data = None
+        if parallel:
+            if Config.use_MPI:
+                # mpi4py
+                comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=parameters.lambda_)  # Init
+                comm.bcast(mutEval, root=MPI.ROOT)                     # Equal for all processes
+                comm.scatter(new_population, root=MPI.ROOT)            # Different for each process
+                comm.Barrier()                                         # Wait for everything to finish...
+                new_population = comm.gather(run_data, root=MPI.ROOT)  # And gather everything up
+            else:
+                new_population = p.map(mutEval, new_population)
 
-            # mpi4py
-            comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=parameters.lambda_)  # Init
-            comm.bcast(mutEval, root=MPI.ROOT)           # Equal for all processes
-            comm.scatter(new_population, root=MPI.ROOT)  # Different for each process
-            comm.Barrier()                               # Wait for everything to finish...
-            new_population = comm.gather(run_data, root=MPI.ROOT)     # And gather everything up
-            used_budget += parameters.lambda_
-            i = parameters.lambda_
-        elif parallel:
-            new_population = p.map(mutEval, new_population)
-            used_budget += parameters.lambda_
-            i = parameters.lambda_
+            if sequential_evaluation:
+                for i, individual in enumerate(new_population):
+                    used_budget += 1
+                    if individual.fitness < best_individual.fitness:
+                        improvement_found = True  # Is the latest individual better?
+                    if i >= parameters.seq_cutoff and improvement_found:
+                        improvement_found = False  # Have we evaluated at least mu mutated individuals?
+                        break
+                    if used_budget == budget:
+                        break
+            else:
+                used_budget += parameters.lambda_
+                i = parameters.lambda_
         else:
             for i, individual in enumerate(new_population):
                 mutate(individual)  # Mutation
