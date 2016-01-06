@@ -288,11 +288,11 @@ def bruteForce():
           "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
 
 
-def runGA():
+def runGA(ndim=10, fid=1):
 
     from datetime import datetime
     x = datetime.now()
-    pop, sigmas, fitness, best = GA(n=10)  # This line does all the work!
+    pop, sigmas, fitness, best = GA(n=ndim, fit_func_id=fid)  # This line does all the work!
     y = datetime.now()
     print()
     print("Best Individual:     {}\n"
@@ -332,4 +332,10 @@ def run():
 if __name__ == '__main__':
     np.set_printoptions(linewidth=1000)
     # np.random.seed(42)
-    run()
+
+    if len(sys.argv) == 3:
+        ndim = sys.argv[1]
+        fid = sys.argv[2]
+        runGA(ndim, fid)
+    else:
+        run()
