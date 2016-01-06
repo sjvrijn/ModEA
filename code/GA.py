@@ -7,6 +7,7 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 import numpy as np
 import sys
 from copy import copy
+from datetime import datetime
 from functools import partial
 from multiprocessing import Pool
 from mpi4py import MPI
@@ -290,9 +291,8 @@ def bruteForce():
 
 def runGA(ndim=10, fid=1):
 
-    from datetime import datetime
     x = datetime.now()
-    pop, sigmas, fitness, best = GA(n=ndim, fit_func_id=fid)  # This line does all the work!
+    gen_sizes, sigmas, fitness, best = GA(n=ndim, fit_func_id=fid)  # This line does all the work!
     y = datetime.now()
     print()
     print("Best Individual:     {}\n"
@@ -307,16 +307,21 @@ def runGA(ndim=10, fid=1):
           "Time at end:         {}\n"
           "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
 
+    np.savez("{}final_GA_results_{}dim_f{}".format(datapath, ndim, fid),
+             sigma=sigmas, best_fitness=fitness, best_result=best.dna, generation_sizes=gen_sizes, time_spent=z)
+
 
 def runExperiments():
     for dim in Config.experiment_dims:
         for func_id in Config.experiment_funcs:
             print("Optimizing for function ID {} in {}-dimensional space:".format(func_id, dim))
-            generation_sizes, sigma_over_time, best_fitness_over_time, best_individual = GA(n=dim, fit_func_id=func_id)
+            x = datetime.now()
+            gen_sizes, sigmas, fitness, best = GA(n=dim, fit_func_id=func_id)
+            y = datetime.now()
 
+            z = y - x
             np.savez("{}final_GA_results_{}dim_f{}".format(datapath, dim, func_id),
-                     sigma=sigma_over_time, best_fitness=best_fitness_over_time,
-                     best_result=best_individual.dna, generation_sizes=generation_sizes)
+                     sigma=sigmas, best_fitness=fitness, best_result=best.dna, generation_sizes=gen_sizes, time_spent=z)
 
 
 def run():
