@@ -374,10 +374,12 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
             comm.scatter(new_population, root=MPI.ROOT)  # Different for each process
             comm.Barrier()                               # Wait for everything to finish...
             new_population = comm.gather(run_data, root=MPI.ROOT)     # And gather everything up
+            used_budget += parameters.lambda_
+            i = parameters.lambda_
         elif parallel:
             new_population = p.map(mutEval, new_population)
             used_budget += parameters.lambda_
-            i=parameters.lambda_
+            i = parameters.lambda_
         else:
             for i, individual in enumerate(new_population):
                 mutate(individual)  # Mutation
