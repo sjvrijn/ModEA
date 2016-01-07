@@ -50,7 +50,7 @@ def GA(n, budget=None, fit_func_id=1):
     storage_file = '{}GA_results_{}dim_f{}.tdat'.format(datapath, n, fit_func_id)
 
     # Fitness function to be passed on to the baseAlgorithm
-    fitnessFunction = partial(evaluate_ES, fit_func_id=fit_func_id, storage_file=storage_file)
+    fitnessFunction = partial(ALT_evaluate_ES, fit_func_id=fit_func_id, storage_file=storage_file)
 
     # Assuming a dimensionality of 11 (8 boolean + 3 triples)
     GA_mu = Config.GA_mu
@@ -85,6 +85,69 @@ def GA(n, budget=None, fit_func_id=1):
     results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters,
                             parallel=Config.GA_parallel, debug=Config.GA_debug)
     return results
+
+
+def ALT_evaluate_ES(bitstrings, fit_func_id=1, opts=None, n=10, budget=None, storage_file=None):
+    """ Single function to run all desired combinations of algorithms * fitness functions """
+
+    # Set parameters
+    if budget is None:
+        budget = Config.ES_budget_factor * n
+    num_runs = Config.ES_num_runs
+    parallel = Config.ES_parallel
+    medians = []
+    comms = []
+
+    for bitstring in bitstrings:
+        # Setup the bbob logger
+        bbob_opts['algid'] = bitstring  # Save the bitstring of the ES we are currently evaluating
+        f = fgeneric.LoggingFunction(datapath, **bbob_opts)
+
+        if opts:
+            print(getBitString(opts))
+        else:
+            print(bitstring, end=' ')
+            opts = getOpts(bitstring)
+
+        function = partial(fetchResults, fit_func_id, n=n, budget=budget, opts=opts)
+        arguments = range(num_runs)
+        run_data = None
+
+        # mpi4py
+        comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=num_runs)  # Init
+        comm.bcast(function, root=MPI.ROOT)     # Equal for all processes
+        comm.scatter(arguments, root=MPI.ROOT)  # Different for each process
+        comms.append(comm)
+
+    for comm in comms:
+        comm.Barrier()
+
+    for comm in comms:
+        # Wait for everything to finish...
+        run_data = comm.gather(run_data, root=MPI.ROOT)  # And gather everything up
+
+        targets, results = zip(*run_data)
+
+        # Preprocess/unpack results
+        _, sigmas, fitnesses, best_individual = (list(x) for x in zip(*results))
+        fit_lengths = set([len(x) for x in fitnesses])
+        if len(fit_lengths) > 1:
+            min_length = min(fit_lengths)
+            fitnesses = [x[:min_length] for x in fitnesses]
+
+        # Subtract the target fitness value from all returned fitnesses to only get the absolute distance
+        fitnesses = np.subtract(np.array(fitnesses).T, np.array(targets)[np.newaxis,:])
+        # From all different runs, retrieve the median fitness to be used as fitness for this ES
+        min_fitnesses = np.min(fitnesses, axis=0)
+
+        if storage_file:
+            with open(storage_file, 'a') as f:
+                f.write("{}\t{}\n".format(bitstring.tolist(), min_fitnesses.tolist()))
+        median = np.median(min_fitnesses)
+        print("\t\t{}".format(median))
+        medians.append(median)
+
+    return [medians]
 
 
 def evaluate_ES(bitstring, fit_func_id=1, opts=None, n=10, budget=None, storage_file=None):

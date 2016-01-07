@@ -368,12 +368,18 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
 
         if parallel:
             if Config.use_MPI:
-                # mpi4py
-                comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=parameters.lambda_)  # Init
-                comm.bcast(mutEval, root=MPI.ROOT)                     # Equal for all processes
-                comm.scatter(new_population, root=MPI.ROOT)            # Different for each process
-                comm.Barrier()                                         # Wait for everything to finish...
-                new_population = comm.gather(run_data, root=MPI.ROOT)  # And gather everything up
+
+                # In this case, it is hardcoded that the parallelization takes place one level further!!!!!!!!!
+                genes = []
+                for ind in new_population:
+                    mutate(ind)
+                    genes.append(ind.dna)
+
+                fitnesses = fitnessFunction(genes)
+
+                for i, ind in enumerate(new_population):
+                    ind.fitness = fitnesses[i]
+
             else:
                 new_population = p.map(mutEval, new_population)
 
