@@ -122,6 +122,7 @@ def ALT_evaluate_ES(bitstrings, fit_func_id=1, opts=None, n=10, budget=None, sto
     for i, comm in enumerate(comms):
         # Wait for everything to finish...
         run_data = comm.gather(run_data, root=MPI.ROOT)  # And gather everything up
+        comm.Disconnect()
 
         targets, results = zip(*run_data)
 
