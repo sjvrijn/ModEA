@@ -15,20 +15,40 @@ A Mutation operator mutates an Individual's DNA inline, thus returning nothing.
 # E.g. step size control & CMA
 
 import numpy as np
-from numpy import add, dot, exp, floor, mod
+from numpy import add, bitwise_and, dot, exp, floor, isfinite, mod, newaxis, shape, zeros
 from numpy.linalg import norm
 from random import gauss, getrandbits
 
 
 def keepInBounds(x, l_bound, u_bound):
-    """ Modify a vector such that it falls within the lower and upper bound specified """
-    y = (x-l_bound)/(u_bound-l_bound)
-    if (mod(floor(y), 2) == 0).all():
-        yprime = abs(y - floor(y))
-    else:
-        yprime = 1 - abs(y - floor(y))
+    """
+        This function transforms x to t w.r.t. the low and high
+        boundaries lb and ub. It implements the function T^{r}_{[a,b]} as
+        described in Rui Li's PhD thesis "Mixed-Integer Evolution Strategies
+        for Parameter Optimization and Their Applications to Medical Image
+        Analysis" as alorithm 6.
 
-    x = l_bound+(u_bound-l_bound)*yprime
+        x, l_bound and u_bound are column vectors
+    """
+
+    l_bound, u_bound = l_bound.flatten(), u_bound.flatten()
+
+    lb_index = isfinite(l_bound)
+    up_index = isfinite(u_bound)
+
+    valid = bitwise_and(lb_index,  up_index)
+
+    LB = l_bound[valid][:, newaxis]
+    UB = u_bound[valid][:, newaxis]
+
+    y = (x[valid, :] - LB) / (UB - LB)
+    I = mod(floor(y), 2) == 0
+    yprime = zeros(shape(y))
+    yprime[I] = np.abs(y[I] - floor(y[I]))
+    yprime[~I] = 1.0 - np.abs(y[~I] - floor(y[~I]))
+
+    x[valid, :] = LB + (UB - LB) * yprime
+
     return x
 
 

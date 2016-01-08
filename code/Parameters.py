@@ -68,10 +68,10 @@ class Parameters(BaseParameters):
         if mu < 1 or lambda_ <= mu or n < 1:
             raise Exception("Invalid initialization values: mu, n >= 1, lambda > mu")
 
-        if l_bound is None or not isfinite(l_bound):
-            l_bound = -5
-        if u_bound is None or not isfinite(u_bound):
-            u_bound = 5
+        if l_bound is None or not isfinite(l_bound).all():
+            l_bound = np.ones((n, 1)) * -5
+        if u_bound is None or not isfinite(u_bound).all():
+            u_bound = ones((n, 1)) * 5
 
         ### Basic parameters ###
         self.n = n
