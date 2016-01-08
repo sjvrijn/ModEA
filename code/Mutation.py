@@ -151,7 +151,7 @@ def mutateIntList(individual, num_options):
     p = individual.baseStepSize + individual.stepSizeOffset
 
     int_list = individual.dna
-    for i in range(individual.n):
+    for i in range(len(individual.dna)):
         if np.random.random() < p:
             # -1 as random_integers is [1, val], -1 to simulate leaving out the current value
             new_int = np.random.random_integers(num_options[i]-1)-1
