@@ -103,11 +103,8 @@ def ALT_evaluate_ES(bitstrings, fit_func_id=1, opts=None, n=10, budget=None, sto
         bbob_opts['algid'] = bitstring  # Save the bitstring of the ES we are currently evaluating
         f = fgeneric.LoggingFunction(datapath, **bbob_opts)
 
-        if opts:
-            print(getBitString(opts))
-        else:
-            print(bitstring, end=' ')
-            opts = getOpts(bitstring)
+        print(bitstring)
+        opts = getOpts(bitstring)
 
         function = partial(fetchResults, fit_func_id, n=n, budget=budget, opts=opts)
         arguments = range(num_runs)
@@ -144,10 +141,10 @@ def ALT_evaluate_ES(bitstrings, fit_func_id=1, opts=None, n=10, budget=None, sto
             with open(storage_file, 'a') as f:
                 f.write("{}\t{}\n".format(bitstring.tolist(), min_fitnesses.tolist()))
         median = np.median(min_fitnesses)
-        print("\t\t{}".format(median))
+        print("\t{}".format(median))
         medians.append(median)
 
-    return [medians]
+    return medians
 
 
 def evaluate_ES(bitstring, fit_func_id=1, opts=None, n=10, budget=None, storage_file=None):
