@@ -15,9 +15,21 @@ A Mutation operator mutates an Individual's DNA inline, thus returning nothing.
 # E.g. step size control & CMA
 
 import numpy as np
-from numpy import add, dot, exp
+from numpy import add, dot, exp, floor, mod
 from numpy.linalg import norm
 from random import gauss, getrandbits
+
+
+def keepInBounds(x, l_bound, u_bound):
+    """ Modify a vector such that it falls within the lower and upper bound specified """
+    y = (x-l_bound)/(u_bound-l_bound)
+    if (mod(floor(y), 2) == 0).all():
+        yprime = abs(y - floor(y))
+    else:
+        yprime = 1 - abs(y - floor(y))
+
+    x = l_bound+(u_bound-l_bound)*yprime
+    return x
 
 
 def adaptStepSize(individual):
@@ -67,7 +79,7 @@ def CMAMutation(individual, param, sampler, threshold_convergence=False):
     individual.mutation_vector = dot(param.B, (param.D * individual.last_z))  # y_k in cmatutorial.pdf)
     mutation_vector = individual.mutation_vector * param.sigma
 
-    individual.dna = add(individual.dna, mutation_vector)
+    individual.dna = keepInBounds(add(individual.dna, mutation_vector), param.l_bound, param.u_bound)
 
 
 def choleskyCMAMutation(individual, param, sampler):
