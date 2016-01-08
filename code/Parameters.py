@@ -42,7 +42,7 @@ class Parameters(BaseParameters):
     """
 
     def __init__(self, n, budget,
-                 mu=None, lambda_=None, weights_option=None,
+                 mu=None, lambda_=None, weights_option=None, l_bound=None, u_bound=None,
                  active=False, elitist=False, ipop=None, sequential=False, tpa=False):
         """
             Setup the set of parameters
@@ -52,6 +52,8 @@ class Parameters(BaseParameters):
             :param mu:              Number of individuals that form the parents of each generation
             :param lambda_:         Number of individuals in the offspring of each generation
             :param weights_option:  String to determine which weignts to use. Choose from 'default' (CMA-ES), '1/n'
+            :param l_bound:         Lower bound of the search space
+            :param u_bound:         Upper bound of the search space
             :param active:          Boolean switch on using an active update. Default: False
             :param elitist:         Boolean switch on using a (mu, l) strategy rather than (mu + l). Default: False
             :param sequential:      Boolean switch on using sequential evaluation. Default: False
@@ -66,11 +68,18 @@ class Parameters(BaseParameters):
         if mu < 1 or lambda_ <= mu or n < 1:
             raise Exception("Invalid initialization values: mu, n >= 1, lambda > mu")
 
+        if l_bound is None or not isfinite(l_bound):
+            l_bound = -5
+        if u_bound is None or not isfinite(u_bound):
+            u_bound = 5
+
         ### Basic parameters ###
         self.n = n
         self.budget = budget
         self.mu = mu
         self.lambda_ = lambda_
+        self.l_bound = l_bound
+        self.u_bound = u_bound
         self.sigma = 1
         self.active = active
         self.elitist = elitist
