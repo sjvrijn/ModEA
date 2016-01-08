@@ -119,7 +119,7 @@ def ALT_evaluate_ES(bitstrings, fit_func_id=1, opts=None, n=10, budget=None, sto
     for comm in comms:
         comm.Barrier()
 
-    for comm in comms:
+    for i, comm in enumerate(comms):
         # Wait for everything to finish...
         run_data = comm.gather(run_data, root=MPI.ROOT)  # And gather everything up
 
@@ -139,7 +139,7 @@ def ALT_evaluate_ES(bitstrings, fit_func_id=1, opts=None, n=10, budget=None, sto
 
         if storage_file:
             with open(storage_file, 'a') as f:
-                f.write("{}\t{}\n".format(bitstring.tolist(), min_fitnesses.tolist()))
+                f.write("{}\t{}\n".format(bitstrings[i].tolist(), min_fitnesses.tolist()))
         median = np.median(min_fitnesses)
         print("\t{}".format(median))
         medians.append(median)

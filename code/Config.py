@@ -17,7 +17,7 @@ GA_debug = True
 
 ### ES Settings ###
 ES_budget_factor = 1e3
-ES_num_runs = 1#5
+ES_num_runs = 15
 ES_parallel = True
 
 ### Experiment Settings ###
