@@ -8,6 +8,7 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 # The following are imports that are required by the functions that are passed to this MPI slave in order to run
 from code.GA import fetchResults, evaluate_ES  # Required for the MPI calls for the GA
 
+import numpy as np
 from mpi4py import MPI
 comm = MPI.COMM_SELF.Get_parent()
 size = comm.Get_size()
@@ -17,6 +18,8 @@ rank = comm.Get_rank()
 
 def runSlaveRun():
 
+
+    np.set_printoptions(linewidth=1000)
     function = None
     options = None
 
