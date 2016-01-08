@@ -483,7 +483,7 @@ class Parameters(BaseParameters):
         self.C = eye(n)
         self.B = eye(n)
         self.D = ones((n,1))
-        self.sigma_mean = 1          # TODO: make this depend on any input default sigma value
+        self.sigma_mean = self.sigma = 1          # TODO: make this depend on any input default sigma value
         # TODO: add feedback of resetting sigma to the sigma per individual
 
 
