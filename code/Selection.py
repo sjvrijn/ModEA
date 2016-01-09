@@ -87,8 +87,9 @@ def roulette(population, new_population, param, force_unique=False):
     offspring = np.column_stack((ind.dna for ind in new_population))
     param.all_offspring = offspring
 
+    # TODO: warning with negative fitness values?
     # Use normalized 1/fitness as probability for picking a certain individual
-    norm_inverses = [1/abs(ind.fitness) for ind in new_population]  # we take the absolute just to be sure it works
+    norm_inverses = [1/abs(ind.fitness) for ind in new_population]  # We take the absolute just to be sure it works
     norm_inverses /= sum(norm_inverses)
 
     # Create a discrete sampler using the PageRank values as probabilities
