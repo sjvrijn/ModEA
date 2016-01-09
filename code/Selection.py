@@ -70,13 +70,14 @@ def pairwise(population, new_population, param):
     return best(population, pairwise_filtered, param)
 
 
-def roulette(population, new_population, param):
+def roulette(population, new_population, param, force_unique=False):
     """
         Given the population, return mu individuals, selected by roulette, using 1/fitness as probability
 
         :param population:      List of :py:class:code.Individual objects containing the previous generation
         :param new_population:  List of :py:class:code.Individual objects containing the new generation
         :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
+        :param force_unique:    Determine if an individual from the original population may be selected multiple times
         :returns:               A slice of the sorted new_population list.
     """
     if param.elitist:
@@ -93,12 +94,15 @@ def roulette(population, new_population, param):
     # Create a discrete sampler using the PageRank values as probabilities
     roulette_sampler = stats.rv_discrete(name='roulette', values=(list(range(len(new_population))), norm_inverses))
 
-    indices = set()
-    while len(indices) < param.mu:
-        to_be_sampled = param.mu - len(indices)
-        # Draw <to_be_sampled> samples from the defined distribution
-        sample = roulette_sampler.rvs(size=to_be_sampled)
-        indices.update(sample)
+    if force_unique:
+        indices = set()
+        while len(indices) < param.mu:
+            to_be_sampled = param.mu - len(indices)
+            # Draw <to_be_sampled> samples from the defined distribution
+            sample = roulette_sampler.rvs(size=to_be_sampled)
+            indices.update(sample)
+    else:
+        indices = roulette_sampler.rvs(size=param.mu)
 
     return [new_population[index] for index in indices]
 
