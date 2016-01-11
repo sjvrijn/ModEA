@@ -72,8 +72,7 @@ def getFullOpts(opts):
 
         :param opts:    Dictionary to be checked for option names and the chosen option
     """
-
-    for name, choice in opts:
+    for name, choice in list(opts.items()):
         if name not in options:
             del opts[name]
         elif choice not in options[name]:
@@ -86,3 +85,36 @@ def getFullOpts(opts):
         # Optional, should already be checked above
         # elif opts[name] not in choices:
         #     opts[name] = choices[0]
+
+def getPrintName(opts):
+    # getFullOpts(opts)
+
+    elitist = '+' if opts['elitism'] else ','
+    active = 'Active-' if opts['active'] else ''
+    thres = 'threshold ' if opts['threshold'] else ''
+    mirror = 'Mirrored-' if opts['mirrored'] else ''
+    ortho = 'Orthogonal-' if opts['orthogonal'] else ''
+    tpa = 'TPA-' if opts['two-point'] else ''
+    seq = 'sequential ' if opts['sequential'] else ''
+    ipop = '{}-'.format(opts['ipop']) if opts['ipop'] is not None else ''
+    weight = '{}-weighted '.format(opts['weights']) if opts['weights'] is not None else ''
+
+    sel = 'Pairwise selection' if opts['selection'] == 'pairwise' else ''
+    sampler = 'a {} sampler'.format(opts['base-sampler']) if opts['base-sampler'] is not None else ''
+
+    if len(sel) + len(sampler) > 0:
+        append = ' with {}'
+        if len(sel) > 0 and len(sampler) > 0:
+            temp = '{} and {}'.format(sel, sampler)
+        else:
+            temp = '{}{}'.format(sel, sampler)
+        append = append.format(temp)
+    else:
+        append = ''
+
+    base_string = "{seq}{thres}{weight}{mirror}{ortho}{active}(mu{elitist}lambda)-{tpa}{ipop}CMA-ES{append}"
+
+    name = base_string.format(elitist=elitist, active=active, thres=thres, mirror=mirror, ortho=ortho,
+                              tpa=tpa, seq=seq, ipop=ipop, weight=weight, append=append)
+
+    return name
