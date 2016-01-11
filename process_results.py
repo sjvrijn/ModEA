@@ -62,9 +62,11 @@ def createGARunPlots():
     x = np.load('final_GA_results.npz')
     results = x['results'].item()
 
-    for dim in dims:
-        print("{}-dimensional:".format(dim))
-        for func in functions:
+    for func in functions:
+        print("F{}:".format(func))
+
+        plt.clf()
+        for dim in dims:
             best_per_generation = results[dim][func]['best_fitness'][::12]
             best_found_ever = []
             for i, fit in enumerate(best_per_generation):
@@ -72,18 +74,16 @@ def createGARunPlots():
                     best_found_ever.append(fit)
                 else:
                     best_found_ever.append(best_found_ever[i-1])
-            # print(best_per_generation)
-            # print(best_found_ever)
 
-            plt.title("F{}, {}-dim".format(func, dim))
-            plt.plot(best_found_ever, label='Best overall')
-            plt.plot(best_per_generation, label='Best per generation')
-            plt.xlabel('Generation')
-            plt.ylabel('Fitness')
-            plt.legend(loc=0)
+            plt.plot(best_found_ever, label='{}-dim'.format(dim))
 
-            plt.savefig('F{}-{}dim.png'.format(func, dim))
-            plt.savefig('F{}-{}dim.pdf'.format(func, dim))
+        plt.title("F{}".format(func))
+        plt.xlabel('Generation')
+        plt.ylabel('Fitness')
+        plt.legend(loc=0)
+
+        plt.savefig('img/F{}.png'.format(func))
+        plt.savefig('img/F{}.pdf'.format(func))
 
 if __name__ == '__main__':
 
