@@ -59,6 +59,21 @@ def printResults():
             print("  F{}:\t{} {}".format(func, results[dim][func]['best_result'], getPrintName(getOpts(results[dim][func]['best_result']))))
 
 
+def printTable():
+
+    os.chdir(location)
+    x = np.load('final_GA_results.npz')
+    results = x['results'].item()
+    print('\\hline')
+    print('F-ID Dim & & Best ES Found\\\\')
+    print('\\hline')
+    print('\\hline')
+    for func in functions:
+        for dim in dims:
+            print('F{} {} & & {}\\\\'.format(dim, func, getPrintName(getOpts(results[dim][func]['best_result']))))
+        print('\\hline')
+
+
 def createGARunPlots():
     os.chdir(location)
     x = np.load('final_GA_results.npz')
@@ -83,7 +98,7 @@ def createGARunPlots():
 
         plt.title("F{}".format(func))
         plt.xlabel('Generation')
-        plt.ylabel('Fitness')
+        plt.ylabel('Distance to Target')
         plt.legend(loc=0)
 
         plt.savefig('img/F{}.png'.format(func), bbox_inches='tight')
@@ -95,6 +110,7 @@ if __name__ == '__main__':
     # printResults()
 
     createGARunPlots()
+    # printTable()
 
     pass
 

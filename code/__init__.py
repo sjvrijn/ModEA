@@ -91,13 +91,13 @@ def getPrintName(opts):
 
     elitist = '+' if opts['elitism'] else ','
     active = 'Active-' if opts['active'] else ''
-    thres = 'threshold ' if opts['threshold'] else ''
+    thres = 'Threshold ' if opts['threshold'] else ''
     mirror = 'Mirrored-' if opts['mirrored'] else ''
     ortho = 'Orthogonal-' if opts['orthogonal'] else ''
     tpa = 'TPA-' if opts['two-point'] else ''
-    seq = 'sequential ' if opts['sequential'] else ''
+    seq = 'Sequential ' if opts['sequential'] else ''
     ipop = '{}-'.format(opts['ipop']) if opts['ipop'] is not None else ''
-    weight = '{}-weighted '.format(opts['weights']) if opts['weights'] is not None else ''
+    weight = '${}$-weighted '.format(opts['weights']) if opts['weights'] is not None else ''
 
     sel = 'Pairwise selection' if opts['selection'] == 'pairwise' else ''
     sampler = 'a {} sampler'.format(opts['base-sampler']) if opts['base-sampler'] is not None else ''
