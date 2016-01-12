@@ -4,13 +4,15 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 from code import getPrintName, getOpts
 
 np.set_printoptions(linewidth=156)
-location = 'D:\\test_results'  # laptop
+# location = 'D:\\test_results'  # laptop
+location = '/home/sander/Dropbox/Liacs/Semester12/Thesis/test_results'  # desktop
 dims = [2, 3, 5, 10, 20]
 functions = [3, 4, 7, 9, 10, 12, 13, 16, 17, 19, 20, 21, 23, 24]
 np_save_names = ['time_spent', 'generation_sizes', 'sigma', 'best_result', 'best_fitness']
@@ -62,6 +64,8 @@ def createGARunPlots():
     x = np.load('final_GA_results.npz')
     results = x['results'].item()
 
+    matplotlib.rcParams.update({'font.size': 18})
+
     for func in functions:
         print("F{}:".format(func))
 
@@ -82,8 +86,8 @@ def createGARunPlots():
         plt.ylabel('Fitness')
         plt.legend(loc=0)
 
-        plt.savefig('img/F{}.png'.format(func))
-        plt.savefig('img/F{}.pdf'.format(func))
+        plt.savefig('img/F{}.png'.format(func), bbox_inches='tight')
+        plt.savefig('img/F{}.pdf'.format(func), bbox_inches='tight')
 
 if __name__ == '__main__':
 
