@@ -4,10 +4,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
+import json
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import pprint
 from code import getPrintName, getOpts
 
 np.set_printoptions(linewidth=156)
@@ -57,6 +59,25 @@ def printResults():
         print("{}-dimensional:".format(dim))
         for func in functions:
             print("  F{}:\t{} {}".format(func, results[dim][func]['best_result'], getPrintName(getOpts(results[dim][func]['best_result']))))
+
+
+def storeRepresentation():
+
+    os.chdir(location)
+    x = np.load('final_GA_results.npz')
+    results = x['results'].item()
+
+    to_store = {dim: {} for dim in dims}
+    for dim in dims:
+        print("{}-dimensional:".format(dim))
+        for func in functions:
+            to_store[dim][func] = results[dim][func]['best_result'].tolist()
+            # print("  F{}:\t{} {}".format(func, results[dim][func]['best_result']))
+
+    pprint.pprint(to_store)
+    with open('ES_per_experiment.json', 'w') as json_out:
+        json.dump(to_store, json_out)
+
 
 
 def printTable():
@@ -109,8 +130,15 @@ if __name__ == '__main__':
     # storeResults()
     # printResults()
 
-    createGARunPlots()
+    # createGARunPlots()
     # printTable()
+    # storeRepresentation()
+
+
+    # os.chdir(location)
+    # with open('ES_per_experiment.json') as infile:
+    #     x = json.load(infile)
+    # pprint.pprint(x)
 
     pass
 
