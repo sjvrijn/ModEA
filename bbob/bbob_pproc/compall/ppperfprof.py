@@ -35,7 +35,7 @@
    # bb.compall.ppperfprof.plotmultiple(dsets, dsref=bb.bestalg.bestalgentries2009)
 
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import os
 import warnings

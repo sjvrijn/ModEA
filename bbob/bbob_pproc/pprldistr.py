@@ -40,7 +40,7 @@ CAVEAT: the naming conventions in this module mix up ERT (an estimate
 of the expected running length) and run lengths.
 
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import os
 import warnings # I don't know what I am doing here

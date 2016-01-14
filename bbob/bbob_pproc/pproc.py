@@ -17,7 +17,7 @@ for comparisons.
 # TODO: dictAlg should become the class DictALg that is a dictionary of DataSetLists with
 # usecase DictAlg(algdict).by_dim() etc
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import sys
 import os

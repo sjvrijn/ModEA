@@ -3,7 +3,7 @@
 
 """Creates run length distribution figures for the comparison of 2 algorithms."""
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import os
 import numpy

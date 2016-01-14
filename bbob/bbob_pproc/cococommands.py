@@ -48,7 +48,7 @@ Examples:
 
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 #from bbob.bbob_pproc import ppsingle, ppfigdim, dataoutput
 # from bbob.bbob_pproc.pproc import DataSetList, DataSet

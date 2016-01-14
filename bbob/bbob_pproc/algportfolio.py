@@ -47,7 +47,7 @@ functions.
 
 # TODO: generalize behaviour for data sets that have different instances...
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import os
 import sys

@@ -7,7 +7,7 @@ Scale up figures for two algorithms can be done with compall/ppfigs.py
 
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import os
 import sys

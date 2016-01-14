@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """Routines for the generation of TeX tables."""
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import os
 from pdb import set_trace

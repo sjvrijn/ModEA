@@ -20,7 +20,7 @@ interpreter, assuming this package has been imported as ``bb``, type:
 
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import sys
 

@@ -20,7 +20,7 @@ p = 0.05 or p = 1e-k where k > 1 is the number following the
 functions.
 
 """
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import os
 import numpy as np
