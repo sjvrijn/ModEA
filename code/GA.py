@@ -69,9 +69,9 @@ def GA(n, budget=None, fit_func_id=1):
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = partial(Rec.random, param=parameters)
     mutate = partial(Mut.mutateIntList, num_options=num_options)
-    roulette = partial(Sel.roulette, param=parameters)
+    best = partial(Sel.best, param=parameters)
     def select(pop, new_pop, _):
-        return roulette(pop, new_pop)
+        return best(pop, new_pop)
     def mutateParameters(t):
         pass  # The only actual parameter mutation is the self-adaptive step-size of each individual
 

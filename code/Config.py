@@ -9,7 +9,7 @@ use_MPI = True
 
 
 ### GA Settings ###
-GA_mu = 3        # Assuming a dimensionality of 11
+GA_mu = 1        # Assuming a dimensionality of 11
 GA_lambda = 12   # (8 boolean + 3 triples)
 GA_budget = 250  # Roughly 20 generations
 GA_parallel = True
