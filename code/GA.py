@@ -306,7 +306,7 @@ def exampleRuns():
     evaluate_ES(None, opts={'mirrored': True, 'selection': 'pairwise'})
 
 
-def bruteForce():
+def bruteForce(ndim=10, fid=1, parallel=1):
     # Exhaustive/brute-force search over *all* possible combinations
     # NB: THIS ASSUMES OPTIONS ARE SORTED ASCENDING BY NUMBER OF VALUES
     print("Brute-force exhaustive search of *all* available ES-combinations.")
@@ -326,13 +326,23 @@ def bruteForce():
 
     storage_file = open('{}bruteforce_10_sphere.tdat'.format(datapath), 'w')
     x = datetime.now()
-    for combo in product(*products):
-        opts = list(sum(combo, ()))
-        result = evaluate_ES(opts, storage_file=storage_file)[0]
 
-        if result < best_result:
-            best_result = result
-            best_ES = opts
+    all_combos = [list(sum(combo, ())) for combo in product(*products)]
+
+    num_iters = len(all_combos) // parallel
+    num_iters += 0 if len(all_combos) % parallel == 0 else 1
+
+    # for combo in all_combos:
+    #     opts = list(sum(combo, ()))
+    for i in range(num_iters):
+        bitstrings = all_combos[i*parallel:(i+1)*parallel]
+
+        result = evaluate_ES(bitstrings, storage_file=storage_file)
+
+        for j, res in enumerate(result):
+            if res < best_result:
+                best_result = res
+                best_ES = bitstrings[j]
 
     y = datetime.now()
 
