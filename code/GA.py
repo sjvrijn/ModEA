@@ -413,5 +413,10 @@ if __name__ == '__main__':
         ndim = sys.argv[1]
         fid = sys.argv[2]
         runGA(ndim, fid)
+    elif len(sys.argv) == 4:
+        ndim = sys.argv[1]
+        fid = sys.argv[2]
+        parallel = sys.argv[3]
+        bruteForce(ndim, fid, parallel)
     else:
         run()
