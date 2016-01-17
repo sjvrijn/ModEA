@@ -55,7 +55,7 @@ def GA(n, budget=None, fit_func_id=1):
     storage_file = '{}GA_results_{}dim_f{}.tdat'.format(non_bbob_datapath, n, fit_func_id)
 
     # Fitness function to be passed on to the baseAlgorithm
-    fitnessFunction = partial(ALT_evaluate_ES, fit_func_id=fit_func_id, storage_file=storage_file)
+    fitnessFunction = partial(ALT_evaluate_ES, fit_func_id=fit_func_id, n=n, storage_file=storage_file)
 
     # Assuming a dimensionality of 11 (8 boolean + 3 triples)
     GA_mu = Config.GA_mu
