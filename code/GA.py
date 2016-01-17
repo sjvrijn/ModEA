@@ -27,6 +27,7 @@ from code.Parameters import Parameters
 free_function_ids = bbobbenchmarks.nfreeIDs
 noisy_function_ids = bbobbenchmarks.noisyIDs
 datapath = "test_results/"  # Where to store results
+non_bbob_datapath = "ga_results/" # Where to store the results I personally generate
 # Options to be stored in the log file(s)
 bbob_opts = {'algid': None,
              'comments': '<comments>',
@@ -47,7 +48,7 @@ def GA(n, budget=None, fit_func_id=1):
     """ Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function """
 
     # Where to store genotype-fitness information
-    storage_file = '{}GA_results_{}dim_f{}.tdat'.format(datapath, n, fit_func_id)
+    storage_file = '{}GA_results_{}dim_f{}.tdat'.format(non_bbob_datapath, n, fit_func_id)
 
     # Fitness function to be passed on to the baseAlgorithm
     fitnessFunction = partial(ALT_evaluate_ES, fit_func_id=fit_func_id, storage_file=storage_file)
@@ -87,7 +88,7 @@ def GA(n, budget=None, fit_func_id=1):
     return results
 
 
-def ALT_evaluate_ES(bitstrings, fit_func_id=1, opts=None, n=10, budget=None, storage_file=None):
+def ALT_evaluate_ES(bitstrings, fit_func_id, n, budget=None, storage_file=None, opts=None):
     """ Single function to run all desired combinations of algorithms * fitness functions """
 
     # Set parameters
@@ -111,7 +112,7 @@ def ALT_evaluate_ES(bitstrings, fit_func_id=1, opts=None, n=10, budget=None, sto
         run_data = None
 
         # mpi4py
-        comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=num_runs)  # Init
+        comm = MPI.COMM_SELF.Spawn(sys.executable, args=['code/MPI_slave.py'], maxprocs=num_runs)  # Init
         comm.bcast(function, root=MPI.ROOT)     # Equal for all processes
         comm.scatter(arguments, root=MPI.ROOT)  # Different for each process
         comms.append(comm)
@@ -137,10 +138,12 @@ def ALT_evaluate_ES(bitstrings, fit_func_id=1, opts=None, n=10, budget=None, sto
         fitnesses = np.subtract(np.array(fitnesses).T, np.array(targets)[np.newaxis,:])
         # From all different runs, retrieve the median fitness to be used as fitness for this ES
         min_fitnesses = np.min(fitnesses, axis=0)
+        if not isinstance(bitstrings[i], list):
+            bitstrings[i] = bitstrings[i].tolist()
 
         if storage_file:
             with open(storage_file, 'a') as f:
-                f.write("{}\t{}\n".format(bitstrings[i].tolist(), min_fitnesses.tolist()))
+                f.write("{}\t{}\n".format(bitstrings[i], min_fitnesses.tolist()))
         median = np.median(min_fitnesses)
         print("\t{}".format(median))
         medians.append(median)
@@ -306,9 +309,10 @@ def exampleRuns():
     evaluate_ES(None, opts={'mirrored': True, 'selection': 'pairwise'})
 
 
-def bruteForce(ndim=10, fid=1, parallel=1):
+def bruteForce(ndim, fid, parallel=1):
     # Exhaustive/brute-force search over *all* possible combinations
     # NB: THIS ASSUMES OPTIONS ARE SORTED ASCENDING BY NUMBER OF VALUES
+    print("F{} in {} dimensions:".format(fid, ndim))
     print("Brute-force exhaustive search of *all* available ES-combinations.")
     print("Number of possible ES-combinations currently available: {}".format(np.product(num_options)))
     from collections import Counter
@@ -324,20 +328,20 @@ def bruteForce(ndim=10, fid=1, parallel=1):
     for num, count in sorted(counts.items(), key=lambda x: x[0]):
         products.append(product(range(num), repeat=count))
 
-    storage_file = open('{}bruteforce_10_sphere.tdat'.format(datapath), 'w')
+    storage_file = '{}bruteforce_{}_f{}.tdat'.format(non_bbob_datapath, ndim, fid)
     x = datetime.now()
 
-    all_combos = [list(sum(combo, ())) for combo in product(*products)]
+    all_combos = []
+    for combo in list(product(*products)):
+        all_combos.append(list(sum(combo, ())))
 
     num_iters = len(all_combos) // parallel
     num_iters += 0 if len(all_combos) % parallel == 0 else 1
 
-    # for combo in all_combos:
-    #     opts = list(sum(combo, ()))
     for i in range(num_iters):
         bitstrings = all_combos[i*parallel:(i+1)*parallel]
 
-        result = evaluate_ES(bitstrings, storage_file=storage_file)
+        result = ALT_evaluate_ES(bitstrings, fit_func_id=fid, n=ndim, storage_file=storage_file)
 
         for j, res in enumerate(result):
             if res < best_result:
@@ -378,7 +382,7 @@ def runGA(ndim=10, fid=1):
           "Time at end:         {}\n"
           "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
 
-    np.savez("{}final_GA_results_{}dim_f{}".format(datapath, ndim, fid),
+    np.savez("{}final_GA_results_{}dim_f{}".format(non_bbob_datapath, ndim, fid),
              sigma=sigmas, best_fitness=fitness, best_result=best.dna, generation_sizes=gen_sizes, time_spent=z)
 
 
@@ -391,7 +395,7 @@ def runExperiments():
             y = datetime.now()
 
             z = y - x
-            np.savez("{}final_GA_results_{}dim_f{}".format(datapath, dim, func_id),
+            np.savez("{}final_GA_results_{}dim_f{}".format(non_bbob_datapath, dim, func_id),
                      sigma=sigmas, best_fitness=fitness, best_result=best.dna, generation_sizes=gen_sizes, time_spent=z)
 
 
@@ -410,13 +414,13 @@ if __name__ == '__main__':
     # np.random.seed(42)
 
     if len(sys.argv) == 3:
-        ndim = sys.argv[1]
-        fid = sys.argv[2]
+        ndim = int(sys.argv[1])
+        fid = int(sys.argv[2])
         runGA(ndim, fid)
     elif len(sys.argv) == 4:
-        ndim = sys.argv[1]
-        fid = sys.argv[2]
-        parallel = sys.argv[3]
+        ndim = int(sys.argv[1])
+        fid = int(sys.argv[2])
+        parallel = int(sys.argv[3])
         bruteForce(ndim, fid, parallel)
     else:
         run()
