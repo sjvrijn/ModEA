@@ -27,7 +27,7 @@ from code.Parameters import Parameters
 free_function_ids = bbobbenchmarks.nfreeIDs
 noisy_function_ids = bbobbenchmarks.noisyIDs
 datapath = "test_results/"  # Where to store results
-non_bbob_datapath = "ga_results/" # Where to store the results I personally generate
+non_bbob_datapath = "ga_results/"  # Where to store the results I personally generate
 # Options to be stored in the log file(s)
 bbob_opts = {'algid': None,
              'comments': '<comments>',
@@ -36,6 +36,10 @@ bbob_opts = {'algid': None,
 fitness_functions = {'sphere': free_function_ids[0], 'elipsoid': free_function_ids[1],
                      'rastrigin': free_function_ids[2], }
 
+
+def cleanResults(fid):
+    import shutil
+    shutil.rmtree('{}data_f{}'.format(datapath, fid))
 
 
 def sysPrint(string):
@@ -342,6 +346,7 @@ def bruteForce(ndim, fid, parallel=1):
         bitstrings = all_combos[i*parallel:(i+1)*parallel]
 
         result = ALT_evaluate_ES(bitstrings, fit_func_id=fid, n=ndim, storage_file=storage_file)
+        cleanResults(fid)
 
         for j, res in enumerate(result):
             if res < best_result:
