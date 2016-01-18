@@ -328,7 +328,7 @@ def bruteForce(ndim, fid, parallel=1):
     best_ES = None
     best_result = np.inf
 
-    progress_log = 'progress-f{}-{}dim.log'.format(fid, ndim)
+    progress_log = '{}progress-f{}-{}dim.log'.format(non_bbob_datapath, fid, ndim)
     if progress_log not in os.listdir(non_bbob_datapath):
         start_at = 0
     else:
