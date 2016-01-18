@@ -38,9 +38,10 @@ fitness_functions = {'sphere': free_function_ids[0], 'elipsoid': free_function_i
 
 
 def cleanResults(fid):
+    import os
     import shutil
     shutil.rmtree('{}data_f{}'.format(datapath, fid))
-
+    os.remove("{}bbobexp_f{}.info".format(datapath, fid))
 
 def sysPrint(string):
     """ Small function to take care of the 'overhead' of sys.stdout.write + flush """
@@ -328,11 +329,12 @@ def bruteForce(ndim, fid, parallel=1):
     best_ES = None
     best_result = np.inf
 
-    progress_log = '{}progress-f{}-{}dim.log'.format(non_bbob_datapath, fid, ndim)
+    progress_log = 'progress-f{}-{}dim.log'.format(fid, ndim)
+    progress_fname = "{}{}".format(non_bbob_datapath, progress_log)
     if progress_log not in os.listdir(non_bbob_datapath):
         start_at = 0
     else:
-        with open(progress_log) as progress_file:
+        with open(progress_fname) as progress_file:
             start_at = cPickle.load(progress_file)
 
     products = []
@@ -357,7 +359,7 @@ def bruteForce(ndim, fid, parallel=1):
         bitstrings = all_combos[i*parallel:(i+1)*parallel]
 
         result = ALT_evaluate_ES(bitstrings, fid=fid, ndim=ndim, storage_file=storage_file)
-        with open(progress_log, 'w') as progress_file:
+        with open(progress_fname, 'w') as progress_file:
             cPickle.dump((i+1)*parallel, progress_file)
         cleanResults(fid)
 
