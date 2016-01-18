@@ -111,7 +111,7 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
         print(bitstring)
         opts = getOpts(bitstring)
 
-        function = partial(fetchResults, fid, n=ndim, budget=budget, opts=opts)
+        function = partial(fetchResults, fid, ndim=ndim, budget=budget, opts=opts)
         arguments = range(num_runs)
         run_data = None
 
