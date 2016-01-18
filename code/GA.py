@@ -48,14 +48,14 @@ def sysPrint(string):
     sys.stdout.flush()
 
 
-def GA(n, budget=None, fit_func_id=1):
+def GA(ndim, fid, budget=None):
     """ Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function """
 
     # Where to store genotype-fitness information
-    storage_file = '{}GA_results_{}dim_f{}.tdat'.format(non_bbob_datapath, n, fit_func_id)
+    storage_file = '{}GA_results_{}dim_f{}.tdat'.format(non_bbob_datapath, ndim, fid)
 
     # Fitness function to be passed on to the baseAlgorithm
-    fitnessFunction = partial(ALT_evaluate_ES, fit_func_id=fit_func_id, n=n, storage_file=storage_file)
+    fitnessFunction = partial(ALT_evaluate_ES, fit_func_id=fid, n=ndim, storage_file=storage_file)
 
     # Assuming a dimensionality of 11 (8 boolean + 3 triples)
     GA_mu = Config.GA_mu
@@ -63,9 +63,9 @@ def GA(n, budget=None, fit_func_id=1):
     if budget is None:
         budget = Config.GA_budget
 
-    parameters = Parameters(n, budget, GA_mu, GA_lambda)
+    parameters = Parameters(ndim, budget, GA_mu, GA_lambda)
     # Initialize the first individual in the population
-    population = [Individual(n)]
+    population = [Individual(ndim)]
     population[0].dna = np.array([np.random.randint(len(x[1])) for x in options])
 
     while len(population) < GA_mu:
@@ -92,12 +92,12 @@ def GA(n, budget=None, fit_func_id=1):
     return results
 
 
-def ALT_evaluate_ES(bitstrings, fit_func_id, n, budget=None, storage_file=None, opts=None):
+def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=None):
     """ Single function to run all desired combinations of algorithms * fitness functions """
 
     # Set parameters
     if budget is None:
-        budget = Config.ES_budget_factor * n
+        budget = Config.ES_budget_factor * ndim
     num_runs = Config.ES_num_runs
     parallel = Config.ES_parallel
     medians = []
@@ -111,7 +111,7 @@ def ALT_evaluate_ES(bitstrings, fit_func_id, n, budget=None, storage_file=None, 
         print(bitstring)
         opts = getOpts(bitstring)
 
-        function = partial(fetchResults, fit_func_id, n=n, budget=budget, opts=opts)
+        function = partial(fetchResults, fid, n=ndim, budget=budget, opts=opts)
         arguments = range(num_runs)
         run_data = None
 
@@ -155,12 +155,12 @@ def ALT_evaluate_ES(bitstrings, fit_func_id, n, budget=None, storage_file=None, 
     return medians
 
 
-def evaluate_ES(bitstring, fit_func_id=1, opts=None, n=10, budget=None, storage_file=None):
+def evaluate_ES(bitstring, fid, ndim, opts=None, budget=None, storage_file=None):
     """ Single function to run all desired combinations of algorithms * fitness functions """
 
     # Set parameters
     if budget is None:
-        budget = Config.ES_budget_factor * n
+        budget = Config.ES_budget_factor * ndim
     num_runs = Config.ES_num_runs
 
     # Setup the bbob logger
@@ -181,7 +181,7 @@ def evaluate_ES(bitstring, fit_func_id=1, opts=None, n=10, budget=None, storage_
     # Actually running the algorithm is encapsulated in a try-except for now... math errors
     try:
         # Run the actual ES for <num_runs> times
-        _, fitnesses = runAlgorithm(fitness_function, algorithm, n, num_runs, f, budget, opts)
+        _, fitnesses = runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts)
 
         # From all different runs, retrieve the median fitness to be used as fitness for this ES
         min_fitnesses = np.min(fitnesses, axis=0)
@@ -195,7 +195,7 @@ def evaluate_ES(bitstring, fit_func_id=1, opts=None, n=10, budget=None, storage_
         # print(" {}  \t({})".format(mean_best_fitness, median))
     # '''
 
-    _, fitnesses = runAlgorithm(fit_func_id, algorithm, n, num_runs, f, budget, opts, parallel=Config.ES_parallel)
+    _, fitnesses = runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, parallel=Config.ES_parallel)
 
     # From all different runs, retrieve the median fitness to be used as fitness for this ES
     min_fitnesses = np.min(fitnesses, axis=0)
@@ -216,20 +216,20 @@ def evaluate_ES(bitstring, fit_func_id=1, opts=None, n=10, budget=None, storage_
     return [median]
 
 
-def fetchResults(fun_id, instance, n, budget, opts):
+def fetchResults(fid, instance, ndim, budget, opts):
     """ Small overhead-function to enable multi-processing """
     f = fgeneric.LoggingFunction(datapath, **bbob_opts)
-    f_target = f.setfun(*bbobbenchmarks.instantiate(fun_id, iinstance=instance)).ftarget
+    f_target = f.setfun(*bbobbenchmarks.instantiate(fid, iinstance=instance)).ftarget
     # Run the ES defined by opts once with the given budget
-    results = customizedES(n, f.evalfun, budget, opts=opts)
+    results = customizedES(ndim, f.evalfun, budget, opts=opts)
     return f_target, results
 
 
-def runAlgorithm(fit_func_id, algorithm, n, num_runs, f, budget, opts, parallel=False):
+def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, parallel=False):
 
     # Perform the actual run of the algorithm
     if parallel and Config.use_MPI:
-        function = partial(fetchResults, fit_func_id, n=n, budget=budget, opts=opts)
+        function = partial(fetchResults, fid, n=ndim, budget=budget, opts=opts)
         arguments = range(num_runs)
         run_data = None
 
@@ -243,7 +243,7 @@ def runAlgorithm(fit_func_id, algorithm, n, num_runs, f, budget, opts, parallel=
         targets, results = zip(*run_data)
     elif parallel and allow_parallel:  # Multi-core version
         num_workers = min(num_threads, num_runs)
-        function = partial(fetchResults, fit_func_id, n=n, budget=budget, opts=opts)
+        function = partial(fetchResults, fid, n=ndim, budget=budget, opts=opts)
 
         # multiprocessing
         p = Pool(num_workers)
@@ -255,9 +255,9 @@ def runAlgorithm(fit_func_id, algorithm, n, num_runs, f, budget, opts, parallel=
         targets = []
         for j in range(num_runs):
             # sysPrint('    Run: {}\r'.format(j))  # I want the actual carriage return here! No output clutter
-            f_target = f.setfun(*bbobbenchmarks.instantiate(fit_func_id, iinstance=j)).ftarget
+            f_target = f.setfun(*bbobbenchmarks.instantiate(fid, iinstance=j)).ftarget
             targets.append(f_target)
-            results.append(algorithm(n, f.evalfun, budget))
+            results.append(algorithm(ndim, f.evalfun, budget))
 
     # Preprocess/unpack results
     _, sigmas, fitnesses, best_individual = (list(x) for x in zip(*results))
@@ -281,12 +281,12 @@ def runAlgorithm(fit_func_id, algorithm, n, num_runs, f, budget, opts, parallel=
 def testEachOption():
     # Test all individual options
     n = len(options)
-    evaluate_ES([0]*n)
+    evaluate_ES([0]*n, fid=1, ndim=10,)
     for i in range(n):
         for j in range(1, num_options[i]):
             dna = [0]*n
             dna[i] = j
-            evaluate_ES(dna)
+            evaluate_ES(dna, fid=1, ndim=10,)
 
     print("\n\n")
 
@@ -295,13 +295,13 @@ def problemCases():
     # Known problems
     print("Combinations known to cause problems:")
 
-    evaluate_ES(None, opts={'sequential': True})
-    evaluate_ES(None, opts={'two-point': True})
-    evaluate_ES(None, opts={'selection': 'pairwise'})
-    evaluate_ES(None, opts={'two-point': True, 'selection': 'pairwise'})
+    evaluate_ES(None, fid=1, ndim=10, opts={'sequential': True})
+    evaluate_ES(None, fid=1, ndim=10, opts={'two-point': True})
+    evaluate_ES(None, fid=1, ndim=10, opts={'selection': 'pairwise'})
+    evaluate_ES(None, fid=1, ndim=10, opts={'two-point': True, 'selection': 'pairwise'})
     # these are the actual failures
-    evaluate_ES(None, opts={'sequential': True, 'selection': 'pairwise'})
-    evaluate_ES(None, opts={'sequential': True, 'two-point': True, 'selection': 'pairwise'})
+    evaluate_ES(None, fid=1, ndim=10, opts={'sequential': True, 'selection': 'pairwise'})
+    evaluate_ES(None, fid=1, ndim=10, opts={'sequential': True, 'two-point': True, 'selection': 'pairwise'})
     # print("None! Good job :D")
 
     print("\n\n")
@@ -309,8 +309,8 @@ def problemCases():
 
 def exampleRuns():
     print("Mirrored vs Mirrored-pairwise")
-    evaluate_ES(None, opts={'mirrored': True})
-    evaluate_ES(None, opts={'mirrored': True, 'selection': 'pairwise'})
+    evaluate_ES(None, fid=1, ndim=10, opts={'mirrored': True})
+    evaluate_ES(None, fid=1, ndim=10, opts={'mirrored': True, 'selection': 'pairwise'})
 
 
 def bruteForce(ndim, fid, parallel=1):
@@ -322,9 +322,18 @@ def bruteForce(ndim, fid, parallel=1):
     from collections import Counter
     from itertools import product
     from datetime import datetime
+    import cPickle
+    import os
 
     best_ES = None
     best_result = np.inf
+
+    progress_log = 'progress-f{}-{}dim.log'.format(fid, ndim)
+    if progress_log not in os.listdir(non_bbob_datapath):
+        start_at = 0
+    else:
+        with open(progress_log) as progress_file:
+            start_at = cPickle.load(progress_file)
 
     products = []
     # count how often there is a choice of x options
@@ -339,13 +348,17 @@ def bruteForce(ndim, fid, parallel=1):
     for combo in list(product(*products)):
         all_combos.append(list(sum(combo, ())))
 
+    all_combos = all_combos[start_at:]
+
     num_iters = len(all_combos) // parallel
     num_iters += 0 if len(all_combos) % parallel == 0 else 1
 
     for i in range(num_iters):
         bitstrings = all_combos[i*parallel:(i+1)*parallel]
 
-        result = ALT_evaluate_ES(bitstrings, fit_func_id=fid, n=ndim, storage_file=storage_file)
+        result = ALT_evaluate_ES(bitstrings, fid=fid, ndim=ndim, storage_file=storage_file)
+        with open(progress_log, 'w') as progress_file:
+            cPickle.dump((i+1)*parallel, progress_file)
         cleanResults(fid)
 
         for j, res in enumerate(result):
@@ -372,7 +385,7 @@ def bruteForce(ndim, fid, parallel=1):
 def runGA(ndim=10, fid=1):
 
     x = datetime.now()
-    gen_sizes, sigmas, fitness, best = GA(n=ndim, fit_func_id=fid)  # This line does all the work!
+    gen_sizes, sigmas, fitness, best = GA(ndim=ndim, fid=fid)  # This line does all the work!
     y = datetime.now()
     print()
     print("Best Individual:     {}\n"
@@ -392,15 +405,15 @@ def runGA(ndim=10, fid=1):
 
 
 def runExperiments():
-    for dim in Config.experiment_dims:
-        for func_id in Config.experiment_funcs:
-            print("Optimizing for function ID {} in {}-dimensional space:".format(func_id, dim))
+    for ndim in Config.experiment_dims:
+        for fid in Config.experiment_funcs:
+            print("Optimizing for function ID {} in {}-dimensional space:".format(fid, ndim))
             x = datetime.now()
-            gen_sizes, sigmas, fitness, best = GA(n=dim, fit_func_id=func_id)
+            gen_sizes, sigmas, fitness, best = GA(ndim=ndim, fid=fid)
             y = datetime.now()
 
             z = y - x
-            np.savez("{}final_GA_results_{}dim_f{}".format(non_bbob_datapath, dim, func_id),
+            np.savez("{}final_GA_results_{}dim_f{}".format(non_bbob_datapath, ndim, fid),
                      sigma=sigmas, best_fitness=fitness, best_result=best.dna, generation_sizes=gen_sizes, time_spent=z)
 
 
