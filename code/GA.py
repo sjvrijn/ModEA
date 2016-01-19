@@ -360,7 +360,7 @@ def bruteForce(ndim, fid, parallel=1):
 
         result = ALT_evaluate_ES(bitstrings, fid=fid, ndim=ndim, storage_file=storage_file)
         with open(progress_fname, 'w') as progress_file:
-            cPickle.dump((i+1)*parallel, progress_file)
+            cPickle.dump((start_at + (i+1)*parallel), progress_file)
         cleanResults(fid)
 
         for j, res in enumerate(result):
