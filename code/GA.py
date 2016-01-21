@@ -314,12 +314,13 @@ def exampleRuns():
     evaluate_ES(None, fid=1, ndim=10, opts={'mirrored': True, 'selection': 'pairwise'})
 
 
-def bruteForce(ndim, fid, parallel=1):
+def bruteForce(ndim, fid, parallel=1, part=0):
     # Exhaustive/brute-force search over *all* possible combinations
     # NB: THIS ASSUMES OPTIONS ARE SORTED ASCENDING BY NUMBER OF VALUES
+    num_combinations = np.product(num_options)
     print("F{} in {} dimensions:".format(fid, ndim))
     print("Brute-force exhaustive search of *all* available ES-combinations.")
-    print("Number of possible ES-combinations currently available: {}".format(np.product(num_options)))
+    print("Number of possible ES-combinations currently available: {}".format(num_combinations))
     from collections import Counter
     from itertools import product
     from datetime import datetime
@@ -336,6 +337,14 @@ def bruteForce(ndim, fid, parallel=1):
     else:
         with open(progress_fname) as progress_file:
             start_at = cPickle.load(progress_file)
+        if start_at == np.product(num_options):
+            return  # Done.
+
+    if part == 1 and start_at >= num_combinations // 2:  # Been there, done that
+        return
+    elif part == 2 and start_at < num_combinations // 2:  # THIS SHOULD NOT HAPPEN!!!
+        print("{}\nWeird Error!\nstart_at smaller than intended!\n{}".format('-'*32, '-'*32))
+        return
 
     products = []
     # count how often there is a choice of x options
@@ -350,13 +359,20 @@ def bruteForce(ndim, fid, parallel=1):
     for combo in list(product(*products)):
         all_combos.append(list(sum(combo, ())))
 
-    all_combos = all_combos[start_at:]
+    if part == 0:
+        num_cases = len(all_combos)
+    elif part == 1:
+        num_cases = len(all_combos)//2 - start_at
+    elif part == 2:
+        num_cases = len(all_combos) - start_at
+    else:
+        return  # invalid 'part' value
 
-    num_iters = len(all_combos) // parallel
-    num_iters += 0 if len(all_combos) % parallel == 0 else 1
+    num_iters = num_cases // parallel
+    num_iters += 0 if num_cases % parallel == 0 else 1
 
     for i in range(num_iters):
-        bitstrings = all_combos[i*parallel:(i+1)*parallel]
+        bitstrings = all_combos[(start_at + i*parallel):(start_at + (i+1)*parallel)]
 
         result = ALT_evaluate_ES(bitstrings, fid=fid, ndim=ndim, storage_file=storage_file)
         with open(progress_fname, 'w') as progress_file:
@@ -442,5 +458,11 @@ if __name__ == '__main__':
         fid = int(sys.argv[2])
         parallel = int(sys.argv[3])
         bruteForce(ndim, fid, parallel)
+    elif len(sys.argv) == 5:
+        ndim = int(sys.argv[1])
+        fid = int(sys.argv[2])
+        parallel = int(sys.argv[3])
+        part = int(sys.argv[4])
+        bruteForce(ndim, fid, parallel, part)
     else:
         run()
