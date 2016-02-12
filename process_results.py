@@ -14,7 +14,7 @@ import cPickle
 from code import getPrintName, getOpts
 
 np.set_printoptions(linewidth=156)
-brute_location = 'C:\\Users\\Sander\\Dropbox\\Liacs\\Semester12\\Thesis\\brute_force\\final_results'
+brute_location = 'C:\\Users\\Sander\\Dropbox\\Liacs\\Semester12\\Thesis\\output\\brute_force\\final_results'
 
 ga_location = 'D:\\test_results'  # laptop
 # ga_location = '/home/sander/Dropbox/Liacs/Semester12/Thesis/test_results'  # desktop
@@ -95,13 +95,13 @@ def printTable(results):
 
 def printCompTable(bf, ga):
     print('\\hline')
-    print('F-ID & Dim & Best ES & Best ES Found\\\\')
+    print('F-ID & N & Brute Force & Fitness & GA & Fitness\\\\')
     print('\\hline')
     print('\\hline')
     for fid in functions:
         for dim in dims:
-            bf_result = bf[dim][fid]
-            ga_result = ga[dim][fid]
+            bf_result, bf_fit = bf[dim][fid]
+            ga_result, ga_fit = ga[dim][fid]
             ga_diff = ''
             bf_string = ''
             for i in range(len(bf_result)):
@@ -111,7 +111,7 @@ def printCompTable(bf, ga):
                 else:
                     ga_diff += str(ga_result[i])
 
-            print('F{} & {} & {} & {}\\\\'.format(fid, dim, bf_string, ga_diff))
+            print('F{0} & {1} & {2} & {3:.3g} & {4} & {5:.3g}\\\\'.format(fid, dim, bf_string, bf_fit, ga_diff, ga_fit))
         print('\\hline')
 
 
@@ -137,12 +137,41 @@ def printDoubleTable():
     os.chdir(ga_location)
     x = np.load('final_GA_results.npz')
     results = x['results'].item()
-    ga_results = {dim: {fid: results[dim][fid]['best_result'] for fid in functions} for dim in dims}
+    ga_results = {dim: {fid: (results[dim][fid]['best_result'], min(results[dim][fid]['best_fitness'])) for fid in functions} for dim in dims}
 
     os.chdir(brute_location)
     with open('brute_results.dat') as f:
         bf_results = cPickle.load(f)
     printCompTable(bf_results, ga_results)
+
+
+def printIntCount(results):
+
+    from collections import Counter
+
+    all_strings = []
+    for fid in functions:
+        for dim in dims:
+            all_strings.append(results[dim][fid][0])
+
+    choice_lists = zip(*all_strings)
+    counters = [Counter(int_list) for int_list in choice_lists]
+    print(counters)
+    print()
+
+
+def printDoubleCount():
+
+    os.chdir(ga_location)
+    x = np.load('final_GA_results.npz')
+    results = x['results'].item()
+    ga_results = {dim: {fid: (results[dim][fid]['best_result'], min(results[dim][fid]['best_fitness'])) for fid in functions} for dim in dims}
+    printIntCount(ga_results)
+
+    os.chdir(brute_location)
+    with open('brute_results.dat') as f:
+        bf_results = cPickle.load(f)
+    printIntCount(bf_results)
 
 
 def createGARunPlots():
@@ -169,7 +198,7 @@ def createGARunPlots():
 
         plt.title("F{}".format(func))
         plt.xlabel('Generation')
-        plt.ylabel('Distance to Target')
+        plt.ylabel('Distance to Target Value')
         plt.legend(loc=0)
 
         plt.savefig('img/F{}.png'.format(func), bbox_inches='tight')
@@ -194,7 +223,7 @@ def findBestFromBF():
                     if fitness < best_result:
                         best_result = fitness
                         best_es = ES
-            results[dim][fid] = best_es
+            results[dim][fid] = (best_es, best_result)
 
     with open('brute_results.dat', 'w') as f:
         cPickle.dump(results, f)
@@ -211,7 +240,7 @@ if __name__ == '__main__':
     # storeRepresentation()
 
 
-    # os.chdir(location)
+    # os.chdir(ga_location)
     # with open('ES_per_experiment.json') as infile:
     #     x = json.load(infile)
     # pprint.pprint(x)
@@ -219,7 +248,8 @@ if __name__ == '__main__':
     ### Brute Force STUFF ###
 
     # findBestFromBF()
-    printDoubleTable()
+    # printDoubleTable()
+    printDoubleCount()
 
     pass
 
