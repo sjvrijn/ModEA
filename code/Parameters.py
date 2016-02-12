@@ -119,7 +119,7 @@ class Parameters(BaseParameters):
         self.chiN = n**.5 * (1-1/(4*n)+1/(21*n**2))  # Expected random vector (or something like it)
         self.offspring = None
         self.all_offspring = None
-        self.wcm = randn(n,1)
+        self.wcm = (randn(n,1) * self.search_space_size) + self.l_bound
         self.wcm_old = None
         self.damps = 1 + 2*np.max([0, sqrt((mu_eff-1)/(n+1))-1]) + self.c_sigma  # TODO: Same as d_sigma
 
