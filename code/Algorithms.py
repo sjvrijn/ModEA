@@ -207,6 +207,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
 
     if lambda_ is None:
         lambda_ = int(4 + floor(3 * log(n)))
+    eff_lambda = lambda_
     if mu is None:
         mu = int(lambda_//2)
 
@@ -223,25 +224,8 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
             opts[op] = None
 
 
-    # Pick the lowest-level sampler
-    if opts['base-sampler'] == 'quasi-sobol':
-        sampler = Sam.QuasiGaussianSobolSampling(n)
-    elif opts['base-sampler'] == 'quasi-halton' and Sam.halton_available:
-        sampler = Sam.QuasiGaussianHaltonSampling(n)
-    else:
-        sampler = Sam.GaussianSampling(n)
-
-    # Create an orthogonal sampler using the determined base_sampler
-    if opts['orthogonal']:
-        sampler = Sam.OrthogonalSampling(n, base_sampler=sampler)
-
-    # Create a mirrored sampler using the sampler (structure) chosen so far
-    if opts['mirrored']:
-        sampler = Sam.MirroredSampling(n, base_sampler=sampler)
-
     if opts['selection'] == 'pairwise':
         selector = Sel.pairwise
-        # TODO FIXME: are these fixes correct?!
         # Explicitly force lambda_ to be even
         if lambda_ % 2 == 1:
             lambda_ -= 1
@@ -253,13 +237,30 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
             if lambda_ == 2:
                 lambda_ += 2
             eff_lambda = lambda_ - 2
-        else:
-            eff_lambda = lambda_
 
         if mu > eff_lambda // 2:
             mu = eff_lambda // 2
     else:
         selector = Sel.best
+
+    # Pick the lowest-level sampler
+    if opts['base-sampler'] == 'quasi-sobol':
+        sampler = Sam.QuasiGaussianSobolSampling(n)
+    elif opts['base-sampler'] == 'quasi-halton' and Sam.halton_available:
+        sampler = Sam.QuasiGaussianHaltonSampling(n)
+    else:
+        sampler = Sam.GaussianSampling(n)
+
+    # Create an orthogonal sampler using the determined base_sampler
+    if opts['orthogonal']:
+        orth_lambda = eff_lambda
+        if opts['mirrored']:
+            orth_lambda //= 2
+        sampler = Sam.OrthogonalSampling(n, lambda_=orth_lambda, base_sampler=sampler)
+
+    # Create a mirrored sampler using the sampler (structure) chosen so far
+    if opts['mirrored']:
+        sampler = Sam.MirroredSampling(n, base_sampler=sampler)
 
 
     parameters = Parameters(n, budget, mu, lambda_, weights_option=opts['weights'], active=opts['active'],

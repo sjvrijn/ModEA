@@ -44,7 +44,6 @@ class QuasiGaussianSobolSampling(object):
         """
         self.n = n
         self.shape = (n,1) if shape == 'col' else (1,n)
-        # TODO: set seed to random or as keyword argument in __init__
         if seed is None or seed < 2:
             self.seed = randint(2, n**2)  # seed=1 will give a null-vector as first result
         else:
@@ -96,7 +95,7 @@ else:
 
 class OrthogonalSampling(object):
     """ A sampler to create orthogonal samples using some base sampler (Gaussian as default) """
-    def __init__(self, n, shape='col', base_sampler=None, lambda_=1):
+    def __init__(self, n, lambda_, shape='col', base_sampler=None):
         """
             :param n:               Dimensionality of the vectors to be sampled
             :param shape:           String to select between 'col' and 'row'. Default: 'col'
