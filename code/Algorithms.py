@@ -474,7 +474,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
                     pop_change = 'small'
                 # In the remaining (B)IPOP cases we increase the population
                 elif parameters.ipop in ['IPOP', 'BIPOP']:
-                    restart_budget = parameters.max_iter * parameters.lambda_  # TODO FIXME: add * parameters.lambda_ factor?!
+                    restart_budget = parameters.max_iter * parameters.lambda_
                     pop_change = 'large'
                 # Otherwise, we just use a local restart TODO FIXME: DOES NOT CURRENTLY OCCUR?
                 else:

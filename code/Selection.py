@@ -32,7 +32,7 @@ def best(population, new_population, param):
 
     new_population.sort(key=getFitness)  # sort descending
 
-    offspring = np.column_stack((ind.dna for ind in new_population))
+    offspring = np.column_stack((ind.dna for ind in new_population))  # Update to use the actual mutations
     param.all_offspring = offspring
 
     return new_population[:param.mu]

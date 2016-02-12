@@ -80,6 +80,7 @@ class Parameters(BaseParameters):
         self.lambda_ = lambda_
         self.l_bound = l_bound
         self.u_bound = u_bound
+        self.search_space_size = u_bound - l_bound
         self.sigma = 1
         self.active = active
         self.elitist = elitist
@@ -106,7 +107,7 @@ class Parameters(BaseParameters):
 
         mu_eff = self.mu_eff  # Local copy
         self.c_sigma = (mu_eff + 2) / (mu_eff + n + 5)
-        self.d_sigma = self.c_sigma + 1 + 2*max(0, sqrt((mu_eff-1) / (n+1)))
+        self.d_sigma = self.c_sigma + 1 + 2*max(0, sqrt((mu_eff-1) / (n+1)))  # Same as damps
         self.c_c = (4 + mu_eff/n) / (n + 4 + 2*mu_eff/n)
         self.c_1 = 2 / ((n + 1.3)**2 + mu_eff)
         self.c_mu = min(1-self.c_1, self.alpha_mu*((mu_eff - 2 + 1/mu_eff) / ((n+2)**2 + self.alpha_mu*mu_eff/2)))
@@ -115,23 +116,22 @@ class Parameters(BaseParameters):
         self.weighted_mutation_vector = zeros((n,1))   # weighted average of the last generation of offset vectors
         self.y_w_squared = zeros((n,1))
 
-        self.chiN = n**.5 * (1-1./(4*n)+1./(21*n**2))  # Expected random vector (or something like it)
+        self.chiN = n**.5 * (1-1/(4*n)+1/(21*n**2))  # Expected random vector (or something like it)
         self.offspring = None
         self.all_offspring = None
         self.wcm = randn(n,1)
         self.wcm_old = None
-        self.damps = 1. + 2*np.max([0, sqrt((mu_eff-1)/(n+1))-1]) + self.c_sigma
+        self.damps = 1 + 2*np.max([0, sqrt((mu_eff-1)/(n+1))-1]) + self.c_sigma  # TODO: Same as d_sigma
 
         ## Threshold Convergence ##
-        self.diameter = 10         # Diameter of the search space TODO: implement upper/lower bound
+        self.diameter = sqrt(sum(square(self.search_space_size)))  # Diameter of the search space
         self.init_threshold = 0.2  # "guess" from
-        self.decay_factor = 0.995
+        self.decay_factor = 0.995  # TODO: should be >1 or <1 ????
         self.threshold = self.init_threshold * self.diameter * ((1-0) / 1)**self.decay_factor
 
         ## Active CMA-ES ##
         if active:
             self.c_c = 2 / (n+sqrt(2))**2
-        self.beta = (4*mu - 2) / ((n+12)**2 + 4*mu)
 
         ## Two Point Step Size Adaptation ##
         self.alpha = 0.5
