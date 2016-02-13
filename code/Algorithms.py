@@ -51,7 +51,9 @@ def onePlusOneES(n, fitnessFunction, budget):
         'mutateParameters': mutateParameters,
     }
 
-    return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+    _, results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+
+    return results
 
 
 def CMA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
@@ -90,7 +92,9 @@ def CMA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
         'mutateParameters': mutateParameters,
     }
 
-    return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+    _, results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+
+    return results
 
 
 def onePlusOneCholeskyCMAES(n, fitnessFunction, budget):
@@ -121,7 +125,9 @@ def onePlusOneCholeskyCMAES(n, fitnessFunction, budget):
         'mutateParameters': mutateParameters,
     }
 
-    return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+    _, results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+
+    return results
 
 
 def onePlusOneActiveCMAES(n, fitnessFunction, budget):
@@ -152,7 +158,9 @@ def onePlusOneActiveCMAES(n, fitnessFunction, budget):
         'mutateParameters': mutateParameters,
     }
 
-    return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+    _, results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+
+    return results
 
 
 def CMSA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
@@ -187,7 +195,9 @@ def CMSA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
         'mutateParameters': mutateParameters,
     }
 
-    return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+    _, results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+
+    return results
 
 
 # Evolving ES
@@ -290,7 +300,27 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
         'mutateParameters': mutateParameters,
     }
 
-    return baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+    _, results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+
+    return results
+
+
+def localRestartAlgorithm(population, fitnessFunction, budget, functions, parameters, parallel=False, debug=False):
+    """
+        Run the baseAlgorithm with the given specifications using a local-restart strategy.
+
+        :param population:
+        :param fitnessFunction:
+        :param budget:
+        :param functions:
+        :param parameters:
+        :param parallel:
+        :param debug:
+        :return:
+    """
+
+    pass
+
 
 
 # Helper function
@@ -490,4 +520,4 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
     if parameters.count_degenerations:
         print(parameters.count_degenerations, end=' ')
 
-    return generation_size, sigma_over_time, best_fitness_over_time, best_individual
+    return used_budget, (generation_size, sigma_over_time, best_fitness_over_time, best_individual)
