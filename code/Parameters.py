@@ -41,7 +41,7 @@ class Parameters(BaseParameters):
         separate parameters.
     """
 
-    def __init__(self, n, budget,
+    def __init__(self, n, budget, sigma=None,
                  mu=None, lambda_=None, weights_option=None, l_bound=None, u_bound=None, seq_cutoff=None, wcm=None,
                  active=False, elitist=False, local_restart=None, sequential=False, tpa=False):
         """
@@ -66,6 +66,8 @@ class Parameters(BaseParameters):
             lambda_ = int(4 + floor(3 * log(n)))
         if mu is None:
             mu = int(lambda_//2)
+        if sigma is None:
+            sigma = 1
 
         if mu < 1 or lambda_ <= mu or n < 1:
             raise Exception("Invalid initialization values: mu, n >= 1, lambda > mu")
@@ -88,7 +90,7 @@ class Parameters(BaseParameters):
         self.l_bound = l_bound
         self.u_bound = u_bound
         self.search_space_size = u_bound - l_bound
-        self.sigma = 1
+        self.sigma = sigma
         self.active = active
         self.elitist = elitist
         self.local_restart = local_restart
@@ -575,7 +577,7 @@ class Parameters(BaseParameters):
                 print('tolupsigma')
             restart_required = True
 
-        # Stagnation, median of most recent 20 values is no better than that of the oldest 20
+        # Stagnation, median of most recent 20 best values is no better than that of the oldest 20 medians/generation
         elif len(self.stagnation_list) > 20 and len(self.recent_best_fitnesses) > 20 and \
                                                 median(self.stagnation_list[:20]) > median(self.recent_best_fitnesses):
             if debug:
