@@ -255,6 +255,9 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
     else:
         selector = Sel.best
 
+    def select(pop, new_pop, _, param):
+        return selector(pop, new_pop, param)
+
     # Pick the lowest-level sampler
     if opts['base-sampler'] == 'quasi-sobol':
         sampler = Sam.QuasiGaussianSobolSampling(n)
@@ -300,7 +303,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
     functions = {
         'recombine': recombine,
         'mutate': mutate,
-        'select': selector,
+        'select': select,
     }
 
     if opts['ipop']:
@@ -332,7 +335,8 @@ def localRestartAlgorithm(population, fitnessFunction, budget, functions, parame
     local_budget = budget
     total_results = []
     while local_budget > 0:
-
+        if debug:
+            print(local_budget)
         parameters = Parameters(**parameter_opts)
         functions['mutateParameters'] = parameters.adaptCovarianceMatrix
         # Run the actual algorithm
