@@ -176,7 +176,7 @@ def mutateBitstring(individual):
             bitstring[i] = 1-bitstring[i]
 
 
-def mutateIntList(individual, num_options):
+def mutateIntList(individual, _, num_options):
     """ self-adaptive random integer mutation """
 
     adaptStepSize(individual)
