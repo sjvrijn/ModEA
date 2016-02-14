@@ -73,11 +73,11 @@ def GA(ndim, fid, budget=None):
         population.append(copy(population[0]))
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
-    recombine = partial(Rec.random, param=parameters)
+    recombine = Rec.onePlusOne
     mutate = partial(Mut.mutateIntList, num_options=num_options)
-    best = partial(Sel.best, param=parameters)
-    def select(pop, new_pop, _):
-        return best(pop, new_pop)
+    best = Sel.best
+    def select(pop, new_pop, _, params):
+        return best(pop, new_pop, params)
     def mutateParameters(t):
         pass  # The only actual parameter mutation is the self-adaptive step-size of each individual
 
@@ -313,6 +313,16 @@ def exampleRuns():
     evaluate_ES(None, fid=1, ndim=10, opts={'mirrored': True})
     evaluate_ES(None, fid=1, ndim=10, opts={'mirrored': True, 'selection': 'pairwise'})
 
+    print("Regular vs Active")
+    evaluate_ES(None, fid=1, ndim=10, opts={'active': False})
+    evaluate_ES(None, fid=1, ndim=10, opts={'active': True})
+
+    print("No restart vs local restart")
+    evaluate_ES(None, fid=1, ndim=10, opts={'ipop': None})
+    evaluate_ES(None, fid=1, ndim=10, opts={'ipop': True})
+    evaluate_ES(None, fid=1, ndim=10, opts={'ipop': 'IPOP'})
+    evaluate_ES(None, fid=1, ndim=10, opts={'ipop': 'BIPOP'})
+
 
 def bruteForce(ndim, fid, parallel=1, part=0):
     # Exhaustive/brute-force search over *all* possible combinations
@@ -438,12 +448,12 @@ def runExperiments():
 
 
 def run():
-    # testEachOption()
+    testEachOption()
     # problemCases()
     # exampleRuns()
     # bruteForce()
     # runGA()
-    runExperiments()
+    # runExperiments()
     pass
 
 
