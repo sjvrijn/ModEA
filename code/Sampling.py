@@ -5,7 +5,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 # External libraries
 import numpy as np
-from numpy import array, dot
+from numpy import array, dot, any, isnan
 from numpy.linalg import norm
 from numpy.random import randn, randint
 from scipy.stats import norm as norm_dist
@@ -120,7 +120,9 @@ class OrthogonalSampling(object):
         """
         if self.current_sample % self.num_samples == 0:
             self.current_sample = 0
-            self.__generateSamples()
+            invalid_samples = True
+            while invalid_samples:
+                invalid_samples = self.__generateSamples()
 
         self.current_sample += 1
         return self.samples[self.current_sample-1]
@@ -140,9 +142,9 @@ class OrthogonalSampling(object):
             samples[i] *= lengths[i]
 
         self.samples = samples
+        return any(isnan(samples))  # Are all generated samples any good? I.e. is there no 'nan' value anywhere?
 
-    @staticmethod
-    def __gramSchmidt(vectors):
+    def __gramSchmidt(self, vectors):
         """ Implementation of the Gram-Schmidt process for orthonormalizing a set of vectors """
         num_vectors = len(vectors)
         for i in range(1, num_vectors):
@@ -152,7 +154,12 @@ class OrthogonalSampling(object):
                 vectors[i] = vec_i - vec_j * (dot(vec_i.T, vec_j) / norm(vec_j)**2)
 
         for i, vec in enumerate(vectors):
-            vectors[i] = vec / norm(vec)
+            # In the rare, but not uncommon cases of this producing 0-vectors, we simply replace it with a random one
+            if norm(vec) == 0:
+                new_vector = self.base_sampler.next()
+                vectors[i] = new_vector / norm(new_vector)
+            else:
+                vectors[i] = vec / norm(vec)
 
         return vectors
 

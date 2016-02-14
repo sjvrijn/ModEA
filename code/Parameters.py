@@ -5,8 +5,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
-from numpy import abs, all, any, append, arange, ceil, diag, dot, exp, eye, floor, isfinite, isinf, isreal, ones, log,\
-                  max, mean, median, mod, newaxis, outer, real, sqrt, square, sum, triu, zeros
+from numpy import abs, all, any, append, arange, ceil, diag, dot, exp, eye, floor, isfinite, isinf, isreal,\
+                  ones, log, max, mean, median, mod, newaxis, outer, real, sqrt, square, sum, triu, zeros
 from numpy.linalg import cond, eig, eigh, norm, LinAlgError
 from numpy.random import randn
 
