@@ -56,7 +56,7 @@ def GA(ndim, fid, budget=None):
     storage_file = '{}GA_results_{}dim_f{}.tdat'.format(non_bbob_datapath, ndim, fid)
 
     # Fitness function to be passed on to the baseAlgorithm
-    fitnessFunction = partial(ALT_evaluate_ES, fit_func_id=fid, n=ndim, storage_file=storage_file)
+    fitnessFunction = partial(ALT_evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
 
     # Assuming a dimensionality of 11 (8 boolean + 3 triples)
     GA_mu = Config.GA_mu
@@ -73,7 +73,7 @@ def GA(ndim, fid, budget=None):
         population.append(copy(population[0]))
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
-    recombine = Rec.onePlusOne
+    recombine = Rec.random
     mutate = partial(Mut.mutateIntList, num_options=num_options)
     best = Sel.best
     def select(pop, new_pop, _, params):
