@@ -64,7 +64,7 @@ def GA(ndim, fid, budget=None):
     if budget is None:
         budget = Config.GA_budget
 
-    parameters = Parameters(ndim, budget, GA_mu, GA_lambda)
+    parameters = Parameters(ndim, budget, mu=GA_mu, lambda_=GA_lambda)
     # Initialize the first individual in the population
     population = [Individual(ndim)]
     population[0].dna = np.array([np.random.randint(len(x[1])) for x in options])
