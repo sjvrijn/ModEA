@@ -503,7 +503,7 @@ class Parameters(BaseParameters):
         # TODO: add feedback of resetting sigma to the sigma per individual
 
 
-    def ipopTest(self, evalcount, fitnesses):
+    def localRestart(self, evalcount, fitnesses):
 
         restart_required = False
         diagC = diag(self.C).reshape(-1, 1)

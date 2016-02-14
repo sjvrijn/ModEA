@@ -510,6 +510,11 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
 
         mutateParameters(used_budget)                     # Parameter mutation
 
+        # Local restart
+        if parameters.localRestart(used_budget, fitnesses):
+            break
+
+        '''
         # (B)IPOP
         # TODO: Move the following code to >= 1 separate function(s)
         if parameters.ipop:
@@ -538,6 +543,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
                 new_search_point = randn(parameters.n,1)
                 for ind in new_population:
                     ind.dna = new_search_point
+        '''
 
     # Debug print statement, displaying the number of degenerations that occurred during the run of this algorithm
     if parameters.count_degenerations:
