@@ -311,7 +311,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
     return results
 
 
-def localRestartAlgorithm(population, fitnessFunction, budget, functions, parameters, parallel=False, debug=False):
+def localRestartAlgorithm(population, fitnessFunction, budget, functions, parameter_opts, parallel=False, debug=False):
     """
         Run the baseAlgorithm with the given specifications using a local-restart strategy.
 
@@ -319,7 +319,7 @@ def localRestartAlgorithm(population, fitnessFunction, budget, functions, parame
         :param fitnessFunction:
         :param budget:
         :param functions:
-        :param parameters:
+        :param parameter_opts:
         :param parallel:
         :param debug:
         :return:
@@ -329,6 +329,8 @@ def localRestartAlgorithm(population, fitnessFunction, budget, functions, parame
     total_results = []
     while local_budget > 0:
 
+        parameters = Parameters(**parameter_opts)
+        # Run the actual algorithm
         used_budget, local_results = baseAlgorithm(population, fitnessFunction, local_budget, functions, parameters,
                                                    parallel=parallel, debug=debug)
 
