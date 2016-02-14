@@ -277,7 +277,9 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
 
     parameter_opts = {'n': n, 'budget': budget, 'mu': mu, 'lambda_': lambda_, 'u_bound': u_bound, 'l_bound': l_bound,
                       'weights_option': opts['weights'], 'active': opts['active'], 'elitist': opts['elitism'],
-                      'ipop': opts['ipop'], 'sequential': opts['sequential'], 'tpa': opts['two-point']}
+                      'sequential': opts['sequential'], 'tpa': opts['two-point'], 'local_restart': opts['ipop'],
+                      # 'ipop': opts['ipop'],
+                      }
 
     # In case of pairwise selection, sequential evaluation may only stop after 2mu instead of mu individuals
     if opts['sequential'] and opts['selection'] == 'pairwise':

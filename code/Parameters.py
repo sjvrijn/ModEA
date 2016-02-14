@@ -43,7 +43,7 @@ class Parameters(BaseParameters):
 
     def __init__(self, n, budget,
                  mu=None, lambda_=None, weights_option=None, l_bound=None, u_bound=None, seq_cutoff=None, wcm=None,
-                 active=False, elitist=False, ipop=None, sequential=False, tpa=False):
+                 active=False, elitist=False, local_restart=None, sequential=False, tpa=False):
         """
             Setup the set of parameters
 
@@ -91,7 +91,7 @@ class Parameters(BaseParameters):
         self.sigma = 1
         self.active = active
         self.elitist = elitist
-        self.ipop = ipop
+        self.local_restart = local_restart
         self.sequential = sequential
         self.seq_cutoff = seq_cutoff
         self.tpa = tpa
@@ -505,6 +505,9 @@ class Parameters(BaseParameters):
 
     def localRestart(self, evalcount, fitnesses):
 
+        if not self.local_restart:
+            return False
+
         restart_required = False
         diagC = diag(self.C).reshape(-1, 1)
         tmp = append(abs(self.p_c), sqrt(diagC), axis=1)
@@ -561,7 +564,7 @@ class Parameters(BaseParameters):
         return restart_required
 
 
-    def local_restart(self, pop_change='large'):
+    def local_restart__(self, pop_change='large'):
         if pop_change == 'large':
             self.lambda_large *= self.pop_inc_factor
             self.lambda_ = self.lambda_large
