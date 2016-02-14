@@ -156,7 +156,11 @@ class Parameters(BaseParameters):
         self.flat_fitness_index = int(min([ceil(0.1+self.lambda_/4.0), self.mu-1]))
         self.nbin = 10 + ceil(30*n/lambda_)
         self.histfunevals = zeros(self.nbin)
-        self.stagnation_list = []
+
+        self.recent_best_fitnesses = []  # Contains the most recent best fitnesses of the 20 most recent generations
+        self.stagnation_list = []  # Contains median fitness of some recent generations (formula: see local_restart())
+
+
         self.max_iter = 100 + 50*(n+3)**2 / sqrt(lambda_)
         self.tolx = 1e-12 * self.sigma
         self.tolupx = 1e3 * self.sigma
@@ -244,7 +248,7 @@ class Parameters(BaseParameters):
                        sqrt(cs*(2-cs)*mueff) * dot(invsqrt_C, (wcm - wcm_old) / self.sigma)
         hsig = sum(self.p_sigma**2)/(1-(1-cs)**(2*evalcount/lambda_))/n < 2 + 4/(n+1)
         self.p_c = (1-cc) * self.p_c + hsig * sqrt(cc*(2-cc)*mueff) * (wcm - wcm_old) / self.sigma
-        offset = self.offset[:self.mu].T
+        offset = self.offset[:, :self.mu]
 
         if not self.active or len(self.all_offspring) < 2*self.mu:
             # Regular update of C
@@ -253,7 +257,7 @@ class Parameters(BaseParameters):
                       + c_mu * dot(offset, self.weights*offset.T)
         else:
             # Active update of C TODO: separate function?
-            offset_bad = self.offset[-self.mu:].T
+            offset_bad = self.offset[:, -self.mu:]
             self.C = (1-c_1-c_mu)*self.C \
                       + c_1 * (outer(self.p_c, self.p_c) + (1 - hsig) * cc * (2 - cc) * self.C) \
                       + c_mu * (dot(offset, self.weights*offset.T) - dot(offset_bad, self.weights*offset_bad.T))
@@ -516,7 +520,11 @@ class Parameters(BaseParameters):
         tmp = append(abs(self.p_c), sqrt(diagC), axis=1)
         a = mod(evalcount/self.lambda_-1, self.n)
         self.histfunevals[mod(evalcount/self.lambda_-1, self.nbin)] = fitnesses[0]
-        self.stagnation_list.extend(fitnesses)
+
+        self.recent_best_fitnesses.append(fitnesses[0])
+        self.recent_best_fitnesses = self.recent_best_fitnesses[-20:]
+
+        self.stagnation_list.append(median(fitnesses))
         self.stagnation_list = self.stagnation_list[-int(ceil(0.2*evalcount + 120 + 30*self.n/self.lambda_)):]
 
         # TolX
@@ -568,10 +576,11 @@ class Parameters(BaseParameters):
             restart_required = True
 
         # Stagnation, median of most recent 20 values is no better than that of the oldest 20
-        # elif median(self.stagnation_list[-20:]) > median(self.stagnation_list[:20]):
-        #     if debug:
-        #         print('stagnation')
-        #     restart_required = True
+        elif len(self.stagnation_list) > 20 and len(self.recent_best_fitnesses) > 20 and \
+                                                median(self.stagnation_list[:20]) > median(self.recent_best_fitnesses):
+            if debug:
+                print('stagnation')
+            restart_required = True
 
         return restart_required
 
