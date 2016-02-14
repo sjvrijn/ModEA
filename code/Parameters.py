@@ -42,7 +42,7 @@ class Parameters(BaseParameters):
     """
 
     def __init__(self, n, budget,
-                 mu=None, lambda_=None, weights_option=None, l_bound=None, u_bound=None,
+                 mu=None, lambda_=None, weights_option=None, l_bound=None, u_bound=None, seq_cutoff=None, wcm=None,
                  active=False, elitist=False, ipop=None, sequential=False, tpa=False):
         """
             Setup the set of parameters
@@ -54,6 +54,8 @@ class Parameters(BaseParameters):
             :param weights_option:  String to determine which weignts to use. Choose from 'default' (CMA-ES), '1/n'
             :param l_bound:         Lower bound of the search space
             :param u_bound:         Upper bound of the search space
+            :param seq_cutoff:      Minimal cut-off allowed in sequential selection
+            :param wcm:             Initial 'weighted center of mass'
             :param active:          Boolean switch on using an active update. Default: False
             :param elitist:         Boolean switch on using a (mu, l) strategy rather than (mu + l). Default: False
             :param sequential:      Boolean switch on using sequential evaluation. Default: False
@@ -69,9 +71,14 @@ class Parameters(BaseParameters):
             raise Exception("Invalid initialization values: mu, n >= 1, lambda > mu")
 
         if l_bound is None or not isfinite(l_bound).all():
-            l_bound = np.ones((n, 1)) * -5
+            l_bound = ones((n, 1)) * -5
         if u_bound is None or not isfinite(u_bound).all():
             u_bound = ones((n, 1)) * 5
+
+        if seq_cutoff is None:
+            seq_cutoff = mu
+        if wcm is None:
+            wcm = (randn(n,1) * (u_bound - l_bound)) + l_bound
 
         ### Basic parameters ###
         self.n = n
@@ -86,7 +93,7 @@ class Parameters(BaseParameters):
         self.elitist = elitist
         self.ipop = ipop
         self.sequential = sequential
-        self.seq_cutoff = mu + 1
+        self.seq_cutoff = seq_cutoff
         self.tpa = tpa
         self.weights = self.getWeights(weights_option)
         self.mu_eff = 1 / sum(square(self.weights))
@@ -119,7 +126,7 @@ class Parameters(BaseParameters):
         self.chiN = n**.5 * (1-1/(4*n)+1/(21*n**2))  # Expected random vector (or something like it)
         self.offspring = None
         self.all_offspring = None
-        self.wcm = (randn(n,1) * self.search_space_size) + self.l_bound
+        self.wcm = wcm
         self.wcm_old = None
         self.damps = 1 + 2*np.max([0, sqrt((mu_eff-1)/(n+1))-1]) + self.c_sigma  # TODO: Same as d_sigma
 
