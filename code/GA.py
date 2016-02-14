@@ -419,7 +419,8 @@ def runGA(ndim=10, fid=1):
           "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
 
     np.savez("{}final_GA_results_{}dim_f{}".format(non_bbob_datapath, ndim, fid),
-             sigma=sigmas, best_fitness=fitness, best_result=best.dna, generation_sizes=gen_sizes, time_spent=z)
+             sigma=sigmas, best_fitness=fitness, best_result=[ind.dna for ind in best],
+             generation_sizes=gen_sizes, time_spent=z)
 
 
 def runExperiments():
@@ -432,7 +433,8 @@ def runExperiments():
 
             z = y - x
             np.savez("{}final_GA_results_{}dim_f{}".format(non_bbob_datapath, ndim, fid),
-                     sigma=sigmas, best_fitness=fitness, best_result=best.dna, generation_sizes=gen_sizes, time_spent=z)
+                     sigma=sigmas, best_fitness=fitness, best_result=[ind.dna for ind in best],
+                     generation_sizes=gen_sizes, time_spent=z)
 
 
 def run():

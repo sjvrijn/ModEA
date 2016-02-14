@@ -319,8 +319,23 @@ def localRestartAlgorithm(population, fitnessFunction, budget, functions, parame
         :return:
     """
 
-    pass
+    local_budget = budget
+    total_results = []
+    while local_budget > 0:
 
+        used_budget, local_results = baseAlgorithm(population, fitnessFunction, local_budget, functions, parameters,
+                                                   parallel=parallel, debug=debug)
+
+        local_budget -= used_budget
+
+        # Extend all arrays returned
+        for i, result in enumerate(local_results):
+            if i == len(total_results):
+                total_results.append(result)
+            else:
+                total_results[i].extend(result)
+
+    return tuple(total_results)
 
 
 # Helper function
@@ -520,4 +535,4 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
     if parameters.count_degenerations:
         print(parameters.count_degenerations, end=' ')
 
-    return used_budget, (generation_size, sigma_over_time, best_fitness_over_time, best_individual)
+    return used_budget, (generation_size, sigma_over_time, best_fitness_over_time, [best_individual])
