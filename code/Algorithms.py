@@ -39,9 +39,8 @@ def onePlusOneES(n, fitnessFunction, budget):
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.onePlusOne
-    mutate = partial(Mut.x1, param=parameters, sampler=Sam.GaussianSampling(n))
-    def select(pop, new_pop, t):
-        return Sel.onePlusOneSelection(pop, new_pop, t, parameters)
+    mutate = partial(Mut.x1, sampler=Sam.GaussianSampling(n))
+    select = Sel.onePlusOneSelection
     mutateParameters = parameters.oneFifthRule
 
     functions = {
@@ -79,10 +78,10 @@ def CMA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
         individual.dna = wcm
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
-    recombine = partial(Rec.weighted, param=parameters)
-    mutate = partial(Mut.CMAMutation, param=parameters, sampler=Sam.GaussianSampling(n))
-    def select(pop, new_pop, t):
-        return Sel.best(pop, new_pop, parameters)
+    recombine = Rec.weighted
+    mutate = partial(Mut.CMAMutation, sampler=Sam.GaussianSampling(n))
+    def select(pop, new_pop, _, params):
+        return Sel.best(pop, new_pop, params)
     mutateParameters = parameters.adaptCovarianceMatrix
 
     functions = {
@@ -113,9 +112,9 @@ def onePlusOneCholeskyCMAES(n, fitnessFunction, budget):
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.onePlusOne
-    mutate = partial(Mut.choleskyCMAMutation, param=parameters, sampler=Sam.GaussianSampling(n))
-    def select(pop, new_pop, t):
-        return Sel.onePlusOneCholeskySelection(pop, new_pop, parameters)
+    mutate = partial(Mut.choleskyCMAMutation, sampler=Sam.GaussianSampling(n))
+    def select(pop, new_pop, _, params):
+        return Sel.onePlusOneCholeskySelection(pop, new_pop, params)
     mutateParameters = parameters.adaptCholeskyCovarianceMatrix
 
     functions = {
@@ -146,9 +145,9 @@ def onePlusOneActiveCMAES(n, fitnessFunction, budget):
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.onePlusOne
-    mutate = partial(Mut.choleskyCMAMutation, param=parameters, sampler=Sam.GaussianSampling(n))
-    def select(pop, new_pop, _):
-        return Sel.onePlusOneActiveSelection(pop, new_pop, parameters)
+    mutate = partial(Mut.choleskyCMAMutation, sampler=Sam.GaussianSampling(n))
+    def select(pop, new_pop, _, params):
+        return Sel.onePlusOneActiveSelection(pop, new_pop, params)
     mutateParameters = parameters.adaptActiveCovarianceMatrix
 
     functions = {
@@ -181,10 +180,10 @@ def CMSA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
     population = [Individual(n) for _ in range(mu)]
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
-    recombine = partial(Rec.weighted, param=parameters)
-    mutate = partial(Mut.CMAMutation, param=parameters, sampler=Sam.GaussianSampling(n))
-    def select(pop, new_pop, _):
-        return Sel.best(pop, new_pop, parameters)
+    recombine = Rec.weighted
+    mutate = partial(Mut.CMAMutation, sampler=Sam.GaussianSampling(n))
+    def select(pop, new_pop, _, params):
+        return Sel.best(pop, new_pop, params)
     def mutateParameters(t):
         return parameters.selfAdaptCovarianceMatrix()
 
@@ -294,21 +293,24 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
 
     parameters = Parameters(**parameter_opts)
 
-    # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
-    recombine = partial(Rec.weighted, param=parameters)
-    mutate = partial(Mut.CMAMutation, param=parameters, sampler=sampler, threshold_convergence=opts['threshold'])
-    def select(pop, new_pop, _):
-        return selector(pop, new_pop, parameters)
-    mutateParameters = parameters.adaptCovarianceMatrix
+    # We use functions/partials here to 'hide' the additional passing of parameters that are algorithm specific
+    recombine = Rec.weighted
+    mutate = partial(Mut.CMAMutation, sampler=sampler, threshold_convergence=opts['threshold'])
 
     functions = {
         'recombine': recombine,
         'mutate': mutate,
-        'select': select,
-        'mutateParameters': mutateParameters,
+        'select': selector,
     }
 
-    _, results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
+    if opts['ipop']:
+        results = localRestartAlgorithm(population, fitnessFunction, budget, functions, parameter_opts)
+    else:
+
+        mutateParameters = parameters.adaptCovarianceMatrix
+        functions['mutateParameters'] = mutateParameters
+
+        _, results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters)
 
     return results
 
@@ -332,6 +334,7 @@ def localRestartAlgorithm(population, fitnessFunction, budget, functions, parame
     while local_budget > 0:
 
         parameters = Parameters(**parameter_opts)
+        functions['mutateParameters'] = parameters.adaptCovarianceMatrix
         # Run the actual algorithm
         used_budget, local_results = baseAlgorithm(population, fitnessFunction, local_budget, functions, parameters,
                                                    parallel=parallel, debug=debug)
@@ -413,7 +416,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
             print("Warning: Parallel execution not available, defaulting to non-parallel evaluation.")
 
     # Single recombination outside the eval loop to create the new population
-    new_population = recombine(population)
+    new_population = recombine(population, parameters)
     mutEval = partial(mutateAndEvaluate, mutate=mutate, fitFunc=fitnessFunction)
 
     # The main evaluation loop
@@ -428,7 +431,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
                 # In this case, it is hardcoded that the parallelization takes place one level further!!!!!!!!!
                 genes = []
                 for ind in new_population:
-                    mutate(ind)
+                    mutate(ind, parameters)
                     genes.append(ind.dna)
 
                 fitnesses = fitnessFunction(genes)
@@ -454,7 +457,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
                 i = parameters.lambda_
         else:
             for i, individual in enumerate(new_population):
-                mutate(individual)  # Mutation
+                mutate(individual, parameters)  # Mutation
                 # Evaluation
                 individual.fitness = fitnessFunction(individual.dna)[0]  # fitnessFunction returns as a list, as it allows
                 used_budget += 1                                         # simultaneous evaluation for multiple individuals
@@ -471,7 +474,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
 
         new_population = new_population[:i+1]  # Any un-used individuals in the new population are discarded
         fitnesses = sorted([individual.fitness for individual in new_population])
-        population = select(population, new_population, used_budget)  # Selection
+        population = select(population, new_population, used_budget, parameters)  # Selection
 
         # Track parameters
         gen_size = used_budget - len(best_fitness_over_time)
@@ -486,7 +489,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
             break
 
         if len(population) == parameters.mu:
-            new_population = recombine(population)                        # Recombination
+            new_population = recombine(population, parameters)                        # Recombination
         else:
             print('Bad population size! size: {} instead of {} at used budget {}'.format(len(population),
                                                                                          parameters.mu, used_budget))

@@ -37,7 +37,7 @@ def random(pop, param):
     return new_population
 
 
-def onePlusOne(pop):
+def onePlusOne(pop, _):
     """
         Utility function for 1+1 ES strategies where the recombination is merely a copy
 
