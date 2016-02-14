@@ -318,7 +318,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
     return results
 
 
-def localRestartAlgorithm(population, fitnessFunction, budget, functions, parameter_opts, parallel=False, debug=False):
+def localRestartAlgorithm(population, fitnessFunction, budget, functions, parameter_opts, parallel=False, debug=True):
     """
         Run the baseAlgorithm with the given specifications using a local-restart strategy.
 
@@ -334,15 +334,24 @@ def localRestartAlgorithm(population, fitnessFunction, budget, functions, parame
 
     local_budget = budget
     total_results = []
+    if parameter_opts['local_restart'] == 'IPOP' or parameter_opts['local_restart'] == 'BIPOP':
+        lambda_init = int(4 + floor(3 * log(parameter_opts['n'])))
+    else:
+        lambda_init = None
+
+    lambda_large = lambda_init  # BIPOP
+    lambda_small = lambda_init  # BIPOP
+    parameter_opts['lambda_'] = lambda_init
+
     while local_budget > 0:
         if debug:
-            print(local_budget)
+            print(local_budget, parameter_opts['lambda_'])
+
         parameters = Parameters(**parameter_opts)
         functions['mutateParameters'] = parameters.adaptCovarianceMatrix
         # Run the actual algorithm
         used_budget, local_results = baseAlgorithm(population, fitnessFunction, local_budget, functions, parameters,
                                                    parallel=parallel, debug=debug)
-
         local_budget -= used_budget
 
         # Extend all arrays returned
@@ -351,6 +360,9 @@ def localRestartAlgorithm(population, fitnessFunction, budget, functions, parame
                 total_results.append(result)
             else:
                 total_results[i].extend(result)
+
+        if parameter_opts['local_restart'] == 'IPOP':
+            parameter_opts['lambda_'] *= 2
 
     return tuple(total_results)
 
