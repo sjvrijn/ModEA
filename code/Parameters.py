@@ -125,6 +125,7 @@ class Parameters(BaseParameters):
 
         self.chiN = n**.5 * (1-1/(4*n)+1/(21*n**2))  # Expected random vector (or something like it)
         self.offspring = None
+        self.offset = None
         self.all_offspring = None
         self.wcm = wcm
         self.wcm_old = None
@@ -243,7 +244,7 @@ class Parameters(BaseParameters):
                        sqrt(cs*(2-cs)*mueff) * dot(invsqrt_C, (wcm - wcm_old) / self.sigma)
         hsig = sum(self.p_sigma**2)/(1-(1-cs)**(2*evalcount/lambda_))/n < 2 + 4/(n+1)
         self.p_c = (1-cc) * self.p_c + hsig * sqrt(cc*(2-cc)*mueff) * (wcm - wcm_old) / self.sigma
-        offset = (self.offspring - wcm_old) / self.sigma
+        offset = self.offset[:self.mu].T
 
         if not self.active or len(self.all_offspring) < 2*self.mu:
             # Regular update of C
@@ -252,7 +253,7 @@ class Parameters(BaseParameters):
                       + c_mu * dot(offset, self.weights*offset.T)
         else:
             # Active update of C TODO: separate function?
-            offset_bad = (self.all_offspring[:,-self.mu:] - wcm_old) / self.sigma
+            offset_bad = self.offset[-self.mu:].T
             self.C = (1-c_1-c_mu)*self.C \
                       + c_1 * (outer(self.p_c, self.p_c) + (1 - hsig) * cc * (2 - cc) * self.C) \
                       + c_mu * (dot(offset, self.weights*offset.T) - dot(offset_bad, self.weights*offset_bad.T))
