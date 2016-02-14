@@ -508,6 +508,8 @@ class Parameters(BaseParameters):
         if not self.local_restart:
             return False
 
+        debug = False
+
         restart_required = False
         diagC = diag(self.C).reshape(-1, 1)
         tmp = append(abs(self.p_c), sqrt(diagC), axis=1)
@@ -518,47 +520,56 @@ class Parameters(BaseParameters):
 
         # TolX
         if all(self.sigma*(max(tmp, axis=1)) < self.tolx):
-            # print('TolX')
+            if debug:
+                print('TolX')
             restart_required = True
 
         # TolUPX
         elif any(self.sigma*sqrt(diagC)) > self.tolupx:
-            # print('TolUPX')
+            if debug:
+                print('TolUPX')
             restart_required = True
 
         # No effective axis
         elif all(0.1*self.sigma*self.D[a, 0]*self.B[:, a] + self.wcm == self.wcm):
-            # print('noeffectaxis')
+            if debug:
+                print('noeffectaxis')
             restart_required = True
 
         # No effective coordinate
         elif any(0.2*self.sigma*sqrt(diagC) + self.wcm == self.wcm):
-            # print('noeffectcoord')
+            if debug:
+                print('noeffectcoord')
             restart_required = True
 
         # Condition of C
         elif cond(self.C) > self.conditioncov:
-            # print('condcov')
+            if debug:
+                print('condcov')
             restart_required = True
 
         elif mod(evalcount, self.lambda_) == self.nbin and \
-            max(self.histfunevals) - min(self.histfunevals) < self.tolfun:
-            # print('tolfun')
+                                max(self.histfunevals) - min(self.histfunevals) < self.tolfun:
+            if debug:
+                print('tolfun')
             restart_required = True
 
         # Adjust step size in case of equal function values
         elif fitnesses[0] == fitnesses[self.flat_fitness_index]:
-            # print('flatfitness')
+            if debug:
+                print('flatfitness')
             restart_required = True
 
         # A mismatch between sigma increase and decrease of all eigenvalues in C
         elif self.sigma / 1 > self.tolupsigma*max(self.D):
-            # print('tolupsigma')
+            if debug:
+                print('tolupsigma')
             restart_required = True
 
         # Stagnation, median of most recent 20 values is no better than that of the oldest 20
         elif median(self.stagnation_list[-20:]) > median(self.stagnation_list[:20]):
-            # print('stagnation')
+            if debug:
+                print('stagnation')
             restart_required = True
 
         return restart_required
