@@ -333,6 +333,7 @@ def localRestartAlgorithm(population, fitnessFunction, budget, functions, parame
     """
 
     local_budget = budget
+    best_fitness = float('inf')
     total_results = []
 
     if parameter_opts['local_restart'] == 'IPOP' or parameter_opts['local_restart'] == 'BIPOP':
@@ -343,7 +344,6 @@ def localRestartAlgorithm(population, fitnessFunction, budget, functions, parame
 
     # BIPOP Specific parameters
     lambda_large = lambda_init
-    lambda_small = lambda_init
     regime = None
     small_budget = None
     large_budget = None
@@ -360,11 +360,18 @@ def localRestartAlgorithm(population, fitnessFunction, budget, functions, parame
         local_budget -= used_budget
 
         # Extend all arrays returned
-        for i, result in enumerate(local_results):
-            if i == len(total_results):
+        if len(total_results) == 0:
+            for result in local_results:  # generation_size, sigma_over_time, best_fitness_over_time, best_individual
                 total_results.append(result)
-            else:
-                total_results[i].extend(result)
+            best_fitness = min(total_results[2])
+        else:
+            total_results[0].extend(local_results[0])
+            total_results[1].extend(local_results[1])
+            total_results[2].extend(local_results[2])
+            if min(local_results[2]) < best_fitness:
+                best_fitness = min(local_results[2])
+                total_results[3] = local_results[3]
+
 
         # Increasing Population Strategies
         if parameter_opts['local_restart'] == 'IPOP':
@@ -391,13 +398,13 @@ def localRestartAlgorithm(population, fitnessFunction, budget, functions, parame
             if regime == 'large':
                 lambda_large *= 2
                 parameter_opts['lambda_'] = lambda_large
-                # parameter_opts['sigma'] = 2
+                parameter_opts['sigma'] = 2
 
             elif regime == 'small':
                 rand_val = random() ** 2
                 lambda_small = int(floor(lambda_init * (.5 * lambda_large/lambda_init)**rand_val))
                 parameter_opts['lambda_'] = lambda_small
-                # parameter_opts['sigma'] = 2e-2*random()
+                parameter_opts['sigma'] = 2e-2*random()
 
 
 
@@ -608,4 +615,4 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
     if parameters.count_degenerations:
         print(parameters.count_degenerations, end=' ')
 
-    return used_budget, (generation_size, sigma_over_time, best_fitness_over_time, [best_individual])
+    return used_budget, (generation_size, sigma_over_time, best_fitness_over_time, best_individual)
