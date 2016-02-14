@@ -9,7 +9,7 @@ from functools import partial
 from mpi4py import MPI
 from multiprocessing import Pool
 from numpy import floor, log, ones
-from numpy.random import randn
+from numpy.random import randn, random
 import sys
 # Internal classes
 from .Individual import Individual
@@ -318,7 +318,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
     return results
 
 
-def localRestartAlgorithm(population, fitnessFunction, budget, functions, parameter_opts, parallel=False, debug=True):
+def localRestartAlgorithm(population, fitnessFunction, budget, functions, parameter_opts, parallel=False, debug=False):
     """
         Run the baseAlgorithm with the given specifications using a local-restart strategy.
 
@@ -334,14 +334,19 @@ def localRestartAlgorithm(population, fitnessFunction, budget, functions, parame
 
     local_budget = budget
     total_results = []
+
     if parameter_opts['local_restart'] == 'IPOP' or parameter_opts['local_restart'] == 'BIPOP':
         lambda_init = int(4 + floor(3 * log(parameter_opts['n'])))
     else:
         lambda_init = None
-
-    lambda_large = lambda_init  # BIPOP
-    lambda_small = lambda_init  # BIPOP
     parameter_opts['lambda_'] = lambda_init
+
+    # BIPOP Specific parameters
+    lambda_large = lambda_init
+    lambda_small = lambda_init
+    regime = None
+    small_budget = None
+    large_budget = None
 
     while local_budget > 0:
         if debug:
@@ -361,8 +366,41 @@ def localRestartAlgorithm(population, fitnessFunction, budget, functions, parame
             else:
                 total_results[i].extend(result)
 
+        # Increasing Population Strategies
         if parameter_opts['local_restart'] == 'IPOP':
             parameter_opts['lambda_'] *= 2
+
+        elif parameter_opts['local_restart'] == 'BIPOP':
+
+            if regime == 'large':
+                large_budget -= used_budget
+            elif regime == 'small':
+                small_budget -= used_budget
+
+            if small_budget is None:
+                small_budget = local_budget // 2
+                large_budget = local_budget - small_budget
+                regime = 'large'
+            else:
+                # TODO: force *last* restart using large regime
+                if small_budget > large_budget > 0:
+                    regime = 'small'
+                else:
+                    regime = 'large'
+
+            if regime == 'large':
+                lambda_large *= 2
+                parameter_opts['lambda_'] = lambda_large
+                # parameter_opts['sigma'] = 2
+
+            elif regime == 'small':
+                rand_val = random() ** 2
+                lambda_small = int(floor(lambda_init * (.5 * lambda_large/lambda_init)**rand_val))
+                parameter_opts['lambda_'] = lambda_small
+                # parameter_opts['sigma'] = 2e-2*random()
+
+
+
 
     return tuple(total_results)
 

@@ -567,10 +567,10 @@ class Parameters(BaseParameters):
             restart_required = True
 
         # Stagnation, median of most recent 20 values is no better than that of the oldest 20
-        elif median(self.stagnation_list[-20:]) > median(self.stagnation_list[:20]):
-            if debug:
-                print('stagnation')
-            restart_required = True
+        # elif median(self.stagnation_list[-20:]) > median(self.stagnation_list[:20]):
+        #     if debug:
+        #         print('stagnation')
+        #     restart_required = True
 
         return restart_required
 
