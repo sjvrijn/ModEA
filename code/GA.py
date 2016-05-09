@@ -8,7 +8,7 @@ import numpy as np
 import sys
 from copy import copy
 from datetime import datetime
-from functools import partial
+from functools import partial, total_ordering
 from multiprocessing import Pool
 from mpi4py import MPI
 
@@ -35,6 +35,31 @@ bbob_opts = {'algid': None,
 # Shortcut dictionary to index benchmark functions by name
 fitness_functions = {'sphere': free_function_ids[0], 'elipsoid': free_function_ids[1],
                      'rastrigin': free_function_ids[2], }
+
+
+@total_ordering
+class ESFitness(object):
+    def __init__(self, FCE, ERT=None):
+        self.FCE = FCE  # Fixed Cost Error
+        self.ERT = ERT  # Expected Running Time
+
+    def __eq__(self, other):
+        if self.ERT is not None and self.ERT == other.ERT:
+            return True  # Both have a valid and equal ERT value
+        elif self.ERT is None and other.ERT is None and self.FCE == other.FCE:
+            return True  # Neither have a valid ERT value, but FCE is equal
+        else:
+            return False
+
+    def __lt__(self, other):  # Assuming minimalization problems, so A < B means A is better than B
+        if self.ERT is not None and other.ERT is None:
+            return True  # If only one has an ERT, it is better by default
+        elif self.ERT is not None and other.ERT is not None and self.ERT < other.ERT:
+            return True  # If both have an ERT, we want the better one
+        elif self.ERT is None and other.ERT is None and self.FCE < other.FCE:
+            return True  # If neither have an ERT, we want the better FCE
+        else:
+            return False
 
 
 def cleanResults(fid):
