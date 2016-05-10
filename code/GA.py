@@ -39,6 +39,11 @@ fitness_functions = {'sphere': free_function_ids[0], 'elipsoid': free_function_i
 
 @total_ordering
 class ESFitness(object):
+    """
+        Object to store the fitness measure for an ES, and allow easy comparison.
+        This measure consists of both the always available Fixed Cost Error (FCE)
+        and the less available but more rigorous Expected Running Time (ERT).
+    """
     def __init__(self, FCE, ERT=None):
         self.FCE = FCE  # Fixed Cost Error
         self.ERT = ERT  # Expected Running Time
@@ -60,6 +65,54 @@ class ESFitness(object):
             return True  # If neither have an ERT, we want the better FCE
         else:
             return False
+
+    def __repr__(self):
+        return "ESFitness(FCE={},ERT={})".format(self.FCE, self.ERT)
+
+    def __unicode__(self):
+        if self.ERT:
+            return "ERT: {} (FCE: {})".format(self.ERT, self.FCE)
+        else:
+            return "FCE: {}".format(self.FCE)
+
+    __str__ = __unicode__
+
+
+
+def calcFCEandERT(fitnesses, target=1e-8):
+    """
+        Calculates the FCE and ERT of a given set of function evaluation results and target value
+
+        :param fitnesses:   Numpy array of size (num_runs, num_evals)
+        :param target:      Target value to use for basing the ERT on. Default: 1e-8
+        :return:            ESFitness object with FCE and ERT properly set
+    """
+
+    # Force 1 row per 1 run TODO: REMOVE ONCE THIS HAS BECOME THE DEFAULT
+    fitnesses = fitnesses.T
+
+    # FCE
+    min_fitnesses = np.min(fitnesses, axis=1)
+    FCE = np.median(min_fitnesses)
+
+    # ERT
+    num_runs, num_evals = fitnesses.shape
+    below_target = fitnesses < target
+    num_below_target = np.sum(below_target, axis=1)
+
+    if np.sum(num_below_target) > 0:
+        sum_evals = num_succesful = 0
+        for i in range(num_runs):
+            if num_below_target[i] == 0:
+                sum_evals += num_evals
+            else:
+                num_succesful += 1
+                sum_evals += np.min(np.argwhere(below_target[i]))
+        ERT = sum_evals / num_succesful
+    else:
+        ERT = None
+
+    return ESFitness(FCE=FCE, ERT=ERT)
 
 
 def cleanResults(fid):
@@ -132,14 +185,14 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
     for bitstring in bitstrings:
         # Setup the bbob logger
         bbob_opts['algid'] = bitstring  # Save the bitstring of the ES we are currently evaluating
-        f = fgeneric.LoggingFunction(datapath, **bbob_opts)
+        f = fgeneric.LoggingFunction(datapath, **bbob_opts)  # TODO: Why is this here when it is done in fetchResults?
 
         print(bitstring)
         opts = getOpts(bitstring)
 
         function = partial(fetchResults, fid, ndim=ndim, budget=budget, opts=opts)
         arguments = range(num_runs)
-        run_data = None
+        run_data = None  # TODO: Any reason this is defined 'so far' above its use?
 
         # mpi4py
         comm = MPI.COMM_SELF.Spawn(sys.executable, args=['code/MPI_slave.py'], maxprocs=num_runs)  # Init
@@ -202,25 +255,7 @@ def evaluate_ES(bitstring, fid, ndim, opts=None, budget=None, storage_file=None)
     # define local function of the algorithm to be used, fixing certain parameters
     algorithm = partial(customizedES, opts=opts)
 
-
-    '''
-    # Actually running the algorithm is encapsulated in a try-except for now... math errors
-    try:
-        # Run the actual ES for <num_runs> times
-        _, fitnesses = runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts)
-
-        # From all different runs, retrieve the median fitness to be used as fitness for this ES
-        min_fitnesses = np.min(fitnesses, axis=0)
-        if storage_file:
-            with open(storage_file, 'a') as f:
-                f.write("{}\t{}\n".format(bitstring.tolist(), min_fitnesses.tolist()))
-        median = np.median(min_fitnesses)
-        print("\t\t{}".format(median))
-
-        # mean_best_fitness = np.mean(min_fitnesses)
-        # print(" {}  \t({})".format(mean_best_fitness, median))
-    # '''
-
+    # Run the actual ES for <num_runs> times
     _, fitnesses = runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, parallel=Config.ES_parallel)
 
     # From all different runs, retrieve the median fitness to be used as fitness for this ES
@@ -231,14 +266,6 @@ def evaluate_ES(bitstring, fid, ndim, opts=None, budget=None, storage_file=None)
     median = np.median(min_fitnesses)
     print("\t\t{}".format(median))
 
-
-    '''
-    except Exception as e:
-        # Give this ES fitness INF in case of runtime errors
-        print(" np.inf: {}".format(e))
-        # mean_best_fitness = np.inf
-        median = np.inf
-    # '''
     return [median]
 
 
@@ -301,9 +328,9 @@ def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, parallel=False
 
 
 
-################################################################################
-################################ Run Functions #################################
-################################################################################
+'''-----------------------------------------------------------------------------
+#                                Run Functions                                 #
+-----------------------------------------------------------------------------'''
 def testEachOption():
     # Test all individual options
     n = len(options)
@@ -485,6 +512,9 @@ def run():
 if __name__ == '__main__':
     np.set_printoptions(linewidth=1000)
     # np.random.seed(42)
+
+    # HARDCODED: JUST GIVE US THE EXACT TARGET IN THESE CASES
+    fgeneric.deltaftarget = 0
 
     if len(sys.argv) == 3:
         ndim = int(sys.argv[1])
