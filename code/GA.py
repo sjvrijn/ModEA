@@ -79,7 +79,7 @@ class ESFitness(object):
 
 
 
-def calcFCEandERT(fitnesses, target=1e-8):
+def calcFCEandERT(fitnesses, target=Config.default_target):
     """
         Calculates the FCE and ERT of a given set of function evaluation results and target value
 
@@ -88,18 +88,16 @@ def calcFCEandERT(fitnesses, target=1e-8):
         :return:            ESFitness object with FCE and ERT properly set
     """
 
-    # Force 1 row per 1 run TODO: REMOVE ONCE THIS HAS BECOME THE DEFAULT
-    fitnesses = fitnesses.T
-
-    # FCE
+    ### FCE ###
     min_fitnesses = np.min(fitnesses, axis=1)
     FCE = np.median(min_fitnesses)
 
-    # ERT
+    ### ERT ###
     num_runs, num_evals = fitnesses.shape
     below_target = fitnesses < target
     num_below_target = np.sum(below_target, axis=1)
 
+    # Calculate the ERT if at least one of the runs reached the target
     if np.sum(num_below_target) > 0:
         sum_evals = num_succesful = 0
         for i in range(num_runs):
@@ -109,7 +107,7 @@ def calcFCEandERT(fitnesses, target=1e-8):
                 num_succesful += 1
                 sum_evals += np.min(np.argwhere(below_target[i]))
         ERT = sum_evals / num_succesful
-    else:
+    else:  # If none of the runs reached the target, there is no (useful) ERT to be calculated
         ERT = None
 
     return ESFitness(FCE=FCE, ERT=ERT)
@@ -218,9 +216,9 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
             fitnesses = [x[:min_length] for x in fitnesses]
 
         # Subtract the target fitness value from all returned fitnesses to only get the absolute distance
-        fitnesses = np.subtract(np.array(fitnesses).T, np.array(targets)[np.newaxis,:])
+        fitnesses = np.subtract(np.array(fitnesses), np.array(targets).T[:,np.newaxis])
         # From all different runs, retrieve the median fitness to be used as fitness for this ES
-        min_fitnesses = np.min(fitnesses, axis=0)
+        min_fitnesses = np.min(fitnesses, axis=1)
         if not isinstance(bitstrings[i], list):
             bitstrings[i] = bitstrings[i].tolist()
 
@@ -259,7 +257,7 @@ def evaluate_ES(bitstring, fid, ndim, opts=None, budget=None, storage_file=None)
     _, fitnesses = runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, parallel=Config.ES_parallel)
 
     # From all different runs, retrieve the median fitness to be used as fitness for this ES
-    min_fitnesses = np.min(fitnesses, axis=0)
+    min_fitnesses = np.min(fitnesses, axis=1)
     if storage_file:
         with open(storage_file, 'a') as f:
             f.write("{}\t{}\n".format(bitstring.tolist(), min_fitnesses.tolist()))
@@ -322,7 +320,7 @@ def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, parallel=False
         fitnesses = [x[:min_length] for x in fitnesses]
 
     # Subtract the target fitness value from all returned fitnesses to only get the absolute distance
-    fitnesses = np.subtract(np.array(fitnesses).T, np.array(targets)[np.newaxis,:])
+    fitnesses = np.subtract(np.array(fitnesses), np.array(targets).T[:,np.newaxis])
 
     return sigmas, fitnesses
 

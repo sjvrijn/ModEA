@@ -21,5 +21,6 @@ ES_num_runs = 15
 ES_parallel = True
 
 ### Experiment Settings ###
+default_target = 1e-8
 experiment_dims = (2, 3, 5, 10, 20)  # Problem dimensionalities to be tested
 experiment_funcs = (3, 4, 7, 9, 10, 12, 13, 16, 17, 19, 20, 21, 23, 24)  # BBOB function numbers
