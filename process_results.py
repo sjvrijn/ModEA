@@ -84,12 +84,17 @@ def storeRepresentation():
 
 def printTable(results):
     print('\\hline')
-    print('F-ID & Dim & Best ES Found\\\\')
+    print('F-ID & N & GA & Fitness\\\\')
     print('\\hline')
     print('\\hline')
     for fid in functions:
         for dim in dims:
-            print('F{} & {} & {}\\\\'.format(fid, dim, getPrintName(getOpts(results[dim][fid]))))
+            result, fit = results[dim][fid]
+            string = ''
+            for i in range(len(result)):
+                string += str(result[i])
+
+            print('F{0} & {1} & {2} & {3:.3g}\\\\'.format(fid, dim, string, fit))
         print('\\hline')
 
 
@@ -111,7 +116,8 @@ def printCompTable(bf, ga):
                 else:
                     ga_diff += str(ga_result[i])
 
-            print('F{0} & {1} & {2} & {3:.3g} & {4} & {5:.3g}\\\\'.format(fid, dim, bf_string, bf_fit, ga_diff, ga_fit))
+            print('F{0} & {1} & {2} & {3:.3g} & {4} & {5:.3g}\\\\'.format(fid, dim, bf_string, bf_fit,
+                                                                          ga_diff, ga_fit))
         print('\\hline')
 
 
@@ -120,7 +126,7 @@ def printGATable():
     os.chdir(ga_location)
     x = np.load('final_GA_results.npz')
     results = x['results'].item()
-    ga_results = {dim: {fid: results[dim][fid]['best_result'] for fid in functions} for dim in dims}
+    ga_results = {dim: {fid: (results[dim][fid]['best_result'], min(results[dim][fid]['best_fitness'])) for fid in functions} for dim in dims}
     printTable(ga_results)
 
 
@@ -156,8 +162,20 @@ def printIntCount(results):
 
     choice_lists = zip(*all_strings)
     counters = [Counter(int_list) for int_list in choice_lists]
-    print(counters)
-    print()
+    # print(counters)
+    # print()
+    for count in counters:
+        for i in range(3):
+            print(count[i], ' ', end='')
+        print()
+
+
+def printGAcount():
+    os.chdir(ga_location)
+    x = np.load('final_GA_results.npz')
+    results = x['results'].item()
+    ga_results = {dim: {fid: (results[dim][fid]['best_result'], min(results[dim][fid]['best_fitness'])) for fid in functions} for dim in dims}
+    printIntCount(ga_results)
 
 
 def printDoubleCount():
@@ -167,7 +185,7 @@ def printDoubleCount():
     results = x['results'].item()
     ga_results = {dim: {fid: (results[dim][fid]['best_result'], min(results[dim][fid]['best_fitness'])) for fid in functions} for dim in dims}
     printIntCount(ga_results)
-
+    print()
     os.chdir(brute_location)
     with open('brute_results.dat') as f:
         bf_results = cPickle.load(f)
@@ -204,6 +222,11 @@ def createGARunPlots():
         plt.savefig('img/F{}.png'.format(func), bbox_inches='tight')
         plt.savefig('img/F{}.pdf'.format(func), bbox_inches='tight')
 
+        # TODO: Limit the lowest value (particularily to prevent negatives which are impossible in logplots)
+        # plt.yscale('log')
+        # plt.savefig('img/F{}_log.png'.format(func), bbox_inches='tight')
+        # plt.savefig('img/F{}_log.pdf'.format(func), bbox_inches='tight')
+
 
 def findBestFromBF():
     os.chdir(brute_location)
@@ -235,8 +258,9 @@ if __name__ == '__main__':
     # storeResults()
     # printResults()
 
-    # createGARunPlots()
-    # printTable()
+    createGARunPlots()
+    # printGATable()
+    # printGAcount()
     # storeRepresentation()
 
 
@@ -248,8 +272,8 @@ if __name__ == '__main__':
     ### Brute Force STUFF ###
 
     # findBestFromBF()
-    # printDoubleTable()
-    printDoubleCount()
+    printDoubleTable()
+    # printDoubleCount()
 
     pass
 
