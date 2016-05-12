@@ -40,13 +40,23 @@ fitness_functions = {'sphere': free_function_ids[0], 'elipsoid': free_function_i
 @total_ordering
 class ESFitness(object):
     """
-        Object to store the fitness measure for an ES, and allow easy comparison.
+        Object to calculate and store the fitness measure for an ES and allow easy comparison.
         This measure consists of both the always available Fixed Cost Error (FCE)
         and the less available but more rigorous Expected Running Time (ERT).
     """
-    def __init__(self, FCE, ERT=None):
+    def __init__(self, fitnesses=None, target=Config.default_target, FCE=None, ERT=None):
+
+        # If fitness values are given, they will overwrite the given FCE and ERT (if any)
+        if fitnesses is not None:
+            FCE, ERT, min_fitnesses, std_dev = self._calcFCEandERT(fitnesses, target)
+        else:
+            min_fitnesses = None
+            std_dev = None
+
         self.FCE = FCE  # Fixed Cost Error
         self.ERT = ERT  # Expected Running Time
+        self.std_dev = std_dev
+        self.min_fitnesses = min_fitnesses
 
     def __eq__(self, other):
         if self.ERT is not None and self.ERT == other.ERT:
@@ -67,50 +77,49 @@ class ESFitness(object):
             return False
 
     def __repr__(self):
+        # TODO: include std_dev and min_fitnesses in __init__ (explicitly or **kwargs) so they can be added here?
         return "ESFitness(FCE={},ERT={})".format(self.FCE, self.ERT)
 
     def __unicode__(self):
-        if self.ERT:
-            return "ERT: {} (FCE: {})".format(self.ERT, self.FCE)
-        else:
-            return "FCE: {}".format(self.FCE)
+        # TODO: pretty-print-ify
+        return "ERT: {0:.6}  \tFCE: {1:.4}  \t(std: {2:.4})".format(self.ERT, self.FCE, self.std_dev)
 
     __str__ = __unicode__
 
+    @staticmethod
+    def _calcFCEandERT(fitnesses, target):
+        """
+            Calculates the FCE and ERT of a given set of function evaluation results and target value
 
+            :param fitnesses:   Numpy array of size (num_runs, num_evals)
+            :param target:      Target value to use for basing the ERT on. Default: 1e-8
+            :return:            ESFitness object with FCE and ERT properly set
+        """
 
-def calcFCEandERT(fitnesses, target=Config.default_target):
-    """
-        Calculates the FCE and ERT of a given set of function evaluation results and target value
+        ### FCE ###
+        min_fitnesses = np.min(fitnesses, axis=1)
+        FCE = np.median(min_fitnesses)
+        std_dev = np.std(min_fitnesses)
 
-        :param fitnesses:   Numpy array of size (num_runs, num_evals)
-        :param target:      Target value to use for basing the ERT on. Default: 1e-8
-        :return:            ESFitness object with FCE and ERT properly set
-    """
+        ### ERT ###
+        num_runs, num_evals = fitnesses.shape
+        below_target = fitnesses < target
+        num_below_target = np.sum(below_target, axis=1)
 
-    ### FCE ###
-    min_fitnesses = np.min(fitnesses, axis=1)
-    FCE = np.median(min_fitnesses)
+        # Calculate the ERT if at least one of the runs reached the target
+        if np.sum(num_below_target) > 0:
+            sum_evals = num_succesful = 0
+            for i in range(num_runs):
+                if num_below_target[i] == 0:
+                    sum_evals += num_evals
+                else:
+                    num_succesful += 1
+                    sum_evals += np.min(np.argwhere(below_target[i]))
+            ERT = sum_evals / num_succesful
+        else:  # If none of the runs reached the target, there is no (useful) ERT to be calculated
+            ERT = None
 
-    ### ERT ###
-    num_runs, num_evals = fitnesses.shape
-    below_target = fitnesses < target
-    num_below_target = np.sum(below_target, axis=1)
-
-    # Calculate the ERT if at least one of the runs reached the target
-    if np.sum(num_below_target) > 0:
-        sum_evals = num_succesful = 0
-        for i in range(num_runs):
-            if num_below_target[i] == 0:
-                sum_evals += num_evals
-            else:
-                num_succesful += 1
-                sum_evals += np.min(np.argwhere(below_target[i]))
-        ERT = sum_evals / num_succesful
-    else:  # If none of the runs reached the target, there is no (useful) ERT to be calculated
-        ERT = None
-
-    return ESFitness(FCE=FCE, ERT=ERT)
+        return FCE, ERT, min_fitnesses, std_dev
 
 
 def cleanResults(fid):
@@ -132,7 +141,8 @@ def GA(ndim, fid, budget=None):
     storage_file = '{}GA_results_{}dim_f{}.tdat'.format(non_bbob_datapath, ndim, fid)
 
     # Fitness function to be passed on to the baseAlgorithm
-    fitnessFunction = partial(ALT_evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
+    # fitnessFunction = partial(ALT_evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
+    fitnessFunction = partial(evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
 
     # Assuming a dimensionality of 11 (8 boolean + 3 triples)
     GA_mu = Config.GA_mu
@@ -144,6 +154,7 @@ def GA(ndim, fid, budget=None):
     # Initialize the first individual in the population
     population = [Individual(ndim)]
     population[0].dna = np.array([np.random.randint(len(x[1])) for x in options])
+    population[0].fitness = ESFitness(FCE=np.inf)
 
     while len(population) < GA_mu:
         population.append(copy(population[0]))
@@ -232,7 +243,7 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
     return medians
 
 
-def evaluate_ES(bitstring, fid, ndim, opts=None, budget=None, storage_file=None):
+def evaluate_ES(bitstring, fid, ndim, budget=None, storage_file=None, opts=None):
     """ Single function to run all desired combinations of algorithms * fitness functions """
 
     # Set parameters
@@ -256,16 +267,16 @@ def evaluate_ES(bitstring, fid, ndim, opts=None, budget=None, storage_file=None)
     # Run the actual ES for <num_runs> times
     _, fitnesses = runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, parallel=Config.ES_parallel)
 
-    # From all different runs, retrieve the median fitness to be used as fitness for this ES
+    '''
     min_fitnesses = np.min(fitnesses, axis=1)
     if storage_file:
         with open(storage_file, 'a') as f:
             f.write("{}\t{}\n".format(bitstring.tolist(), min_fitnesses.tolist()))
-    median = np.median(min_fitnesses)
-    print("\t\t{}".format(median))
+    '''
 
-    return [median]
-
+    fitness = ESFitness(fitnesses)
+    print('\t', fitness)
+    return [fitness]
 
 def fetchResults(fid, instance, ndim, budget, opts):
     """ Small overhead-function to enable multi-processing """
@@ -294,7 +305,7 @@ def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, parallel=False
         targets, results = zip(*run_data)
     elif parallel and allow_parallel:  # Multi-core version
         num_workers = min(num_threads, num_runs)
-        function = partial(fetchResults, fid, n=ndim, budget=budget, opts=opts)
+        function = partial(fetchResults, fid, ndim=ndim, budget=budget, opts=opts)
 
         # multiprocessing
         p = Pool(num_workers)
@@ -478,9 +489,10 @@ def runGA(ndim=10, fid=1):
           "Time at end:         {}\n"
           "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
 
-    np.savez("{}final_GA_results_{}dim_f{}".format(non_bbob_datapath, ndim, fid),
-             sigma=sigmas, best_fitness=fitness, best_result=best.dna,
-             generation_sizes=gen_sizes, time_spent=z)
+    if Config.write_output:
+        np.savez("{}final_GA_results_{}dim_f{}".format(non_bbob_datapath, ndim, fid),
+                 sigma=sigmas, best_fitness=fitness, best_result=best.dna,
+                 generation_sizes=gen_sizes, time_spent=z)
 
 
 def runExperiments():
@@ -498,11 +510,11 @@ def runExperiments():
 
 
 def run():
-    testEachOption()
+    # testEachOption()
     # problemCases()
     # exampleRuns()
     # bruteForce()
-    # runGA()
+    runGA()
     # runExperiments()
     pass
 
@@ -513,6 +525,7 @@ if __name__ == '__main__':
 
     # HARDCODED: JUST GIVE US THE EXACT TARGET IN THESE CASES
     fgeneric.deltaftarget = 0
+    fgeneric.write_output = Config.write_output
 
     if len(sys.argv) == 3:
         ndim = int(sys.argv[1])

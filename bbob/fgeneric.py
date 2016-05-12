@@ -44,6 +44,8 @@ nb_evaluations_always_written = '1' # '100 + 10 * dim'  # 100 + dim;10*dim add a
 nb_triggers_per_delta_f_decade = 5 # using 10 should be perfectly fine
 fileprefix = 'bbobexp'
 
+write_output = True
+
 class LoggingFunction( object ):
     """Class for a function that records data from experiments with a given
        algorithm and parameter settings.
@@ -309,11 +311,11 @@ class LoggingFunction( object ):
                             self.idxFTrigger -= 1
                         self.fTrigger = min( self.fTrigger, 10 ** ( self.idxFTrigger / self.nbptsf ) ) # TODO: why?
             # write
-            if buffr:
+            if buffr and write_output:
                 f = open( self.datafile, 'a' )
                 f.writelines( buffr )
                 f.close()
-            if hbuffr:
+            if hbuffr and write_output:
                 f = open( self.hdatafile, 'a' )
                 f.writelines( hbuffr )
                 f.close()
@@ -332,7 +334,7 @@ class LoggingFunction( object ):
         if self._is_finalized:
             warnings.warn( 'Run was never started.' )
             return
-        if not self.lasteval.is_written:
+        if not self.lasteval.is_written and write_output:
             if not os.path.exists( self.datafile ):
                 warnings.warn( 'The data file %s is not found. '
                               'Data will be appended to an empty file. Previously '

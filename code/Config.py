@@ -6,14 +6,14 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 ### General Settings ###
 use_MPI = True
-
+write_output = True
 
 ### GA Settings ###
 GA_mu = 1        # Assuming a dimensionality of 11
 GA_lambda = 12   # (8 boolean + 3 triples)
 GA_budget = 250  # Roughly 20 generations
 GA_parallel = True
-GA_debug = True
+GA_debug = False
 
 ### ES Settings ###
 ES_budget_factor = 1e3
