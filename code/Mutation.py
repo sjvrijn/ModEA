@@ -31,6 +31,8 @@ def keepInBounds(x, l_bound, u_bound):
         x, l_bound and u_bound are column vectors
     """
 
+    # TODO: Move this check (or a similar one) to Parameters.py
+    '''
     l_bound, u_bound = l_bound.flatten(), u_bound.flatten()
 
     lb_index = isfinite(l_bound)
@@ -40,7 +42,17 @@ def keepInBounds(x, l_bound, u_bound):
 
     LB = l_bound[valid][:, newaxis]
     UB = u_bound[valid][:, newaxis]
+    '''
 
+    y = (x - l_bound) / (u_bound - l_bound)
+    I = mod(floor(y), 2) == 0
+    yprime = zeros(shape(y))
+    yprime[I] = np.abs(y[I] - floor(y[I]))
+    yprime[~I] = 1.0 - np.abs(y[~I] - floor(y[~I]))
+
+    x = l_bound + (u_bound - l_bound) * yprime
+
+    '''
     y = (x[valid, :] - LB) / (UB - LB)
     I = mod(floor(y), 2) == 0
     yprime = zeros(shape(y))
@@ -48,6 +60,7 @@ def keepInBounds(x, l_bound, u_bound):
     yprime[~I] = 1.0 - np.abs(y[~I] - floor(y[~I]))
 
     x[valid, :] = LB + (UB - LB) * yprime
+    '''
 
     return x
 
