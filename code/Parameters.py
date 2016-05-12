@@ -108,50 +108,54 @@ class Parameters(BaseParameters):
         self.success_history = zeros((self.N, ), dtype=np.int)
 
         ### CMA-ES ###
+        # Static
+        mu_eff = self.mu_eff  # Local copy
+        self.c_sigma = (mu_eff + 2) / (mu_eff + n + 5)
+        self.c_c = (4 + mu_eff/n) / (n + 4 + 2*mu_eff/n)
+        self.c_1 = 2 / ((n + 1.3)**2 + mu_eff)
+        self.c_mu = min(1-self.c_1, self.alpha_mu*((mu_eff - 2 + 1/mu_eff) / ((n+2)**2 + self.alpha_mu*mu_eff/2)))
+        self.damps = 1 + 2*np.max([0, sqrt((mu_eff-1)/(n+1))-1]) + self.c_sigma
+        self.chiN = n**.5 * (1-1/(4*n)+1/(21*n**2))  # Expected random vector (or something like it)
+
+        # Dynamic
         self.C = eye(n)       # Covariance matrix
         self.sqrt_C = eye(n)
         self.B = eye(n)       # Eigenvectors of C
         self.D = ones((n,1))  # Diagonal eigenvalues of C
         self.s_mean = None
-
-        mu_eff = self.mu_eff  # Local copy
-        self.c_sigma = (mu_eff + 2) / (mu_eff + n + 5)
-        self.d_sigma = self.c_sigma + 1 + 2*max(0, sqrt((mu_eff-1) / (n+1)))  # Same as damps
-        self.c_c = (4 + mu_eff/n) / (n + 4 + 2*mu_eff/n)
-        self.c_1 = 2 / ((n + 1.3)**2 + mu_eff)
-        self.c_mu = min(1-self.c_1, self.alpha_mu*((mu_eff - 2 + 1/mu_eff) / ((n+2)**2 + self.alpha_mu*mu_eff/2)))
         self.p_sigma = zeros((n,1))
         self.p_c = zeros((n,1))
         self.weighted_mutation_vector = zeros((n,1))   # weighted average of the last generation of offset vectors
         self.y_w_squared = zeros((n,1))
-
-        self.chiN = n**.5 * (1-1/(4*n)+1/(21*n**2))  # Expected random vector (or something like it)
         self.offspring = None
         self.offset = None
         self.all_offspring = None
         self.wcm = wcm
         self.wcm_old = None
-        self.damps = 1 + 2*np.max([0, sqrt((mu_eff-1)/(n+1))-1]) + self.c_sigma  # TODO: Same as d_sigma
 
-        ## Threshold Convergence ##
+        ### Threshold Convergence ###
+        # Static
         self.diameter = sqrt(sum(square(self.search_space_size)))  # Diameter of the search space
         self.init_threshold = 0.2  # "guess" from
         self.decay_factor = 0.995  # TODO: should be >1 or <1 ????
+        # Dynamic
         self.threshold = self.init_threshold * self.diameter * ((1-0) / 1)**self.decay_factor
 
         ## Active CMA-ES ##
         if active:
             self.c_c = 2 / (n+sqrt(2))**2
 
-        ## Two Point Step Size Adaptation ##
+        ### Two Point Step Size Adaptation ###
+        # Static
         self.alpha = 0.5
         self.tpa_factor = 0.5
-        self.alpha_s = 0
         self.beta_tpa = 0
         self.c_alpha = 0.3
+        # Dynamic
+        self.alpha_s = 0
         self.tpa_result = None
 
-        ## IPOP ##
+        ### IPOP ###
         self.last_pop = None
         self.lambda_orig = self.lambda_large = self.lambda_small = self.lambda_
         self.pop_inc_factor = 2
@@ -162,10 +166,15 @@ class Parameters(BaseParameters):
         self.recent_best_fitnesses = []  # Contains the most recent best fitnesses of the 20 most recent generations
         self.stagnation_list = []  # Contains median fitness of some recent generations (formula: see local_restart())
 
-
         self.max_iter = 100 + 50*(n+3)**2 / sqrt(lambda_)
         self.tolx = 1e-12 * self.sigma
         self.tolupx = 1e3 * self.sigma
+
+
+        '''
+        All parameters below this comment are currently NOT in use by any (CMA-)ES variants
+        that are included in the optimization of ES-structures
+        '''
 
         ### CMSA-ES ###
         self.tau = 1 / sqrt(2*n)
@@ -244,7 +253,7 @@ class Parameters(BaseParameters):
 
         cc, cs, c_1, c_mu, n = self.c_c, self.c_sigma, self.c_1, self.c_mu, self.n
         wcm, wcm_old, mueff, invsqrt_C = self.wcm, self.wcm_old, self.mu_eff, self.sqrt_C
-        lambda_ =self.lambda_
+        lambda_ = self.lambda_
 
         self.p_sigma = (1-cs) * self.p_sigma + \
                        sqrt(cs*(2-cs)*mueff) * dot(invsqrt_C, (wcm - wcm_old) / self.sigma)
@@ -586,7 +595,7 @@ class Parameters(BaseParameters):
 
         return restart_required
 
-
+    # '''
     def local_restart__(self, pop_change='large'):
         if pop_change == 'large':
             self.lambda_large *= self.pop_inc_factor
@@ -608,3 +617,4 @@ class Parameters(BaseParameters):
         self.p_c = zeros((n,1))
         self.weighted_mutation_vector = zeros((n,1))   # weighted average of the last generation of offset vectors
         self.y_w_squared = zeros((n,1))
+    # '''
