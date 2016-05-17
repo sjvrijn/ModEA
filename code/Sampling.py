@@ -148,18 +148,17 @@ class OrthogonalSampling(object):
         """ Implementation of the Gram-Schmidt process for orthonormalizing a set of vectors """
         num_vectors = len(vectors)
         lengths = np.zeros(num_vectors)
+        lengths[0] = norm(vectors[0])
+
         for i in range(1, num_vectors):
-            lengths[i-1] = norm(vectors[i-1])
             for j in range(i):
                 vec_i = vectors[i]
                 vec_j = vectors[j]
                 vectors[i] = vec_i - vec_j * (dot(vec_i.T, vec_j) / lengths[j] ** 2)
-
-        lengths[num_vectors-1] = norm(vectors[num_vectors-1])
+            lengths[i] = norm(vectors[i])
 
         for i, vec in enumerate(vectors):
             # In the rare, but not uncommon cases of this producing 0-vectors, we simply replace it with a random one
-            # norm_vec = norm(vec)
             if lengths[i] == 0:
                 new_vector = self.base_sampler.next()
                 vectors[i] = new_vector / norm(new_vector)
