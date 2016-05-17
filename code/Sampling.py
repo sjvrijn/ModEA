@@ -147,19 +147,24 @@ class OrthogonalSampling(object):
     def __gramSchmidt(self, vectors):
         """ Implementation of the Gram-Schmidt process for orthonormalizing a set of vectors """
         num_vectors = len(vectors)
+        lengths = np.zeros(num_vectors)
         for i in range(1, num_vectors):
+            lengths[i-1] = norm(vectors[i-1])
             for j in range(i):
                 vec_i = vectors[i]
                 vec_j = vectors[j]
-                vectors[i] = vec_i - vec_j * (dot(vec_i.T, vec_j) / norm(vec_j)**2)
+                vectors[i] = vec_i - vec_j * (dot(vec_i.T, vec_j) / lengths[j] ** 2)
+
+        lengths[num_vectors-1] = norm(vectors[num_vectors-1])
 
         for i, vec in enumerate(vectors):
             # In the rare, but not uncommon cases of this producing 0-vectors, we simply replace it with a random one
-            if norm(vec) == 0:
+            # norm_vec = norm(vec)
+            if lengths[i] == 0:
                 new_vector = self.base_sampler.next()
                 vectors[i] = new_vector / norm(new_vector)
             else:
-                vectors[i] = vec / norm(vec)
+                vectors[i] = vec / lengths[i]
 
         return vectors
 
@@ -193,10 +198,10 @@ class MirroredSampling(object):
         mirror_next = self.mirror_next
         self.mirror_next = not mirror_next
 
-        if not mirror_next:
+        if mirror_next:
+            sample = self.last_sample * -1
+        else:
             sample = self.base_sampler.next()
             self.last_sample = sample
-        else:
-            sample = self.last_sample * -1
 
         return sample
