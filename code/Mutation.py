@@ -7,7 +7,7 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 """
 This Module contains a collection of Mutation operators to be used in the ES-Framework
 
-A Mutation operator mutates an Individual's DNA inline, thus returning nothing.
+A Mutation operator mutates an ES_Individual's DNA inline, thus returning nothing.
 """
 
 
@@ -70,7 +70,7 @@ def adaptStepSize(individual):
         Given the current step size for a candidate, randomly determine a new step size offset,
         that can be no greater than maxStepSize - baseStepSize
 
-        :param individual:  The Individual object whose step size should be adapted
+        :param individual:  The ES_Individual object whose step size should be adapted
     """
     # Empirically determined, see paper
     gamma = 0.22
@@ -86,7 +86,7 @@ def x1(individual, param, sampler):
     """
         Mutation 1: x = x + sigma*N(0,I)
 
-        :param individual:  Individual to be mutated
+        :param individual:  ES_Individual to be mutated
         :param param:       Parameters object to store settings
         :param sampler:     Sampler from which the random values should be drawn
     """
@@ -98,7 +98,7 @@ def CMAMutation(individual, param, sampler, threshold_convergence=False):
     """
         CMA mutation: x = x + (sigma * B*D*N(0,I))
 
-        :param individual:              Individual to be mutated
+        :param individual:              ES_Individual to be mutated
         :param param:                   Parameters object to store settings
         :param sampler:                 Sampler from which the random values should be drawn
         :param threshold_convergence:   Boolean: Should threshold convergence be applied. Default: False
@@ -119,7 +119,7 @@ def choleskyCMAMutation(individual, param, sampler):
     """
         Cholesky CMA based mutation
 
-        :param individual:  Individual to be mutated
+        :param individual:  ES_Individual to be mutated
         :param param:       Parameters object to store settings
         :param sampler:     Sampler from which the random values should be drawn
     """
