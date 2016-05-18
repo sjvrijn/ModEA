@@ -261,17 +261,13 @@ class Parameters(BaseParameters):
         self.p_c = (1-cc) * self.p_c + hsig * sqrt(cc*(2-cc)*mueff) * (wcm - wcm_old) / self.sigma
         offset = self.offset[:, :self.mu]
 
-        if not self.active or len(self.all_offspring) < 2*self.mu:
-            # Regular update of C
-            self.C = (1-c_1-c_mu) * self.C \
-                      + c_1 * (outer(self.p_c, self.p_c) + (1.-hsig) * cc*(2-cc) * self.C) \
-                      + c_mu * dot(offset, self.weights*offset.T)
-        else:
-            # Active update of C TODO: separate function?
+        # Regular update of C
+        self.C = (1 - c_1 - c_mu) * self.C \
+                  + c_1 * (outer(self.p_c, self.p_c) + (1-hsig) * cc * (2-cc) * self.C) \
+                  + c_mu * dot(offset, self.weights*offset.T)
+        if self.active and len(self.all_offspring) >= 2*self.mu:  # Active update of C
             offset_bad = self.offset[:, -self.mu:]
-            self.C = (1-c_1-c_mu)*self.C \
-                      + c_1 * (outer(self.p_c, self.p_c) + (1 - hsig) * cc * (2 - cc) * self.C) \
-                      + c_mu * (dot(offset, self.weights*offset.T) - dot(offset_bad, self.weights*offset_bad.T))
+            self.C -= c_mu * dot(offset_bad, self.weights*offset_bad.T)
 
         # Adapt step size sigma
         if self.tpa:
