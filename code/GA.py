@@ -19,7 +19,7 @@ import code.Recombination as Rec
 from bbob import bbobbenchmarks, fgeneric
 from code import allow_parallel, getOpts, getBitString, options, num_options, num_threads, Config
 from code.Algorithms import customizedES, baseAlgorithm
-from code.Individual import GA_Individual
+from code.Individual import GAIndividual
 from code.Parameters import Parameters
 
 
@@ -152,7 +152,7 @@ def GA(ndim, fid, budget=None):
 
     parameters = Parameters(ndim, budget, mu=GA_mu, lambda_=GA_lambda)
     # Initialize the first individual in the population
-    population = [GA_Individual(ndim)]
+    population = [GAIndividual(ndim)]
     population[0].dna = np.array([np.random.randint(len(x[1])) for x in options])
     population[0].fitness = ESFitness(FCE=np.inf)
 

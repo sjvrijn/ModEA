@@ -7,14 +7,14 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 from copy import copy
 import numpy as np
 
-class ES_Individual(object):
+class ESIndividual(object):
     """
         Data holder class for ES individuals.
     """
 
     def __init__(self, n):
         """
-            Create an ES_Individual. Stores the DNA column vector and all individual-specific parameters.
+            Create an ESIndividual. Stores the DNA column vector and all individual-specific parameters.
             Default DNA consists of np.ones((n,1))
 
             :param n: dimensionality of the problem to be solved
@@ -31,13 +31,13 @@ class ES_Individual(object):
 
     def __copy__(self):
         """
-            Return a new ES_Individual object that is a copy of the current object. Can be called using
+            Return a new ESIndividual object that is a copy of the current object. Can be called using
             >>> import copy
-            >>> copy.copy(ES_Individual())
+            >>> copy.copy(ESIndividual())
 
-            :returns:  ES_Individual object with all attributes explicitly copied
+            :returns:  ESIndividual object with all attributes explicitly copied
         """
-        return_copy = ES_Individual(self.n)
+        return_copy = ESIndividual(self.n)
         return_copy.dna = copy(self.dna)
         return_copy.fitness = self.fitness
         return_copy.sigma = self.sigma
@@ -48,14 +48,14 @@ class ES_Individual(object):
         return return_copy
 
 
-class GA_Individual(object):
+class GAIndividual(object):
     """
         Data holder class for GA individuals.
     """
 
     def __init__(self, n):
         """
-            Create a GA_Individual. Stores the DNA column vector and all individual-specific parameters.
+            Create a GAIndividual. Stores the DNA column vector and all individual-specific parameters.
             Default DNA consists of np.ones((n,1))
 
             :param n: dimensionality of the problem to be solved
@@ -84,11 +84,11 @@ class GA_Individual(object):
         """
             Return a new Individual object that is a copy of the current object. Can be called using
             >>> import copy
-            >>> copy.copy(GA_Individual())
+            >>> copy.copy(GAIndividual())
 
             :returns:  Individual object with all attributes explicitly copied
         """
-        return_copy = GA_Individual(self.n)
+        return_copy = GAIndividual(self.n)
         return_copy.dna = copy(self.dna)
         return_copy.fitness = self.fitness
         return_copy.sigma = self.sigma
