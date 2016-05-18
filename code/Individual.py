@@ -7,14 +7,55 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 from copy import copy
 import numpy as np
 
-class Individual(object):
+class ES_Individual(object):
     """
         Data holder class for ES individuals.
     """
 
     def __init__(self, n):
         """
-            Create an Individual. Stores the DNA column vector and all individual-specific parameters.
+            Create an ES_Individual. Stores the DNA column vector and all individual-specific parameters.
+            Default DNA consists of np.ones((n,1))
+
+            :param n: dimensionality of the problem to be solved
+        """
+        self.n = n
+        self.dna = np.ones((n,1))               # Column vector
+        self.fitness = np.inf                   # Default 'unset' value
+
+        self.sigma = 1
+
+        self.last_z = np.zeros((n,1))
+        self.mutation_vector = np.zeros((n,1))
+
+
+    def __copy__(self):
+        """
+            Return a new ES_Individual object that is a copy of the current object. Can be called using
+            >>> import copy
+            >>> copy.copy(ES_Individual())
+
+            :returns:  ES_Individual object with all attributes explicitly copied
+        """
+        return_copy = ES_Individual(self.n)
+        return_copy.dna = copy(self.dna)
+        return_copy.fitness = self.fitness
+        return_copy.sigma = self.sigma
+
+        return_copy.last_z = copy(self.last_z)
+        return_copy.mutation_vector = copy(self.mutation_vector)
+
+        return return_copy
+
+
+class GA_Individual(object):
+    """
+        Data holder class for GA individuals.
+    """
+
+    def __init__(self, n):
+        """
+            Create a GA_Individual. Stores the DNA column vector and all individual-specific parameters.
             Default DNA consists of np.ones((n,1))
 
             :param n: dimensionality of the problem to be solved
@@ -27,6 +68,7 @@ class Individual(object):
         self.initStepSize = 0.2
         self.sigma = 1
 
+        # TODO: Remove these parameters from this class
         self.last_z = np.zeros((n,1))
         self.mutation_vector = np.zeros((n,1))
 
@@ -42,11 +84,11 @@ class Individual(object):
         """
             Return a new Individual object that is a copy of the current object. Can be called using
             >>> import copy
-            >>> copy.copy(Individual())
+            >>> copy.copy(GA_Individual())
 
             :returns:  Individual object with all attributes explicitly copied
         """
-        return_copy = Individual(self.n)
+        return_copy = GA_Individual(self.n)
         return_copy.dna = copy(self.dna)
         return_copy.fitness = self.fitness
         return_copy.sigma = self.sigma
@@ -55,8 +97,5 @@ class Individual(object):
         return_copy.baseStepSize = self.baseStepSize
         return_copy.initStepSize = self.initStepSize
         return_copy.stepSizeOffset = self.stepSizeOffset
-
-        return_copy.last_z = copy(self.last_z)
-        return_copy.mutation_vector = copy(self.mutation_vector)
 
         return return_copy

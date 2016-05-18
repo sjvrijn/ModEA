@@ -12,7 +12,7 @@ from numpy import floor, log, ones
 from numpy.random import randn, random
 import sys
 # Internal classes
-from .Individual import Individual
+from .Individual import ES_Individual
 from .Parameters import Parameters
 from code import allow_parallel, num_threads, Config
 # Internal modules
@@ -35,7 +35,7 @@ def onePlusOneES(n, fitnessFunction, budget):
     """
 
     parameters = Parameters(n, budget, 1, 1)
-    population = [Individual(n)]
+    population = [ES_Individual(n)]
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.onePlusOne
@@ -70,7 +70,7 @@ def CMA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
     """
 
     parameters = Parameters(n, budget, mu, lambda_, elitist=elitist)
-    population = [Individual(n) for _ in range(mu)]
+    population = [ES_Individual(n) for _ in range(mu)]
 
     # Artificial init: in hopes of fixing CMA-ES
     wcm = parameters.wcm
@@ -108,7 +108,7 @@ def onePlusOneCholeskyCMAES(n, fitnessFunction, budget):
     """
 
     parameters = Parameters(n, budget, 1, 1)
-    population = [Individual(n)]
+    population = [ES_Individual(n)]
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.onePlusOne
@@ -141,7 +141,7 @@ def onePlusOneActiveCMAES(n, fitnessFunction, budget):
     """
 
     parameters = Parameters(n, budget, 1, 1)
-    population = [Individual(n)]
+    population = [ES_Individual(n)]
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.onePlusOne
@@ -177,7 +177,7 @@ def CMSA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
     """
 
     parameters = Parameters(n, budget, mu, lambda_, elitist=elitist, weights_option='1/n')
-    population = [Individual(n) for _ in range(mu)]
+    population = [ES_Individual(n) for _ in range(mu)]
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.weighted
@@ -280,13 +280,12 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
     parameter_opts = {'n': n, 'budget': budget, 'mu': mu, 'lambda_': lambda_, 'u_bound': u_bound, 'l_bound': l_bound,
                       'weights_option': opts['weights'], 'active': opts['active'], 'elitist': opts['elitism'],
                       'sequential': opts['sequential'], 'tpa': opts['two-point'], 'local_restart': opts['ipop'],
-                      # 'ipop': opts['ipop'],
                       }
 
     # In case of pairwise selection, sequential evaluation may only stop after 2mu instead of mu individuals
     if opts['sequential'] and opts['selection'] == 'pairwise':
         parameter_opts['seq_cutoff'] = 2*mu
-    population = [Individual(n) for _ in range(mu)]
+    population = [ES_Individual(n) for _ in range(mu)]
 
     # Artificial init: in hopes of fixing CMA-ES
     wcm = (randn(n,1) * (u_bound-l_bound)) + l_bound
@@ -352,8 +351,10 @@ def localRestartAlgorithm(population, fitnessFunction, budget, functions, parame
         if debug:
             print(local_budget, parameter_opts['lambda_'])
 
+        # Every local restart needs its own parameters, so parameter update/mutation must also be linked every time
         parameters = Parameters(**parameter_opts)
         functions['mutateParameters'] = parameters.adaptCovarianceMatrix
+
         # Run the actual algorithm
         used_budget, local_results = baseAlgorithm(population, fitnessFunction, local_budget, functions, parameters,
                                                    parallel=parallel, debug=debug)
@@ -373,7 +374,7 @@ def localRestartAlgorithm(population, fitnessFunction, budget, functions, parame
                 total_results[3] = local_results[3]
 
 
-        # Increasing Population Strategies
+        # Increasing Population Strategies TODO: move these 'over-arching' parameters to a higher level object (???)
         if parameter_opts['local_restart'] == 'IPOP':
             parameter_opts['lambda_'] *= 2
 

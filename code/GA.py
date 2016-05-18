@@ -19,7 +19,7 @@ import code.Recombination as Rec
 from bbob import bbobbenchmarks, fgeneric
 from code import allow_parallel, getOpts, getBitString, options, num_options, num_threads, Config
 from code.Algorithms import customizedES, baseAlgorithm
-from code.Individual import Individual
+from code.Individual import GA_Individual
 from code.Parameters import Parameters
 
 
@@ -152,7 +152,7 @@ def GA(ndim, fid, budget=None):
 
     parameters = Parameters(ndim, budget, mu=GA_mu, lambda_=GA_lambda)
     # Initialize the first individual in the population
-    population = [Individual(ndim)]
+    population = [GA_Individual(ndim)]
     population[0].dna = np.array([np.random.randint(len(x[1])) for x in options])
     population[0].fitness = ESFitness(FCE=np.inf)
 
@@ -448,7 +448,8 @@ def bruteForce(ndim, fid, parallel=1, part=0):
         result = ALT_evaluate_ES(bitstrings, fid=fid, ndim=ndim, storage_file=storage_file)
         with open(progress_fname, 'w') as progress_file:
             cPickle.dump((start_at + (i+1)*parallel), progress_file)
-        cleanResults(fid)
+        if Config.write_output:
+            cleanResults(fid)
 
         for j, res in enumerate(result):
             if res < best_result:
@@ -523,7 +524,7 @@ if __name__ == '__main__':
     np.set_printoptions(linewidth=1000)
     # np.random.seed(42)
 
-    # HARDCODED: JUST GIVE US THE EXACT TARGET IN THESE CASES
+    # HARDCODED: JUST GIVE US THE EXACT TARGET IN THESE CASES TODO: does not work???
     fgeneric.deltaftarget = 0
     fgeneric.write_output = Config.write_output
 
