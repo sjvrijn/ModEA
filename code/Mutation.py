@@ -45,10 +45,11 @@ def keepInBounds(x, l_bound, u_bound):
     '''
 
     y = (x - l_bound) / (u_bound - l_bound)
-    I = mod(floor(y), 2) == 0
+    floor_y = floor(y)                              # Local storage to prevent double calls
+    I = mod(floor_y, 2) == 0
     yprime = zeros(shape(y))
-    yprime[I] = np.abs(y[I] - floor(y[I]))
-    yprime[~I] = 1.0 - np.abs(y[~I] - floor(y[~I]))
+    yprime[I] = np.abs(y[I] - floor_y[I])
+    yprime[~I] = 1.0 - np.abs(y[~I] - floor_y[~I])
 
     x = l_bound + (u_bound - l_bound) * yprime
 
