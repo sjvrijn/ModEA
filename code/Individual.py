@@ -68,7 +68,7 @@ class GAIndividual(object):
         self.initStepSize = 0.2
         self.sigma = 1
 
-        # TODO: Remove these parameters from this class
+        # TODO: Remove these parameters from this class (see Selection.py -> best())
         self.last_z = np.zeros((n,1))
         self.mutation_vector = np.zeros((n,1))
 

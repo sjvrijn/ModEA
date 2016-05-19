@@ -7,12 +7,11 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 """
 This Module contains a collection of Mutation operators to be used in the ES-Framework
 
-A Mutation operator mutates an ESIndividual's DNA inline, thus returning nothing.
+A Mutation operator mutates an Individual's Genotype inline, thus returning nothing.
 """
 
 
-# TODO: Split (CMA-based) mutations into multiple/as many parts as possible.
-# E.g. step size control & CMA
+# TODO: (future work) Split (CMA-based) mutations into multiple/as many parts as possible. E.g. step size control & CMA
 
 import numpy as np
 from numpy import add, bitwise_and, dot, exp, floor, isfinite, mod, newaxis, shape, zeros
@@ -82,8 +81,7 @@ def adaptStepSize(individual):
     individual.stepSizeOffset = min(offset, (individual.maxStepSize - individual.baseStepSize))
 
 
-# TODO: come up with a better name for this mutation function
-def x1(individual, param, sampler):
+def addRandomOffset(individual, param, sampler):
     """
         Mutation 1: x = x + sigma*N(0,I)
 

@@ -145,8 +145,8 @@ class Parameters(BaseParameters):
         ### Threshold Convergence ###
         # Static
         self.diameter = sqrt(sum(square(self.search_space_size)))  # Diameter of the search space
-        self.init_threshold = 0.2  # "guess" from
-        self.decay_factor = 0.995  # TODO: should be >1 or <1 ????
+        self.init_threshold = 0.2  # Guess value, not actually mentioned in paper
+        self.decay_factor = 0.995  # Determines curve of the decay. < 1: 'bulges', > 1: 'hollow'
         # Dynamic
         self.threshold = self.init_threshold * self.diameter * ((1-0) / 1)**self.decay_factor
 
@@ -614,27 +614,3 @@ class Parameters(BaseParameters):
             restart_required = True
 
         return restart_required
-
-    # '''
-    def local_restart__(self, pop_change='large'):
-        if pop_change == 'large':
-            self.lambda_large *= self.pop_inc_factor
-            self.lambda_ = self.lambda_large
-        elif pop_change == 'small':
-            rand_val = np.random.random() ** 2
-            self.lambda_small = floor(self.lambda_orig * (.5 * self.lambda_large/self.lambda_orig)**rand_val)
-            self.lambda_ = int(self.lambda_small)
-
-        self.last_pop = pop_change
-        n = self.n
-        self.C = eye(n)
-        self.B = eye(n)
-        self.D = ones((n,1))
-        self.sqrt_C = dot(self.B, self.D**-1 * self.B.T)
-        self.sigma_mean = self.sigma = 1  # TODO: replace with BIPOP formula
-
-        self.p_sigma = zeros((n,1))
-        self.p_c = zeros((n,1))
-        self.weighted_mutation_vector = zeros((n,1))   # weighted average of the last generation of offset vectors
-        self.y_w_squared = zeros((n,1))
-    # '''

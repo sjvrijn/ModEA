@@ -390,7 +390,6 @@ def localRestartAlgorithm(population, fitnessFunction, budget, functions, parame
                 large_budget = local_budget - small_budget
                 regime = 'large'
             else:
-                # TODO: force *last* restart using large regime
                 if small_budget > large_budget > 0:
                     regime = 'small'
                 else:

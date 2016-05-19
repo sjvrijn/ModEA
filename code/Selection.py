@@ -96,7 +96,7 @@ def roulette(population, new_population, param, force_unique=False):
     norm_inverses = [1/abs(ind.fitness) for ind in new_population]  # We take the absolute just to be sure it works
     norm_inverses /= sum(norm_inverses)
 
-    # Create a discrete sampler using the PageRank values as probabilities
+    # Create a discrete sampler using the normalized 1/fitness values as probabilities
     roulette_sampler = stats.rv_discrete(name='roulette', values=(list(range(len(new_population))), norm_inverses))
 
     if force_unique:

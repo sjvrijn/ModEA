@@ -148,7 +148,6 @@ def makeGraphsPerAlgorithm(sigmas, fitnesses, alg_names, fit_names, suffix='', s
     fig.savefig('../results_per_algorithm{}.{}'.format(suffix, extension))
 
 
-#TODO: make length of results-arrays equal for all algorithms. that is extend/lengthen by num_evals/generation
 def makeGraphsPerFitness(sigmas, fitnesses, alg_names, fit_names, suffix='', save_pdf=False):
 
     if save_pdf:
