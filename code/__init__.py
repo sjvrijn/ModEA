@@ -20,17 +20,18 @@ except NotImplementedError:
 # The following list contains all possible options from which the Evolving ES can choose.
 # To give this list a 'constant' property, it is defined as a tuple (i.e. immutable)
 options = (
-    ('active',       (False, True)),
-    ('elitism',      (False, True)),
-    ('mirrored',     (False, True)),
-    ('orthogonal',   (False, True)),
-    ('sequential',   (False, True)),
-    ('threshold',    (False, True)),
-    ('two-point',    (False, True)),
-    ('selection',    (None, 'pairwise')),
-    ('weights',      (None, '1/n')),
-    ('base-sampler', (None, 'quasi-sobol', 'quasi-halton')),
-    ('ipop',         (None, 'IPOP',        'BIPOP')),
+    #'Name',         (Tuple, of, options),                  Number of associated parameters
+    ('active',       (False, True),                         0),
+    ('elitism',      (False, True),                         0),
+    ('mirrored',     (False, True),                         0),
+    ('orthogonal',   (False, True),                         0),
+    ('sequential',   (False, True),                         0),
+    ('threshold',    (False, True),                         2),
+    ('two-point',    (False, True),                         4),
+    ('selection',    (None, 'pairwise'),                    0),
+    ('weights',      (None, '1/n'),                         0),
+    ('base-sampler', (None, 'quasi-sobol', 'quasi-halton'), 0),
+    ('ipop',         (None, 'IPOP',        'BIPOP'),        1),
 )
 
 num_options = [len(opt[1]) for opt in options]
@@ -55,7 +56,7 @@ def getBitString(opts):
     """
     bitstring = []
     for i, option in enumerate(options):
-        name, choices = option
+        name, choices, _ = option
         if name in opts:
             if opts[name] in choices:
                 bitstring.append(choices.index(opts[name]))
@@ -76,9 +77,9 @@ def getFullOpts(opts):
         if name not in options:
             del opts[name]
         elif choice not in options[name]:
-            opts[name] = options[choice][0]
+            opts[name] = options[name][0]
 
-    for name, choices in options:
+    for name, choices, _ in options:
         if name not in opts:
             opts[name] = choices[0]
 
