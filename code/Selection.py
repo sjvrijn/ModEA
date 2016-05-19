@@ -33,7 +33,7 @@ def best(population, new_population, param):
     new_population.sort(key=getFitness)  # sort descending
 
     # TODO: REMOVE THESE OPERATIONS FROM THIS FUNCTION, UNEXPECTED/UNDOCUMENTED FUNCTIONALITY
-    offspring = np.column_stack((ind.dna for ind in new_population))  # Update to use the actual mutations
+    offspring = np.column_stack((ind.genotype for ind in new_population))  # Update to use the actual mutations
     offset = np.column_stack((ind.mutation_vector for ind in new_population))
 
     param.all_offspring = offspring
@@ -88,7 +88,7 @@ def roulette(population, new_population, param, force_unique=False):
         new_population.extend(population)
 
     new_population.sort(key=getFitness)  # sort descending
-    offspring = np.column_stack((ind.dna for ind in new_population))
+    offspring = np.column_stack((ind.genotype for ind in new_population))
     param.all_offspring = offspring
 
     # TODO: warning with negative fitness values?

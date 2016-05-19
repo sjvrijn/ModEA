@@ -92,7 +92,7 @@ def x1(individual, param, sampler):
         :param sampler:     Sampler from which the random values should be drawn
     """
 
-    individual.dna += param.sigma * sampler.next()
+    individual.genotype += param.sigma * sampler.next()
 
 
 def CMAMutation(individual, param, sampler, threshold_convergence=False):
@@ -113,7 +113,7 @@ def CMAMutation(individual, param, sampler, threshold_convergence=False):
     individual.mutation_vector = dot(param.B, (param.D * individual.last_z))  # y_k in cmatutorial.pdf)
     mutation_vector = individual.mutation_vector * param.sigma
 
-    individual.dna = keepInBounds(add(individual.dna, mutation_vector), param.l_bound, param.u_bound)
+    individual.genotype = keepInBounds(add(individual.genotype, mutation_vector), param.l_bound, param.u_bound)
 
 
 def choleskyCMAMutation(individual, param, sampler):
@@ -128,7 +128,7 @@ def choleskyCMAMutation(individual, param, sampler):
     param.last_z = sampler.next()
     mutation_vector = np.dot(param.A, param.last_z.T)
 
-    individual.dna += param.sigma * mutation_vector
+    individual.genotype += param.sigma * mutation_vector
 
 
 def _scaleWithThreshold(mutation_vector, threshold):
@@ -182,7 +182,7 @@ def _getXi():
 ### GA MUTATIONS ###
 def mutateBitstring(individual):
     """ Extremely simple 1/n bit-flip mutation """
-    bitstring = individual.dna
+    bitstring = individual.genotype
     n = len(bitstring)
     p = 1/n
     for i in range(n):
@@ -196,8 +196,8 @@ def mutateIntList(individual, _, num_options):
     adaptStepSize(individual)
     p = individual.baseStepSize + individual.stepSizeOffset
 
-    int_list = individual.dna
-    for i in range(len(individual.dna)):
+    int_list = individual.genotype
+    for i in range(len(individual.genotype)):
         if np.random.random() < p:
             # -1 as random_integers is [1, val], -1 to simulate leaving out the current value
             new_int = np.random.random_integers(num_options[i]-1)-1

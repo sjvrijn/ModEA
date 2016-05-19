@@ -75,7 +75,7 @@ def CMA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
     # Artificial init: in hopes of fixing CMA-ES
     wcm = parameters.wcm
     for individual in population:
-        individual.dna = wcm
+        individual.genotype = wcm
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.weighted
@@ -291,7 +291,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None):
     wcm = (randn(n,1) * (u_bound-l_bound)) + l_bound
     parameter_opts['wcm'] = wcm
     for individual in population:
-        individual.dna = copy(wcm)
+        individual.genotype = copy(wcm)
 
     parameters = Parameters(**parameter_opts)
 
@@ -413,7 +413,7 @@ def localRestartAlgorithm(population, fitnessFunction, budget, functions, parame
 # Helper function
 def mutateAndEvaluate(ind, mutate, fitFunc):
     mutate(ind)
-    ind.fitness = fitFunc(ind.dna)[0]
+    ind.fitness = fitFunc(ind.genotype)[0]
     return ind
 
 def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, parallel=False, debug=False):
@@ -488,7 +488,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
                 genes = []
                 for ind in new_population:
                     mutate(ind, parameters)
-                    genes.append(ind.dna)
+                    genes.append(ind.genotype)
 
                 fitnesses = fitnessFunction(genes)
 
@@ -515,8 +515,8 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
             for i, individual in enumerate(new_population):
                 mutate(individual, parameters)  # Mutation
                 # Evaluation
-                individual.fitness = fitnessFunction(individual.dna)[0]  # fitnessFunction returns as a list, as it allows
-                used_budget += 1                                         # simultaneous evaluation for multiple individuals
+                individual.fitness = fitnessFunction(individual.genotype)[0]  # fitnessFunction returns a list, to allow
+                used_budget += 1                                              # evaluation of >1 individuals in 1 call
 
                 # Sequential Evaluation
                 if sequential_evaluation:  # Sequential evaluation: we interrupt once a better individual has been found

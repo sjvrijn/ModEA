@@ -18,7 +18,7 @@ from random import choice
 
 
 def onePointCrossover(ind_a, ind_b):
-    crossover_point = np.random.randint(1, len(ind_a.dna) - 2)  # -1 as randint is inclusive, -1 to not choose the last element
+    crossover_point = np.random.randint(1, len(ind_a.genotype) - 2)  # -1 as randint is inclusive, -1 to not choose the last element
     ind_a[:crossover_point], ind_b[:crossover_point] = ind_b[:crossover_point], ind_a[:crossover_point]
     return ind_a, ind_b
 
@@ -60,12 +60,12 @@ def weighted(pop, param):
 
     param.wcm_old = param.wcm
 
-    offspring = np.column_stack((ind.dna for ind in pop))
+    offspring = np.column_stack((ind.genotype for ind in pop))
     param.offspring = offspring
     param.wcm = dot(offspring, param.weights)
 
     new_ind = copy(pop[0])
-    new_ind.dna = param.wcm
+    new_ind.genotype = param.wcm
     new_population = [new_ind]
     for _ in range(param.lambda_-1):
         new_population.append(copy(new_ind))

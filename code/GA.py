@@ -153,7 +153,7 @@ def GA(ndim, fid, budget=None):
     parameters = Parameters(ndim, budget, mu=GA_mu, lambda_=GA_lambda)
     # Initialize the first individual in the population
     population = [GAIndividual(ndim)]
-    population[0].dna = np.array([np.random.randint(len(x[1])) for x in options])
+    population[0].genotype = np.array([np.random.randint(len(x[1])) for x in options])
     population[0].fitness = ESFitness(FCE=np.inf)
 
     while len(population) < GA_mu:
@@ -480,7 +480,7 @@ def runGA(ndim=10, fid=1):
     print()
     print("Best Individual:     {}\n"
           "        Fitness:     {}\n"
-          "Fitnesses over time: {}".format(best.dna, best.fitness, fitness))
+          "Fitnesses over time: {}".format(best.genotype, best.fitness, fitness))
     z = y - x
     days = z.days
     hours = z.seconds//3600
@@ -492,7 +492,7 @@ def runGA(ndim=10, fid=1):
 
     if Config.write_output:
         np.savez("{}final_GA_results_{}dim_f{}".format(non_bbob_datapath, ndim, fid),
-                 sigma=sigmas, best_fitness=fitness, best_result=best.dna,
+                 sigma=sigmas, best_fitness=fitness, best_result=best.genotype,
                  generation_sizes=gen_sizes, time_spent=z)
 
 
@@ -506,7 +506,7 @@ def runExperiments():
 
             z = y - x
             np.savez("{}final_GA_results_{}dim_f{}".format(non_bbob_datapath, ndim, fid),
-                     sigma=sigmas, best_fitness=fitness, best_result=best.dna,
+                     sigma=sigmas, best_fitness=fitness, best_result=best.genotype,
                      generation_sizes=gen_sizes, time_spent=z)
 
 

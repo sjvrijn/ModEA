@@ -20,7 +20,7 @@ class ESIndividual(object):
             :param n: dimensionality of the problem to be solved
         """
         self.n = n
-        self.dna = np.ones((n,1))               # Column vector
+        self.genotype = np.ones((n, 1))               # Column vector
         self.fitness = np.inf                   # Default 'unset' value
 
         self.sigma = 1
@@ -38,7 +38,7 @@ class ESIndividual(object):
             :returns:  ESIndividual object with all attributes explicitly copied
         """
         return_copy = ESIndividual(self.n)
-        return_copy.dna = copy(self.dna)
+        return_copy.genotype = copy(self.genotype)
         return_copy.fitness = self.fitness
         return_copy.sigma = self.sigma
 
@@ -61,7 +61,7 @@ class GAIndividual(object):
             :param n: dimensionality of the problem to be solved
         """
         self.n = n
-        self.dna = np.ones((n,1))               # Column vector
+        self.genotype = np.ones((n, 1))               # Column vector
         self.fitness = np.inf                   # Default 'unset' value
 
         self.maxStepSize = 0.5
@@ -89,7 +89,7 @@ class GAIndividual(object):
             :returns:  Individual object with all attributes explicitly copied
         """
         return_copy = GAIndividual(self.n)
-        return_copy.dna = copy(self.dna)
+        return_copy.genotype = copy(self.genotype)
         return_copy.fitness = self.fitness
         return_copy.sigma = self.sigma
 
