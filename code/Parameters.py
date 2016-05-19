@@ -43,7 +43,8 @@ class Parameters(BaseParameters):
 
     def __init__(self, n, budget, sigma=None,
                  mu=None, lambda_=None, weights_option=None, l_bound=None, u_bound=None, seq_cutoff=None, wcm=None,
-                 active=False, elitist=False, local_restart=None, sequential=False, tpa=False):
+                 active=False, elitist=False, local_restart=None, sequential=False, tpa=False,
+                 values=None):
         """
             Setup the set of parameters
 
@@ -60,7 +61,15 @@ class Parameters(BaseParameters):
             :param elitist:         Boolean switch on using a (mu, l) strategy rather than (mu + l). Default: False
             :param sequential:      Boolean switch on using sequential evaluation. Default: False
             :param tpa:             Boolean switch on using two-point step-size adaptation. Default: False
+            :param values:          Dictionary of initial values for allowed parameters
         """
+
+        # The names of all parameters that may be changed on initialization. This is done dynamically in __init_values()
+        self.initializable_parameters = ('alpha_mu', 'd_sigma', 'c_sigma', 'c_c', 'c_1', 'c_mu',  # CMA-ES
+                                         'init_threshold', 'decay_factor',  # Threshold convergence
+                                         'tpa_factor', 'beta_tpa', 'c_alpha', 'alpha',  # Two-Point Adaptation
+                                         'pop_inc_factor',  # (B)IPOP
+                                         )
 
         if lambda_ is None:
             lambda_ = int(4 + floor(3 * log(n)))
@@ -198,6 +207,21 @@ class Parameters(BaseParameters):
         self.c_act = 2/(n+2)
         self.c_cov_pos = 2/(n**2 + 6)
         self.c_cov_neg = 0.4/(n**1.6 + 1)
+
+        if values:  # Now we've had the default values, we change all values that were passed along
+            self.__init_values(values)
+
+
+    def __init_values(self, values):
+        """
+            Dynamically initialize parameters in this parameter object based on the given dictionary
+
+            :param values:  Dictionary in the form of {'name': value} of initial values for allowed parameters.
+                            Any values for names not in Parameters.initializable_parameters are ignored
+        """
+        for name, value in list(values.items()):
+            if name in self.initializable_parameters:
+                setattr(self, name, value)
 
 
     def oneFifthRule(self, t):
