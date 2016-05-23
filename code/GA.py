@@ -245,7 +245,19 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
 
 
 def evaluate_ES(bitstring, fid, ndim, budget=None, storage_file=None, opts=None):
-    """ Single function to run all desired combinations of algorithms * fitness functions """
+    """
+        Single function to run all desired combinations of algorithms * fitness functions
+
+        :param bitstring:       The bitstring to be translated into customizedES-ready options. Must manually be set to
+                                None if options are given as opts
+        :param fid:             The BBOB function ID to use in the evaluation
+        :param ndim:            The dimensionality to test the BBOB function with
+        :param budget:          The allowed number of BBOB function evaluations
+        :param storage_file:    Filename to use when storing fitness information
+        :param opts:            Dictionary of options for customizedES. If omitted, the bitstring will be translated
+                                into this options automatically
+        :returns:               A list containing one instance of ESFitness representing the fitness of the defined ES
+    """
 
     # Set parameters
     if budget is None:
@@ -256,6 +268,7 @@ def evaluate_ES(bitstring, fid, ndim, budget=None, storage_file=None, opts=None)
     bbob_opts['algid'] = bitstring  # Save the bitstring of the ES we are currently evaluating
     f = fgeneric.LoggingFunction(datapath, **bbob_opts)
 
+    # If a dict of options is given, use that. Otherwise, translate the genotype to customizedES-ready options
     if opts:
         print(getBitString(opts))
     else:

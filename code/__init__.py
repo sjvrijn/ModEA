@@ -34,6 +34,7 @@ options = (
     ('ipop',         (None, 'IPOP',        'BIPOP'),        1),
 )
 
+# TODO: Rename, this is not a single number!
 num_options = [len(opt[1]) for opt in options]
 
 def getOpts(bitstring):
