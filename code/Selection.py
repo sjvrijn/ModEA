@@ -15,7 +15,24 @@ that are chosen to be the best of this generation.
 """
 
 def getFitness(individual):
+    """ Helper function that can be used as key when sorting """
     return individual.fitness
+
+
+def bestGA(population, new_population, param):
+    """
+        Given the population, return the (mu) best
+
+        :param population:      List of :py:class:code.GAIndividual objects containing the previous generation
+        :param new_population:  List of :py:class:code.GAIndividual objects containing the new generation
+        :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
+        :returns:               A slice of the sorted new_population list.
+    """
+    if param.elitist:
+        new_population.extend(population)
+    new_population.sort(key=getFitness)  # sort ascending
+
+    return new_population[:param.mu]
 
 
 def best(population, new_population, param):
@@ -30,12 +47,11 @@ def best(population, new_population, param):
     if param.elitist:
         new_population.extend(population)
 
-    new_population.sort(key=getFitness)  # sort descending
+    new_population.sort(key=getFitness)  # sort ascending
 
     # TODO: REMOVE THESE OPERATIONS FROM THIS FUNCTION, UNEXPECTED/UNDOCUMENTED FUNCTIONALITY
     offspring = np.column_stack((ind.genotype for ind in new_population))  # Update to use the actual mutations
     offset = np.column_stack((ind.mutation_vector for ind in new_population))
-
     param.all_offspring = offspring
     param.offset = offset
 

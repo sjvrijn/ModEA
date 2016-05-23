@@ -61,16 +61,12 @@ class GAIndividual(object):
             :param n: dimensionality of the problem to be solved
         """
         self.n = n
-        self.genotype = np.ones((n, 1))               # Column vector
+        self.genotype = np.ones((n, 1))         # Column vector
         self.fitness = np.inf                   # Default 'unset' value
 
         self.maxStepSize = 0.5
         self.initStepSize = 0.2
         self.sigma = 1
-
-        # TODO: Remove these parameters from this class (see Selection.py -> best())
-        self.last_z = np.zeros((n,1))
-        self.mutation_vector = np.zeros((n,1))
 
         if n > 5:
             self.baseStepSize = 1 / n

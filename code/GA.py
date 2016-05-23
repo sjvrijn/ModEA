@@ -37,6 +37,7 @@ fitness_functions = {'sphere': free_function_ids[0], 'elipsoid': free_function_i
                      'rastrigin': free_function_ids[2], }
 
 
+# TODO: Move this to a 'utils'-like file?
 @total_ordering
 class ESFitness(object):
     """
@@ -162,7 +163,7 @@ def GA(ndim, fid, budget=None):
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.random
     mutate = partial(Mut.mutateIntList, num_options=num_options)
-    best = Sel.best
+    best = Sel.bestGA
     def select(pop, new_pop, _, params):
         return best(pop, new_pop, params)
     def mutateParameters(t):
