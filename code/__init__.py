@@ -36,7 +36,7 @@ options = (
 
 # The names of all parameters that may be changed on initialization. See Parameters.__init_values()
 initializable_parameters = (
-    'alpha_mu', 'd_sigma', 'c_sigma', 'c_c', 'c_1', 'c_mu',  # CMA-ES
+    'alpha_mu', 'c_sigma', 'damps', 'c_c', 'c_1', 'c_mu',    # CMA-ES
     'init_threshold', 'decay_factor',                        # Threshold convergence
     'tpa_factor', 'beta_tpa', 'c_alpha', 'alpha',            # Two-Point Adaptation
     'pop_inc_factor',                                        # (B)IPOP
@@ -54,7 +54,7 @@ def getVals(init_values):
         :return:            Dictionary containing name-indexed initial parameter values
     """
 
-    values = {initializable_parameters[i]: val for i, val in enumerate(init_values)}
+    values = {initializable_parameters[i]: val for i, val in enumerate(init_values) if val is not None}
     return values
 
 def getOpts(bitstring):
