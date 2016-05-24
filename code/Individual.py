@@ -61,15 +61,15 @@ class GAIndividual(object):
             :param n: dimensionality of the problem to be solved
         """
         self.n = n
-        self.genotype = np.ones((n, 1))         # Column vector
-        self.fitness = np.inf                   # Default 'unset' value
+        self.genotype = [np.ones((n[0], 1)), np.ones((n[1], 1))]    # [Integer part, Real part] (column vectors)
+        self.fitness = np.inf                                       # Default 'unset' value
 
         self.maxStepSize = 0.5
         self.initStepSize = 0.2
         self.sigma = 1
 
-        if n > 5:
-            self.baseStepSize = 1 / n
+        if np.sum(n) > 5:
+            self.baseStepSize = 1 / np.sum(n)
         else:
             self.baseStepSize = 0.175  # Random guess value, may need to be updated
         # The actual stepSize is the base + offset, so final starting stepSize = initStepSize

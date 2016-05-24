@@ -17,7 +17,7 @@ import code.Mutation as Mut
 import code.Selection as Sel
 import code.Recombination as Rec
 from bbob import bbobbenchmarks, fgeneric
-from code import allow_parallel, getOpts, getBitString, options, num_options, num_threads, Config
+from code import allow_parallel, getBitString, getOpts, getVals, options, num_options, num_threads, Config
 from code.Algorithms import customizedES, baseAlgorithm
 from code.Individual import GAIndividual
 from code.Parameters import Parameters
@@ -153,8 +153,11 @@ def GA(ndim, fid, budget=None):
 
     parameters = Parameters(ndim, budget, mu=GA_mu, lambda_=GA_lambda)
     # Initialize the first individual in the population
-    population = [GAIndividual(ndim)]
-    population[0].genotype = np.array([np.random.randint(len(x[1])) for x in options])
+    population = [GAIndividual([ndim, ndim])]
+    population[0].genotype[0] = np.array([np.random.randint(len(x[1])) for x in options])
+    # TODO FIXME: dumb, brute force, hardcoded defaults for testing purposes
+    population[0].genotype[1] = np.array([None, None, None, None, None, None, None, None, None, None, None, None, None])
+    # population[0].genotype[1] = np.array([2, None, None, None, None, None, 0.2, 0.995, 0.5, 0, 0.3, 0.5, 2])
     population[0].fitness = ESFitness(FCE=np.inf)
 
     while len(population) < GA_mu:
@@ -202,7 +205,6 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
 
         function = partial(fetchResults, fid, ndim=ndim, budget=budget, opts=opts)
         arguments = range(num_runs)
-        run_data = None  # TODO: Any reason this is defined 'so far' above its use?
 
         # mpi4py
         comm = MPI.COMM_SELF.Spawn(sys.executable, args=['code/MPI_slave.py'], maxprocs=num_runs)  # Init
@@ -211,11 +213,12 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
         comms.append(comm)
 
     for comm in comms:
-        comm.Barrier()
+        comm.Barrier()  # Wait for everything to finish...
 
     for i, comm in enumerate(comms):
-        # Wait for everything to finish...
+        run_data = None                                  # Declaration of the variable to use for catching the data
         run_data = comm.gather(run_data, root=MPI.ROOT)  # And gather everything up
+        # run_data = comm.gather(root=MPI.ROOT)  # And gather everything up
         comm.Disconnect()
 
         targets, results = zip(*run_data)
@@ -227,6 +230,7 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
             min_length = min(fit_lengths)
             fitnesses = [x[:min_length] for x in fitnesses]
 
+        # TODO: replace by use of ESFitness objects
         # Subtract the target fitness value from all returned fitnesses to only get the absolute distance
         fitnesses = np.subtract(np.array(fitnesses), np.array(targets).T[:,np.newaxis])
         # From all different runs, retrieve the median fitness to be used as fitness for this ES
@@ -244,11 +248,11 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
     return medians
 
 
-def evaluate_ES(bitstring, fid, ndim, budget=None, storage_file=None, opts=None, values=None):
+def evaluate_ES(es_genotype, fid, ndim, budget=None, storage_file=None, opts=None, values=None):
     """
         Single function to run all desired combinations of algorithms * fitness functions
 
-        :param bitstring:       The bitstring to be translated into customizedES-ready options. Must manually be set to
+        :param es_genotype:     The genotype to be translated into customizedES-ready options. Must manually be set to
                                 None if options are given as opts
         :param fid:             The BBOB function ID to use in the evaluation
         :param ndim:            The dimensionality to test the BBOB function with
@@ -266,15 +270,16 @@ def evaluate_ES(bitstring, fid, ndim, budget=None, storage_file=None, opts=None,
     num_runs = Config.ES_num_runs
 
     # Setup the bbob logger
-    bbob_opts['algid'] = bitstring  # Save the bitstring of the ES we are currently evaluating
+    bbob_opts['algid'] = es_genotype  # Save the bitstring of the ES we are currently evaluating
     f = fgeneric.LoggingFunction(datapath, **bbob_opts)
 
     # If a dict of options is given, use that. Otherwise, translate the genotype to customizedES-ready options
     if opts:
         print(getBitString(opts))
     else:
-        print(bitstring, end=' ')
-        opts = getOpts(bitstring)
+        print(es_genotype[0], end=' ')
+        opts = getOpts(es_genotype[0])
+        values = getVals(es_genotype[1])
 
     # define local function of the algorithm to be used, fixing certain parameters
     algorithm = partial(customizedES, opts=opts, values=values)
