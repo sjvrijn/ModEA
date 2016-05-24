@@ -97,25 +97,25 @@ bests = {2: {3: [0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0],
          }
 
 
-def parallel_bbob(dim, fID, budget, opts, datapath, bbob_opts):
+def parallel_bbob(dim, fID, budget, opts, datapath, bbob_opts, values=None):
     """
     Parallel bbob experiment wrapper for ES algorithm test
     """
-    
+
     # Set different seed for different processes
     T_0 = time()
     np.random.seed(mod(int(T_0)+os.getpid(), 1000))
-    
+
     f = fgeneric.LoggingFunction(datapath, **bbob_opts)
-    
+
     # small dimensions first, for CPU reasons
     for iinstance in range(1, 16):
         f.setfun(*bn.instantiate(fID, iinstance=iinstance))
 
-        customizedES(dim, f.evalfun, budget, opts=opts)
+        customizedES(dim, f.evalfun, budget, opts=opts, values=values)
 
         f.finalizerun()
-            
+
     with open('./flag_stepsize_acc', 'a') as out:
         out.write('function ' + str(fID) + ' is done.\n')
 

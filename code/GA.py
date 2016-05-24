@@ -244,7 +244,7 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
     return medians
 
 
-def evaluate_ES(bitstring, fid, ndim, budget=None, storage_file=None, opts=None):
+def evaluate_ES(bitstring, fid, ndim, budget=None, storage_file=None, opts=None, values=None):
     """
         Single function to run all desired combinations of algorithms * fitness functions
 
@@ -256,6 +256,7 @@ def evaluate_ES(bitstring, fid, ndim, budget=None, storage_file=None, opts=None)
         :param storage_file:    Filename to use when storing fitness information
         :param opts:            Dictionary of options for customizedES. If omitted, the bitstring will be translated
                                 into this options automatically
+        :param values:          Dictionary of initial values of parameters for the ES to be evaluated
         :returns:               A list containing one instance of ESFitness representing the fitness of the defined ES
     """
 
@@ -276,28 +277,27 @@ def evaluate_ES(bitstring, fid, ndim, budget=None, storage_file=None, opts=None)
         opts = getOpts(bitstring)
 
     # define local function of the algorithm to be used, fixing certain parameters
-    algorithm = partial(customizedES, opts=opts)
+    algorithm = partial(customizedES, opts=opts, values=values)
 
     # Run the actual ES for <num_runs> times
     _, fitnesses = runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, parallel=Config.ES_parallel)
 
-    '''
-    min_fitnesses = np.min(fitnesses, axis=1)
-    if storage_file:
-        with open(storage_file, 'a') as f:
-            f.write("{}\t{}\n".format(bitstring.tolist(), min_fitnesses.tolist()))
-    '''
+    # TODO: re-enable this (or something similar)
+    # min_fitnesses = np.min(fitnesses, axis=1)
+    # if storage_file:
+    #     with open(storage_file, 'a') as f:
+    #         f.write("{}\t{}\n".format(bitstring.tolist(), min_fitnesses.tolist()))
 
     fitness = ESFitness(fitnesses)
     print('\t', fitness)
     return [fitness]
 
-def fetchResults(fid, instance, ndim, budget, opts):
+def fetchResults(fid, instance, ndim, budget, opts, values=None):
     """ Small overhead-function to enable multi-processing """
     f = fgeneric.LoggingFunction(datapath, **bbob_opts)
     f_target = f.setfun(*bbobbenchmarks.instantiate(fid, iinstance=instance)).ftarget
     # Run the ES defined by opts once with the given budget
-    results = customizedES(ndim, f.evalfun, budget, opts=opts)
+    results = customizedES(ndim, f.evalfun, budget, opts=opts, values=values)
     return f_target, results
 
 
