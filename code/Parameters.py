@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
+from code import initializable_parameters
 import numpy as np
 from numpy import abs, all, any, append, arange, ceil, diag, dot, exp, eye, floor, isfinite, isinf, isreal,\
                   ones, log, max, mean, median, mod, newaxis, outer, real, sqrt, square, sum, triu, zeros
@@ -63,13 +64,6 @@ class Parameters(BaseParameters):
             :param tpa:             Boolean switch on using two-point step-size adaptation. Default: False
             :param values:          Dictionary of initial values for allowed parameters
         """
-
-        # The names of all parameters that may be changed on initialization. This is done dynamically in __init_values()
-        self.initializable_parameters = ('alpha_mu', 'd_sigma', 'c_sigma', 'c_c', 'c_1', 'c_mu',  # CMA-ES
-                                         'init_threshold', 'decay_factor',  # Threshold convergence
-                                         'tpa_factor', 'beta_tpa', 'c_alpha', 'alpha',  # Two-Point Adaptation
-                                         'pop_inc_factor',  # (B)IPOP
-                                         )
 
         if lambda_ is None:
             lambda_ = int(4 + floor(3 * log(n)))
@@ -220,7 +214,7 @@ class Parameters(BaseParameters):
                             Any values for names not in Parameters.initializable_parameters are ignored
         """
         for name, value in list(values.items()):
-            if name in self.initializable_parameters:
+            if name in initializable_parameters:
                 setattr(self, name, value)
 
 
