@@ -34,14 +34,34 @@ options = (
     ('ipop',         (None, 'IPOP',        'BIPOP'),        1),
 )
 
+# The names of all parameters that may be changed on initialization. See Parameters.__init_values()
+initializable_parameters = (
+    'alpha_mu', 'd_sigma', 'c_sigma', 'c_c', 'c_1', 'c_mu',  # CMA-ES
+    'init_threshold', 'decay_factor',                        # Threshold convergence
+    'tpa_factor', 'beta_tpa', 'c_alpha', 'alpha',            # Two-Point Adaptation
+    'pop_inc_factor',                                        # (B)IPOP
+)
+
+
 # TODO: Rename, this is not a single number!
 num_options = [len(opt[1]) for opt in options]
+
+def getVals(init_values):
+    """
+        Transformation from real numbered vector to values dictionary
+
+        :param init_values: List/array of real values that serve as initial values for parameters
+        :return:            Dictionary containing name-indexed initial parameter values
+    """
+
+    values = {initializable_parameters[i]: val for i, val in enumerate(init_values)}
+    return values
 
 def getOpts(bitstring):
     """
         Transformation from integer 'bitstring' to options dictionary
 
-        :param bitstring:   A list/array of integers that serve as index for the options tuple
+        :param bitstring:   List/array of integers that serve as index for the options tuple
         :return:            Dictionary with all option names and the chosen option
     """
 
