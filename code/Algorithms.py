@@ -12,7 +12,7 @@ from numpy import floor, log, ones
 from numpy.random import randn, random
 import sys
 # Internal classes
-from .Individual import ESIndividual
+from .Individual import FloatIndividual
 from .Parameters import Parameters
 from code import allow_parallel, num_threads, Config
 # Internal modules
@@ -35,7 +35,7 @@ def onePlusOneES(n, fitnessFunction, budget):
     """
 
     parameters = Parameters(n, budget, 1, 1)
-    population = [ESIndividual(n)]
+    population = [FloatIndividual(n)]
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.onePlusOne
@@ -70,7 +70,7 @@ def CMA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
     """
 
     parameters = Parameters(n, budget, mu, lambda_, elitist=elitist)
-    population = [ESIndividual(n) for _ in range(mu)]
+    population = [FloatIndividual(n) for _ in range(mu)]
 
     # Artificial init: in hopes of fixing CMA-ES
     wcm = parameters.wcm
@@ -108,7 +108,7 @@ def onePlusOneCholeskyCMAES(n, fitnessFunction, budget):
     """
 
     parameters = Parameters(n, budget, 1, 1)
-    population = [ESIndividual(n)]
+    population = [FloatIndividual(n)]
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.onePlusOne
@@ -141,7 +141,7 @@ def onePlusOneActiveCMAES(n, fitnessFunction, budget):
     """
 
     parameters = Parameters(n, budget, 1, 1)
-    population = [ESIndividual(n)]
+    population = [FloatIndividual(n)]
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.onePlusOne
@@ -177,7 +177,7 @@ def CMSA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
     """
 
     parameters = Parameters(n, budget, mu, lambda_, elitist=elitist, weights_option='1/n')
-    population = [ESIndividual(n) for _ in range(mu)]
+    population = [FloatIndividual(n) for _ in range(mu)]
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.weighted
@@ -287,7 +287,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None, v
     # In case of pairwise selection, sequential evaluation may only stop after 2mu instead of mu individuals
     if opts['sequential'] and opts['selection'] == 'pairwise':
         parameter_opts['seq_cutoff'] = 2*mu
-    population = [ESIndividual(n) for _ in range(mu)]
+    population = [FloatIndividual(n) for _ in range(mu)]
 
     # Init all individuals of the first population at the same random point in the search space
     wcm = (randn(n,1) * (u_bound-l_bound)) + l_bound

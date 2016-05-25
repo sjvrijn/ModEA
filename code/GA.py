@@ -19,7 +19,7 @@ import code.Recombination as Rec
 from bbob import bbobbenchmarks, fgeneric
 from code import allow_parallel, getBitString, getOpts, getVals, options, num_options, num_threads, Config
 from code.Algorithms import customizedES, baseAlgorithm
-from code.Individual import GAIndividual
+from code.Individual import MixedIntIndividual
 from code.Parameters import Parameters
 
 
@@ -153,7 +153,7 @@ def GA(ndim, fid, budget=None):
 
     parameters = Parameters(ndim, budget, mu=GA_mu, lambda_=GA_lambda)
     # Initialize the first individual in the population
-    population = [GAIndividual([ndim, ndim])]
+    population = [MixedIntIndividual([ndim, ndim])]
     population[0].genotype[0] = np.array([np.random.randint(len(x[1])) for x in options])
     # TODO FIXME: dumb, brute force, hardcoded defaults for testing purposes
     population[0].genotype[1] = np.array([None, None, None, None, None, None, None, None, None, None, None, None, None])

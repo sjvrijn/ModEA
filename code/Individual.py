@@ -7,15 +7,16 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 from copy import copy
 import numpy as np
 
-class ESIndividual(object):
+class FloatIndividual(object):
     """
-        Data holder class for ES individuals.
+        Data holder class for individuals using a vector of floating point values as genotype.
+        This type of individual can therefore be used by an Evolution Strategy (ES) such as the CMA-ES.
     """
 
     def __init__(self, n):
         """
-            Create an ESIndividual. Stores the DNA column vector and all individual-specific parameters.
-            Default DNA consists of np.ones((n,1))
+            Create an FloatIndividual. Stores the genotype column vector and all individual-specific parameters.
+            Default genotype is np.ones((n,1))
 
             :param n: dimensionality of the problem to be solved
         """
@@ -31,13 +32,13 @@ class ESIndividual(object):
 
     def __copy__(self):
         """
-            Return a new ESIndividual object that is a copy of the current object. Can be called using
+            Return a new FloatIndividual object that is a copy of the current object. Can be called using
             >>> import copy
-            >>> copy.copy(ESIndividual())
+            >>> copy.copy(FloatIndividual())
 
-            :returns:  ESIndividual object with all attributes explicitly copied
+            :returns:  FloatIndividual object with all attributes explicitly copied
         """
-        return_copy = ESIndividual(self.n)
+        return_copy = FloatIndividual(self.n)
         return_copy.genotype = copy(self.genotype)
         return_copy.fitness = self.fitness
         return_copy.sigma = self.sigma
@@ -48,15 +49,16 @@ class ESIndividual(object):
         return return_copy
 
 
-class GAIndividual(object):
+class MixedIntIndividual(object):
     """
-        Data holder class for GA individuals.
+        Data holder class for individuals using a vector containing both floating point and integer values as genotype.
+        This type of individual can therefore be used by an Evolution Strategy (ES) such as the CMA-ES.
     """
 
     def __init__(self, n):
         """
-            Create a GAIndividual. Stores the DNA column vector and all individual-specific parameters.
-            Default DNA consists of np.ones((n,1))
+            Create a MixedIntIndividual. Stores the genotype column vector and all individual-specific parameters.
+            Default genotype is np.ones((n,1))
 
             :param n: dimensionality of the problem to be solved
         """
@@ -64,6 +66,7 @@ class GAIndividual(object):
         self.genotype = [np.ones((n[0], 1)), np.ones((n[1], 1))]    # [Integer part, Real part] (column vectors)
         self.fitness = np.inf                                       # Default 'unset' value
 
+        # Self-adaptive step size parameters
         self.maxStepSize = 0.5
         self.initStepSize = 0.2
         self.sigma = 1
@@ -80,11 +83,11 @@ class GAIndividual(object):
         """
             Return a new Individual object that is a copy of the current object. Can be called using
             >>> import copy
-            >>> copy.copy(GAIndividual())
+            >>> copy.copy(MixedIntIndividual())
 
             :returns:  Individual object with all attributes explicitly copied
         """
-        return_copy = GAIndividual(self.n)
+        return_copy = MixedIntIndividual(self.n)
         return_copy.genotype = copy(self.genotype)
         return_copy.fitness = self.fitness
         return_copy.sigma = self.sigma

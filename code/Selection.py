@@ -23,8 +23,8 @@ def bestGA(population, new_population, param):
     """
         Given the population, return the (mu) best
 
-        :param population:      List of :py:class:code.GAIndividual objects containing the previous generation
-        :param new_population:  List of :py:class:code.GAIndividual objects containing the new generation
+        :param population:      List of :py:class:code.MixedIntIndividual objects containing the previous generation
+        :param new_population:  List of :py:class:code.MixedIntIndividual objects containing the new generation
         :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
@@ -39,8 +39,8 @@ def best(population, new_population, param):
     """
         Given the population, return the (mu) best
 
-        :param population:      List of :py:class:code.ESIndividual objects containing the previous generation
-        :param new_population:  List of :py:class:code.ESIndividual objects containing the new generation
+        :param population:      List of :py:class:code.FloatIndividual objects containing the previous generation
+        :param new_population:  List of :py:class:code.FloatIndividual objects containing the new generation
         :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
@@ -65,8 +65,8 @@ def pairwise(population, new_population, param):
 
         Assumes that new_population contains pairs as [P1_a, P1_b, P2_a, P2_b, etc ... ]
 
-        :param population:      List of :py:class:code.ESIndividual objects containing the previous generation
-        :param new_population:  List of :py:class:code.ESIndividual objects containing the new generation
+        :param population:      List of :py:class:code.FloatIndividual objects containing the previous generation
+        :param new_population:  List of :py:class:code.FloatIndividual objects containing the new generation
         :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
@@ -94,8 +94,8 @@ def roulette(population, new_population, param, force_unique=False):
     """
         Given the population, return mu individuals, selected by roulette, using 1/fitness as probability
 
-        :param population:      List of :py:class:code.ESIndividual objects containing the previous generation
-        :param new_population:  List of :py:class:code.ESIndividual objects containing the new generation
+        :param population:      List of :py:class:code.FloatIndividual objects containing the previous generation
+        :param new_population:  List of :py:class:code.FloatIndividual objects containing the new generation
         :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
         :param force_unique:    Determine if an individual from the original population may be selected multiple times
         :returns:               A slice of the sorted new_population list.
@@ -132,8 +132,8 @@ def onePlusOneSelection(population, new_population, t, param):
     """
         (1+1)-selection (with success history)
 
-        :param population:      List of :py:class:code.ESIndividual objects containing the previous generation
-        :param new_population:  List of :py:class:code.ESIndividual objects containing the new generation
+        :param population:      List of :py:class:code.FloatIndividual objects containing the previous generation
+        :param new_population:  List of :py:class:code.FloatIndividual objects containing the new generation
         :param t:               Timestamp of the current generation being evaluated
         :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
@@ -157,8 +157,8 @@ def onePlusOneCholeskySelection(population, new_population, param):
     """
         (1+1)-selection (with success history)
 
-        :param population:      List of :py:class:code.ESIndividual objects containing the previous generation
-        :param new_population:  List of :py:class:code.ESIndividual objects containing the new generation
+        :param population:      List of :py:class:code.FloatIndividual objects containing the previous generation
+        :param new_population:  List of :py:class:code.FloatIndividual objects containing the new generation
         :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
@@ -181,8 +181,8 @@ def onePlusOneActiveSelection(population, new_population, param):
     """
         (1+1)-selection (with success history)
 
-        :param population:      List of :py:class:code.ESIndividual objects containing the previous generation
-        :param new_population:  List of :py:class:code.ESIndividual objects containing the new generation
+        :param population:      List of :py:class:code.FloatIndividual objects containing the previous generation
+        :param new_population:  List of :py:class:code.FloatIndividual objects containing the new generation
         :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
