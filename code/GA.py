@@ -153,11 +153,13 @@ def GA(ndim, fid, budget=None):
 
     parameters = Parameters(ndim, budget, mu=GA_mu, lambda_=GA_lambda)
     # Initialize the first individual in the population
-    population = [MixedIntIndividual([ndim, ndim])]
-    population[0].genotype[0] = np.array([np.random.randint(len(x[1])) for x in options])
+    population = [MixedIntIndividual(ndim, num_ints=len(num_options))]
+    int_part = [np.random.randint(len(x[1])) for x in options]
     # TODO FIXME: dumb, brute force, hardcoded defaults for testing purposes
-    population[0].genotype[1] = np.array([None, None, None, None, None, None, None, None, None, None, None, None, None])
-    # population[0].genotype[1] = np.array([2, None, None, None, None, None, 0.2, 0.995, 0.5, 0, 0.3, 0.5, 2])
+    float_part = [None, None, None, None, None, None, None, None, None, None, None, None, None]
+    # float_part = [2, None, None, None, None, None, 0.2, 0.995, 0.5, 0, 0.3, 0.5, 2]
+
+    population[0].genotype = np.array(int_part + float_part)
     population[0].fitness = ESFitness(FCE=np.inf)
 
     while len(population) < GA_mu:
@@ -268,6 +270,7 @@ def evaluate_ES(es_genotype, fid, ndim, budget=None, storage_file=None, opts=Non
     if budget is None:
         budget = Config.ES_budget_factor * ndim
     num_runs = Config.ES_num_runs
+    num_ints = len(num_options)
 
     # Setup the bbob logger
     bbob_opts['algid'] = es_genotype  # Save the bitstring of the ES we are currently evaluating
@@ -277,9 +280,9 @@ def evaluate_ES(es_genotype, fid, ndim, budget=None, storage_file=None, opts=Non
     if opts:
         print(getBitString(opts))
     else:
-        print(es_genotype[0], end=' ')
-        opts = getOpts(es_genotype[0])
-        values = getVals(es_genotype[1])
+        print(es_genotype[:num_ints], end=' ')
+        opts = getOpts(es_genotype[:num_ints])
+        values = getVals(es_genotype[num_ints:])
 
     # define local function of the algorithm to be used, fixing certain parameters
     algorithm = partial(customizedES, opts=opts, values=values)

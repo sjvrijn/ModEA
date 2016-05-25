@@ -49,30 +49,43 @@ class FloatIndividual(object):
         return return_copy
 
 
+class MixedIntIndividualError(Exception):
+    pass
+
 class MixedIntIndividual(object):
     """
         Data holder class for individuals using a vector containing both floating point and integer values as genotype.
         This type of individual can therefore be used by an Evolution Strategy (ES) such as the CMA-ES.
     """
 
-    def __init__(self, n):
+    def __init__(self, n, num_ints=None, num_floats=None):
         """
             Create a MixedIntIndividual. Stores the genotype column vector and all individual-specific parameters.
             Default genotype is np.ones((n,1))
 
-            :param n: dimensionality of the problem to be solved
+            :param n:           Dimensionality of the problem to be solved, consisting of num_ints integers and
+                                num_floats (= n - num_ints) floating point values
+            :param num_ints:    Number of integer values in the genotype.
+            :param num_floats:  Number of floating point values in the genotype. Must be given is num_ints is omitted
         """
+
+        if n < 2:
+            raise MixedIntIndividualError("Cannot define a mixed-integer representation in < 2 dimensions")
+        if num_floats is None and num_ints is None:
+            raise MixedIntIndividualError("Number of integer or floating point values not specified")
+
         self.n = n
-        self.genotype = [np.ones((n[0], 1)), np.ones((n[1], 1))]    # [Integer part, Real part] (column vectors)
-        self.fitness = np.inf                                       # Default 'unset' value
+        self.num_ints = num_ints if num_ints is not None else n - num_floats  # num_ints + num_floats = n
+        self.genotype = np.ones((n, 1))                                       # Column vector
+        self.fitness = np.inf                                                 # Default 'unset' value
+        self.sigma = 1
 
         # Self-adaptive step size parameters
         self.maxStepSize = 0.5
         self.initStepSize = 0.2
-        self.sigma = 1
 
-        if np.sum(n) > 5:
-            self.baseStepSize = 1 / np.sum(n)
+        if n > 5:
+            self.baseStepSize = 1 / n
         else:
             self.baseStepSize = 0.175  # Random guess value, may need to be updated
         # The actual stepSize is the base + offset, so final starting stepSize = initStepSize
@@ -87,7 +100,7 @@ class MixedIntIndividual(object):
 
             :returns:  Individual object with all attributes explicitly copied
         """
-        return_copy = MixedIntIndividual(self.n)
+        return_copy = MixedIntIndividual(self.n, self.num_ints)
         return_copy.genotype = copy(self.genotype)
         return_copy.fitness = self.fitness
         return_copy.sigma = self.sigma
