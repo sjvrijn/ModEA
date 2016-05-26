@@ -169,7 +169,7 @@ def GA(ndim, fid, budget=None):
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.random
-    mutate = partial(Mut.mutateIntList, num_options=num_options)
+    mutate = partial(Mut.mutateMixedInteger, options=options, num_options=num_options)
     best = Sel.bestGA
     def select(pop, new_pop, _, params):
         return best(pop, new_pop, params)

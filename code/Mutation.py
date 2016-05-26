@@ -191,15 +191,44 @@ def mutateBitstring(individual):
 def mutateIntList(individual, _, num_options):
     """ self-adaptive random integer mutation """
 
-    adaptStepSize(individual)
     p = individual.baseStepSize + individual.stepSizeOffset
 
     int_list = individual.genotype[:individual.num_ints]  # Get the relevant slice
-    for i in range(len(num_options)):
+    for i, val in enumerate(num_options):
         if np.random.random() < p:
             # -1 as random_integers is [1, val], -1 to simulate leaving out the current value
-            new_int = np.random.random_integers(num_options[i]-1)-1
+            new_int = np.random.random_integers(val-1)-1
             if int_list[i] == new_int:
-                new_int = num_options[i] - 1  # If we randomly selected the same value, pick the value we left out
+                new_int = val - 1  # If we randomly selected the same value, pick the value we left out
 
             int_list[i] = new_int
+
+def mutateFloatList(individual, param, options):
+
+    # Setup of values
+    p = individual.baseStepSize + individual.stepSizeOffset
+    float_part = individual.genotype[individual.num_ints:]
+    int_part = individual.genotype[:individual.num_ints]
+    l_bound = param.l_bound[individual.num_ints:].flatten()
+    u_bound = param.u_bound[individual.num_ints:].flatten()
+    search_space = u_bound - l_bound
+    random_values = [np.random.random_sample(float_part.shape),  # TODO reduce to a single call
+                     np.random.random_sample(float_part.shape)]  # Generate all random values in one go
+
+    # Create the mask: which float values will actually be mutated?
+    cond_mask = [True,True,True,True,True,True]  # TODO FIXME: these are default CMA parameters, make this dynamic!
+    for i, val in enumerate(options):
+        cond_mask.extend([bool(int_part[i] * 1)] * val[2])
+    mutate_mask = random_values[0] < p
+    combined_mask = bitwise_and(cond_mask, mutate_mask)
+
+    # Scale the random values to the search space, then start at the lower bound
+    float_part[combined_mask] = (random_values[1][combined_mask] * search_space[combined_mask]) + l_bound[combined_mask]
+
+
+def mutateMixedInteger(individual, param, options, num_options):
+    """ Self-adaptive mutation of a mixed-integer individual """
+
+    adaptStepSize(individual)
+    mutateIntList(individual, param, num_options)
+    mutateFloatList(individual, param, options)
