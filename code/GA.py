@@ -151,7 +151,9 @@ def GA(ndim, fid, budget=None):
     if budget is None:
         budget = Config.GA_budget
 
-    parameters = Parameters(ndim, budget, mu=GA_mu, lambda_=GA_lambda)
+    parameters = Parameters(len(options) + 13, budget, mu=GA_mu, lambda_=GA_lambda)
+    parameters.l_bound[len(options):] = np.array([1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(13,1)
+    parameters.u_bound[len(options):] = np.array([5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(13,1)
     # Initialize the first individual in the population
     population = [MixedIntIndividual(ndim, num_ints=len(num_options))]
     int_part = [np.random.randint(len(x[1])) for x in options]
