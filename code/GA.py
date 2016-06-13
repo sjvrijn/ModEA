@@ -45,17 +45,27 @@ class ESFitness(object):
         This measure consists of both the always available Fixed Cost Error (FCE)
         and the less available but more rigorous Expected Running Time (ERT).
     """
-    def __init__(self, fitnesses=None, target=Config.default_target, FCE=None, ERT=None,
-                 min_fitnesses=None, std_dev=None):
+    def __init__(self, fitnesses=None, target=Config.default_target,         # Original values
+                 min_fitnesses=None, min_indices=None, num_successful=None,  # Summary values
+                 ERT=None, FCE=None, std_dev=None):                          # Human-readable values
 
-        # If fitness values are given, they will overwrite the given FCE and ERT (if any)
+        # If original fitness values are given, calculate everything from scratch
         if fitnesses is not None:
-            FCE, ERT, min_fitnesses, std_dev = self._calcFCEandERT(fitnesses, target)
+            min_fitnesses, min_indices, num_successful = self._preCalcFCEandERT(fitnesses, target)
 
-        self.FCE = FCE  # Fixed Cost Error
-        self.ERT = ERT  # Expected Running Time
-        self.std_dev = std_dev
+        # If 'summary data' is available, calculate ERT, FCE and its std_dev using the summary data
+        if min_fitnesses is not None and min_indices is not None and num_successful is not None:
+            ERT, FCE, std_dev = self._calcFCEandERT(min_fitnesses, min_indices, num_successful)
+
+        # The interesting values to display or use as comparison
+        self.ERT = ERT          # Expected Running Time
+        self.FCE = FCE          # Fixed Cost Error
+        self.std_dev = std_dev  # Standard deviation of FCE
+        # Summary/memory values to use for reproducability
         self.min_fitnesses = min_fitnesses
+        self.min_indices = min_indices
+        self.num_successful = num_successful
+        self.target = target
 
     def __eq__(self, other):
         if self.ERT is not None and self.ERT == other.ERT:
@@ -76,8 +86,13 @@ class ESFitness(object):
             return False
 
     def __repr__(self):
-        # TODO: include std_dev and min_fitnesses in __init__ (explicitly or **kwargs) so they can be added here?
-        return "ESFitness(FCE={},ERT={})".format(self.FCE, self.ERT)
+        if self.min_fitnesses is not None:
+            kwargs = "target={},min_fitnesses={},min_indices={},num_successful={}".format(
+                self.target, self.min_fitnesses, self.min_indices, self.num_successful
+            )
+        else:
+            kwargs = "target={},ERT={},FCE={},std_dev={}".format(self.target, self.ERT, self.FCE, self.std_dev)
+        return "ESFitness({})".format(kwargs)
 
     def __unicode__(self):
         # TODO: pretty-print-ify
@@ -85,8 +100,9 @@ class ESFitness(object):
 
     __str__ = __unicode__
 
+
     @staticmethod
-    def _calcFCEandERT(fitnesses, target):
+    def _preCalcFCEandERT(fitnesses, target):
         """
             Calculates the FCE and ERT of a given set of function evaluation results and target value
 
@@ -94,31 +110,46 @@ class ESFitness(object):
             :param target:      Target value to use for basing the ERT on. Default: 1e-8
             :return:            ESFitness object with FCE and ERT properly set
         """
+        min_fitnesses = np.min(fitnesses, axis=1).tolist()
+
+        num_runs, num_evals = fitnesses.shape
+        below_target = fitnesses < target
+        num_below_target = np.sum(below_target, axis=1)
+        min_indices = []
+        num_successful = 0
+        for i in range(num_runs):
+            if num_below_target[i] != 0:
+                # Take the lowest index at which the target was reached.
+                min_index = np.min(np.argwhere(below_target[i]))
+                num_successful += 1
+            else:
+                # No evaluation reached the target in this run
+                min_index = num_evals
+            min_indices.append(min_index)
+
+        return min_fitnesses, min_indices, num_successful
+
+
+    @staticmethod
+    def _calcFCEandERT(min_fitnesses, min_indices, num_successful):
+        """
+            Calculates the FCE and ERT of a given set of function evaluation results and target value
+
+            :param min_fitnesses:   Numpy array
+            :param min_indices:     List
+            :param num_successful:  Integer
+            :return:
+        """
 
         ### FCE ###
-        min_fitnesses = np.min(fitnesses, axis=1)
         FCE = np.median(min_fitnesses)
         std_dev = np.std(min_fitnesses)
 
         ### ERT ###
-        num_runs, num_evals = fitnesses.shape
-        below_target = fitnesses < target
-        num_below_target = np.sum(below_target, axis=1)
+        # If none of the runs reached the target, there is no (useful) ERT to be calculated
+        ERT = np.sum(min_indices) / num_successful if num_successful != 0 else None
 
-        # Calculate the ERT if at least one of the runs reached the target
-        if np.sum(num_below_target) > 0:
-            sum_evals = num_succesful = 0
-            for i in range(num_runs):
-                if num_below_target[i] == 0:
-                    sum_evals += num_evals
-                else:
-                    num_succesful += 1
-                    sum_evals += np.min(np.argwhere(below_target[i]))
-            ERT = sum_evals / num_succesful
-        else:  # If none of the runs reached the target, there is no (useful) ERT to be calculated
-            ERT = None
-
-        return FCE, ERT, min_fitnesses, std_dev
+        return ERT, FCE, std_dev
 
 
 def cleanResults(fid):
@@ -295,13 +326,10 @@ def evaluate_ES(es_genotype, fid, ndim, budget=None, storage_file=None, opts=Non
     # Run the actual ES for <num_runs> times
     _, fitnesses = runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, parallel=Config.ES_parallel)
 
-    # TODO: re-enable this (or something similar)
-    # min_fitnesses = np.min(fitnesses, axis=1)
-    # if storage_file:
-    #     with open(storage_file, 'a') as f:
-    #         f.write("{}\t{}\n".format(bitstring.tolist(), min_fitnesses.tolist()))
-
     fitness = ESFitness(fitnesses)
+    if storage_file:
+        with open(storage_file, 'a') as f:
+            f.write(str("{}\n".format(repr(fitness))))
     print('\t', fitness)
     return [fitness]
 
@@ -401,8 +429,9 @@ def problemCases():
     evaluate_ES([0, 1, 1, 0, 1, 0, 1, 1, 0, 2, 2, None, None], fid=1, ndim=10)
 
     # dna = [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 27, 0.9383818903266666]
-    # print(getPrintName(getOpts(dna[:-2])))
-    # evaluate_ES(dna, fid=1, ndim=10)
+    dna = [0, 0, 1, 1, 0, 0, 1, 0, 1, 2, 2, 3, 0.923162952008686]
+    print(getPrintName(getOpts(dna[:-2])))
+    evaluate_ES(dna, fid=1, ndim=10)
 
     print("None! Good job :D\n")
 
