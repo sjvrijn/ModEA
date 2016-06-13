@@ -17,7 +17,7 @@ import code.Mutation as Mut
 import code.Selection as Sel
 import code.Recombination as Rec
 from bbob import bbobbenchmarks, fgeneric
-from code import allow_parallel, getBitString, getOpts, getVals, options, num_options, num_threads, Config
+from code import allow_parallel, getBitString, getOpts, getPrintName, getVals, options, num_options, num_threads, Config
 from code.Algorithms import customizedES, baseAlgorithm
 from code.Individual import MixedIntIndividual
 from code.Parameters import Parameters
@@ -45,14 +45,12 @@ class ESFitness(object):
         This measure consists of both the always available Fixed Cost Error (FCE)
         and the less available but more rigorous Expected Running Time (ERT).
     """
-    def __init__(self, fitnesses=None, target=Config.default_target, FCE=None, ERT=None):
+    def __init__(self, fitnesses=None, target=Config.default_target, FCE=None, ERT=None,
+                 min_fitnesses=None, std_dev=None):
 
         # If fitness values are given, they will overwrite the given FCE and ERT (if any)
         if fitnesses is not None:
             FCE, ERT, min_fitnesses, std_dev = self._calcFCEandERT(fitnesses, target)
-        else:
-            min_fitnesses = None
-            std_dev = None
 
         self.FCE = FCE  # Fixed Cost Error
         self.ERT = ERT  # Expected Running Time
@@ -151,15 +149,16 @@ def GA(ndim, fid, budget=None):
     if budget is None:
         budget = Config.GA_budget
 
-    parameters = Parameters(len(options) + 13, budget, mu=GA_mu, lambda_=GA_lambda)
-    parameters.l_bound[len(options):] = np.array([1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(13,1)
-    parameters.u_bound[len(options):] = np.array([5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(13,1)
+    parameters = Parameters(len(options) + 15, budget, mu=GA_mu, lambda_=GA_lambda)
+    parameters.l_bound[len(options):] = np.array([2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15,1)
+    parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15,1)
     # Initialize the first individual in the population
-    population = [MixedIntIndividual(ndim, num_ints=len(num_options))]
+    population = [MixedIntIndividual(ndim, num_ints=len(num_options)+1)]
     int_part = [np.random.randint(len(x[1])) for x in options]
+    int_part.append(None)
     # TODO FIXME: dumb, brute force, hardcoded defaults for testing purposes
-    float_part = [None, None, None, None, None, None, None, None, None, None, None, None, None]
-    # float_part = [2, None, None, None, None, None, 0.2, 0.995, 0.5, 0, 0.3, 0.5, 2]
+    float_part = [None, None, None, None, None, None, None, None, None, None, None, None, None, None]
+    # float_part = [None, 2,    None, None, None, None, None, 0.2, 0.995, 0.5,  0,    0.3,  0.5,  2]
 
     population[0].genotype = np.array(int_part + float_part)
     population[0].fitness = ESFitness(FCE=np.inf)
@@ -272,7 +271,7 @@ def evaluate_ES(es_genotype, fid, ndim, budget=None, storage_file=None, opts=Non
     if budget is None:
         budget = Config.ES_budget_factor * ndim
     num_runs = Config.ES_num_runs
-    num_ints = len(num_options)
+    num_ints = len(num_options)+1
 
     # Setup the bbob logger
     bbob_opts['algid'] = es_genotype  # Save the bitstring of the ES we are currently evaluating
@@ -280,14 +279,18 @@ def evaluate_ES(es_genotype, fid, ndim, budget=None, storage_file=None, opts=Non
 
     # If a dict of options is given, use that. Otherwise, translate the genotype to customizedES-ready options
     if opts:
-        print(getBitString(opts))
+        print(getBitString(opts), end=' ')
+        lambda_ = opts['lambda_'] if 'lambda_' in opts else None
+        mu = opts['mu'] if 'mu' in opts else None
     else:
-        print(es_genotype[:num_ints], end=' ')
-        opts = getOpts(es_genotype[:num_ints])
-        values = getVals(es_genotype[num_ints:])
+        print(es_genotype[:num_ints+1], end=' ')
+        opts = getOpts(es_genotype[:num_ints-1])
+        lambda_ = es_genotype[num_ints-1]
+        mu = es_genotype[num_ints]
+        values = getVals(es_genotype[num_ints+1:])
 
     # define local function of the algorithm to be used, fixing certain parameters
-    algorithm = partial(customizedES, opts=opts, values=values)
+    algorithm = partial(customizedES, lambda_=lambda_, mu=mu, opts=opts, values=values)
 
     # Run the actual ES for <num_runs> times
     _, fitnesses = runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, parallel=Config.ES_parallel)
@@ -367,11 +370,15 @@ def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, parallel=False
 def testEachOption():
     # Test all individual options
     n = len(options)
-    evaluate_ES([0]*n, fid=1, ndim=10,)
+    dna = [0]*n
+    extra = [None, None]
+    dna.extend(extra)
+    evaluate_ES(dna, fid=1, ndim=10,)
     for i in range(n):
         for j in range(1, num_options[i]):
             dna = [0]*n
             dna[i] = j
+            dna.extend(extra)
             evaluate_ES(dna, fid=1, ndim=10,)
 
     print("\n\n")
@@ -382,15 +389,22 @@ def problemCases():
     print("Combinations known to cause problems:")
 
     evaluate_ES(None, fid=1, ndim=10, opts={'sequential': True})
-    evaluate_ES(None, fid=1, ndim=10, opts={'two-point': True})
+    evaluate_ES(None, fid=1, ndim=10, opts={'tpa': True})
     evaluate_ES(None, fid=1, ndim=10, opts={'selection': 'pairwise'})
-    evaluate_ES(None, fid=1, ndim=10, opts={'two-point': True, 'selection': 'pairwise'})
+    evaluate_ES(None, fid=1, ndim=10, opts={'tpa': True, 'selection': 'pairwise'})
     # these are the actual failures
     evaluate_ES(None, fid=1, ndim=10, opts={'sequential': True, 'selection': 'pairwise'})
-    evaluate_ES(None, fid=1, ndim=10, opts={'sequential': True, 'two-point': True, 'selection': 'pairwise'})
-    # print("None! Good job :D")
+    evaluate_ES(None, fid=1, ndim=10, opts={'sequential': True, 'tpa': True, 'selection': 'pairwise'})
 
-    print("\n\n")
+    evaluate_ES([0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 113, 0.18770573922911427], fid=1, ndim=10)
+    evaluate_ES([0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 107, 0.37768142336353183], fid=1, ndim=10)
+    evaluate_ES([0, 1, 1, 0, 1, 0, 1, 1, 0, 2, 2, None, None], fid=1, ndim=10)
+
+    # dna = [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 27, 0.9383818903266666]
+    # print(getPrintName(getOpts(dna[:-2])))
+    # evaluate_ES(dna, fid=1, ndim=10)
+
+    print("None! Good job :D\n")
 
 
 def exampleRuns():
@@ -536,7 +550,7 @@ def runExperiments():
 
 def run():
     # testEachOption()
-    # problemCases()
+    problemCases()
     # exampleRuns()
     # bruteForce()
     runGA()
@@ -546,6 +560,7 @@ def run():
 
 if __name__ == '__main__':
     np.set_printoptions(linewidth=1000)
+    # np.seterr(all='raise')
     # np.random.seed(42)
 
     # HARDCODED: JUST GIVE US THE EXACT TARGET IN THESE CASES TODO: does not work???

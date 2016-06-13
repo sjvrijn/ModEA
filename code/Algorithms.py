@@ -222,37 +222,40 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None, v
         lambda_ = int(4 + floor(3 * log(n)))
     eff_lambda = lambda_
     if mu is None:
-        mu = int(lambda_//2)
+        mu = 0.5
 
     # Boolean defaults, if not given
-    bool_default_opts = ['active', 'elitism', 'mirrored', 'orthogonal', 'sequential', 'threshold', 'two-point']
+    bool_default_opts = ['active', 'elitist', 'mirrored', 'orthogonal', 'sequential', 'threshold', 'tpa']
     for op in bool_default_opts:
         if op not in opts:
             opts[op] = False
 
     # String defaults, if not given
-    string_default_opts = ['base-sampler', 'ipop', 'selection', 'weights']
+    string_default_opts = ['base-sampler', 'ipop', 'selection', 'weights_option']
     for op in string_default_opts:
         if op not in opts:
             opts[op] = None
 
+    if opts['tpa']:
+        eff_lambda = lambda_ - 2
 
     if opts['selection'] == 'pairwise':
         selector = Sel.pairwise
         # Explicitly force lambda_ to be even
         if lambda_ % 2 == 1:
             lambda_ -= 1
-            if lambda_ == 0:
+            if lambda_ == 0:  # If lambda_ is too low, make it be at least one pair
                 lambda_ += 2
 
-        # Both pairwise selection and TPA are lambda-reducing procedures. Change mu if naively using default settings
-        if opts['two-point']:
+        if opts['tpa']:
             if lambda_ == 2:
                 lambda_ += 2
             eff_lambda = lambda_ - 2
+        else:
+            eff_lambda = lambda_
 
-        if mu > eff_lambda // 2:
-            mu = eff_lambda // 2
+        if mu >= 0.5:  # We cannot select more than half of the population when only half is actually available
+            mu /= 2
     else:
         selector = Sel.best
 
@@ -279,15 +282,16 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None, v
         sampler = Sam.MirroredSampling(n, base_sampler=sampler)
 
     parameter_opts = {'n': n, 'budget': budget, 'mu': mu, 'lambda_': lambda_, 'u_bound': u_bound, 'l_bound': l_bound,
-                      'weights_option': opts['weights'], 'active': opts['active'], 'elitist': opts['elitism'],
-                      'sequential': opts['sequential'], 'tpa': opts['two-point'], 'local_restart': opts['ipop'],
+                      'weights_option': opts['weights_option'], 'active': opts['active'], 'elitist': opts['elitist'],
+                      'sequential': opts['sequential'], 'tpa': opts['tpa'], 'local_restart': opts['ipop'],
                       'values': values,
                       }
 
     # In case of pairwise selection, sequential evaluation may only stop after 2mu instead of mu individuals
+    mu_int = int(1 + floor(mu*(eff_lambda-1)))
     if opts['sequential'] and opts['selection'] == 'pairwise':
-        parameter_opts['seq_cutoff'] = 2*mu
-    population = [FloatIndividual(n) for _ in range(mu)]
+        parameter_opts['seq_cutoff'] = 2
+    population = [FloatIndividual(n) for _ in range(mu_int)]
 
     # Init all individuals of the first population at the same random point in the search space
     wcm = (randn(n,1) * (u_bound-l_bound)) + l_bound
@@ -306,7 +310,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None, v
     }
 
     if opts['ipop']:
-        results = localRestartAlgorithm(population, fitnessFunction, budget, functions, parameter_opts)
+        results = localRestartAlgorithm(fitnessFunction, budget, functions, parameter_opts)
     else:
         parameters = Parameters(**parameter_opts)
         functions['mutateParameters'] = parameters.adaptCovarianceMatrix
@@ -316,7 +320,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None, v
     return results
 
 
-def localRestartAlgorithm(population, fitnessFunction, budget, functions, parameter_opts, parallel=False, debug=False):
+def localRestartAlgorithm(fitnessFunction, budget, functions, parameter_opts, parallel=False, debug=False):
     """
         Run the baseAlgorithm with the given specifications using a local-restart strategy.
 
@@ -334,7 +338,9 @@ def localRestartAlgorithm(population, fitnessFunction, budget, functions, parame
     best_fitness = float('inf')
     total_results = []
 
-    if parameter_opts['local_restart'] == 'IPOP' or parameter_opts['local_restart'] == 'BIPOP':
+    if parameter_opts['lambda_']:
+        lambda_init = parameter_opts['lambda_']
+    elif parameter_opts['local_restart'] == 'IPOP' or parameter_opts['local_restart'] == 'BIPOP':
         lambda_init = int(4 + floor(3 * log(parameter_opts['n'])))
     else:
         lambda_init = None
@@ -347,12 +353,18 @@ def localRestartAlgorithm(population, fitnessFunction, budget, functions, parame
     large_budget = None
 
     while local_budget > 0:
-        if debug:
-            print(local_budget, parameter_opts['lambda_'])
 
         # Every local restart needs its own parameters, so parameter update/mutation must also be linked every time
         parameters = Parameters(**parameter_opts)
         functions['mutateParameters'] = parameters.adaptCovarianceMatrix
+
+        population = [FloatIndividual(parameters.n) for _ in range(parameters.mu_int)]
+
+        # Init all individuals of the first population at the same random point in the search space
+        wcm = (randn(parameters.n, 1) * (parameters.u_bound - parameters.l_bound)) + parameters.l_bound
+        parameter_opts['wcm'] = wcm
+        for individual in population:
+            individual.genotype = copy(wcm)
 
         # Run the actual algorithm
         used_budget, local_results = baseAlgorithm(population, fitnessFunction, local_budget, functions, parameters,
@@ -379,11 +391,6 @@ def localRestartAlgorithm(population, fitnessFunction, budget, functions, parame
 
         elif parameter_opts['local_restart'] == 'BIPOP':
 
-            if regime == 'large':
-                large_budget -= used_budget
-            elif regime == 'small':
-                small_budget -= used_budget
-
             if small_budget is None:
                 small_budget = local_budget // 2
                 large_budget = local_budget - small_budget
@@ -393,6 +400,11 @@ def localRestartAlgorithm(population, fitnessFunction, budget, functions, parame
                     regime = 'small'
                 else:
                     regime = 'large'
+
+            if regime == 'large':
+                large_budget -= used_budget
+            elif regime == 'small':
+                small_budget -= used_budget
 
             if regime == 'large':
                 lambda_large *= 2
@@ -447,11 +459,12 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
 
     # Parameter tracking
     sigma_over_time = []
-    best_fitness_over_time = []
+    fitness_over_time = []
     generation_size = []
     best_individual = population[0]
 
     improvement_found = False  # Has a better individual has been found? Used for sequential evaluation
+    seq_cutoff = parameters.mu_int * parameters.seq_cutoff
 
     # Initialization
     used_budget = 0
@@ -520,7 +533,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
                 if sequential_evaluation:  # Sequential evaluation: we interrupt once a better individual has been found
                     if individual.fitness < best_individual.fitness:
                         improvement_found = True  # Is the latest individual better?
-                    if i >= parameters.seq_cutoff and improvement_found:
+                    if i >= seq_cutoff and improvement_found:
                         improvement_found = False  # Have we evaluated at least mu mutated individuals?
                         break
                     if used_budget == budget:
@@ -531,10 +544,10 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
         population = select(population, new_population, used_budget, parameters)  # Selection
 
         # Track parameters
-        gen_size = used_budget - len(best_fitness_over_time)
+        gen_size = used_budget - len(fitness_over_time)
         generation_size.append(gen_size)
-        sigma_over_time.extend([parameters.sigma_mean] * (used_budget - len(sigma_over_time)))
-        best_fitness_over_time.extend([population[0].fitness] * (used_budget - len(best_fitness_over_time)))
+        sigma_over_time.extend([parameters.sigma_mean] * gen_size)
+        fitness_over_time.extend([population[0].fitness] * gen_size)
         if population[0].fitness < best_individual.fitness:
             best_individual = copy(population[0])
 
@@ -542,11 +555,12 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
         if used_budget >= budget:
             break
 
-        if len(population) == parameters.mu:
+        if len(population) == parameters.mu_int:
             new_population = recombine(population, parameters)                        # Recombination
         else:
-            print('Bad population size! Size: {} instead of {} at used budget {}'.format(len(population),
-                                                                                         parameters.mu, used_budget))
+            print('Error encountered in baseAlgorithm():\n'
+                  'Bad population size! Size: {} instead of {} at used budget {}'.format(len(population),
+                                                                                         parameters.mu_int, used_budget))
 
         # Two-Point step-size Adaptation
         # TODO: Move the following code to >= 1 separate function(s)
@@ -577,4 +591,4 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
     if parameters.count_degenerations and debug:
         print(parameters.count_degenerations, end=' ')
 
-    return used_budget, (generation_size, sigma_over_time, best_fitness_over_time, best_individual)
+    return used_budget, (generation_size, sigma_over_time, fitness_over_time, best_individual)

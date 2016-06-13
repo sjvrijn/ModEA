@@ -188,12 +188,13 @@ def mutateBitstring(individual):
             bitstring[i] = 1-bitstring[i]
 
 
-def mutateIntList(individual, _, num_options):
+def mutateIntList(individual, param, num_options):
     """ self-adaptive random integer mutation """
 
     p = individual.baseStepSize + individual.stepSizeOffset
+    num_ints = individual.num_ints
 
-    int_list = individual.genotype[:individual.num_ints]  # Get the relevant slice
+    int_list = individual.genotype[:num_ints-1]  # Get the relevant slice
     for i, val in enumerate(num_options):
         if np.random.random() < p:
             # -1 as random_integers is [1, val], -1 to simulate leaving out the current value
@@ -203,12 +204,16 @@ def mutateIntList(individual, _, num_options):
 
             int_list[i] = new_int
 
+    if np.random.random() < p:
+        new_lambda = np.random.random_integers(param.l_bound[num_ints-1], param.u_bound[num_ints-1])
+        individual.genotype[num_ints-1] = new_lambda
+
 def mutateFloatList(individual, param, options):
 
     # Setup of values
     p = individual.baseStepSize + individual.stepSizeOffset
     float_part = individual.genotype[individual.num_ints:]
-    int_part = individual.genotype[:individual.num_ints]
+    int_part = individual.genotype[:individual.num_ints-1]
     l_bound = param.l_bound[individual.num_ints:].flatten()
     u_bound = param.u_bound[individual.num_ints:].flatten()
     search_space = u_bound - l_bound
@@ -216,7 +221,7 @@ def mutateFloatList(individual, param, options):
                      np.random.random_sample(float_part.shape)]  # Generate all random values in one go
 
     # Create the mask: which float values will actually be mutated?
-    cond_mask = [True,True,True,True,True,True]  # TODO FIXME: these are default CMA parameters, make this dynamic!
+    cond_mask = [True,True,True,True,True,True,True]  # TODO FIXME: these are default CMA parameters, make this dynamic!
     for i, val in enumerate(options):
         cond_mask.extend([bool(int_part[i] * 1)] * val[2])
     mutate_mask = random_values[0] < p

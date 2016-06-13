@@ -43,7 +43,7 @@ class Parameters(BaseParameters):
     """
 
     def __init__(self, n, budget, sigma=None,
-                 mu=None, lambda_=None, weights_option=None, l_bound=None, u_bound=None, seq_cutoff=None, wcm=None,
+                 mu=None, lambda_=None, weights_option=None, l_bound=None, u_bound=None, seq_cutoff=1, wcm=None,
                  active=False, elitist=False, local_restart=None, sequential=False, tpa=False,
                  values=None):
         """
@@ -67,13 +67,15 @@ class Parameters(BaseParameters):
 
         if lambda_ is None:
             lambda_ = int(4 + floor(3 * log(n)))
+        eff_lambda = lambda_ - 2 if tpa else lambda_
         if mu is None:
-            mu = int(lambda_//2)
+            mu = 0.5
+        elif mu > lambda_:
+            raise Exception("mu ({}) cannot be greater than lambda ({})".format(mu, lambda_))
+        elif mu >= 1:
+            mu /= lambda_
         if sigma is None:
             sigma = 1
-
-        if mu < 1 or lambda_ <= mu or n < 1:
-            raise Exception("Invalid initialization values: mu, n >= 1, lambda > mu")
 
         if l_bound is None or not isfinite(l_bound).all():
             l_bound = ones((n, 1)) * -5
@@ -81,7 +83,7 @@ class Parameters(BaseParameters):
             u_bound = ones((n, 1)) * 5
 
         if seq_cutoff is None:
-            seq_cutoff = mu
+            seq_cutoff = mu * eff_lambda
         if wcm is None:
             wcm = (randn(n,1) * (u_bound - l_bound)) + l_bound
 
@@ -90,6 +92,7 @@ class Parameters(BaseParameters):
         self.budget = budget
         self.mu = mu
         self.lambda_ = lambda_
+        self.eff_lambda = eff_lambda
         self.l_bound = l_bound
         self.u_bound = u_bound
         self.search_space_size = u_bound - l_bound
@@ -162,7 +165,7 @@ class Parameters(BaseParameters):
         self.last_pop = None
         self.lambda_orig = self.lambda_large = self.lambda_small = self.lambda_
         self.pop_inc_factor = 2
-        self.flat_fitness_index = int(min([ceil(0.1+self.lambda_/4.0), self.mu-1]))
+        self.flat_fitness_index = int(min([ceil(0.1+self.lambda_/4.0), self.mu_int-1]))
         self.nbin = 10 + ceil(30*n/lambda_)
         self.histfunevals = zeros(self.nbin)
 
@@ -181,7 +184,7 @@ class Parameters(BaseParameters):
 
         ### CMSA-ES ###
         self.tau = 1 / sqrt(2*n)
-        self.tau_c = 1 + ((n**2 + n) / (2*mu))
+        self.tau_c = 1 + ((n**2 + n) / (2*self.mu_int))
         self.sigma_mean = self.sigma
 
         ### (1+1)-Cholesky ES ###
@@ -216,6 +219,11 @@ class Parameters(BaseParameters):
         for name, value in list(values.items()):
             if name in initializable_parameters:
                 setattr(self, name, value)
+
+
+    @property
+    def mu_int(self):
+        return int(1 + floor((self.eff_lambda-1) * self.mu))
 
 
     def oneFifthRule(self, t):
@@ -277,14 +285,14 @@ class Parameters(BaseParameters):
                        sqrt(cs*(2-cs)*mueff) * dot(invsqrt_C, (wcm - wcm_old) / self.sigma)
         hsig = sum(self.p_sigma**2)/(1-(1-cs)**(2*evalcount/lambda_))/n < 2 + 4/(n+1)
         self.p_c = (1-cc) * self.p_c + hsig * sqrt(cc*(2-cc)*mueff) * (wcm - wcm_old) / self.sigma
-        offset = self.offset[:, :self.mu]
+        offset = self.offset[:, :self.mu_int]
 
         # Regular update of C
         self.C = (1 - c_1 - c_mu) * self.C \
                   + c_1 * (outer(self.p_c, self.p_c) + (1-hsig) * cc * (2-cc) * self.C) \
                   + c_mu * dot(offset, self.weights*offset.T)
-        if self.active and len(self.all_offspring) >= 2*self.mu:  # Active update of C
-            offset_bad = self.offset[:, -self.mu:]
+        if self.active and len(self.all_offspring) >= 2*self.mu_int:  # Active update of C
+            offset_bad = self.offset[:, -self.mu_int:]
             self.C -= c_mu * dot(offset_bad, self.weights*offset_bad.T)
 
         # Adapt step size sigma
@@ -494,7 +502,7 @@ class Parameters(BaseParameters):
             :returns:               Returns a np.array of weights, adding to 1
         """
 
-        mu = self.mu
+        mu = self.mu_int
 
         if weights_option == '1/n':
             weights = ones((mu, 1)) * (1/mu)
@@ -529,6 +537,7 @@ class Parameters(BaseParameters):
         self.C = eye(n)
         self.B = eye(n)
         self.D = ones((n,1))
+        self.p_sigma = zeros((n, 1))
         self.sigma_mean = self.sigma = 1          # TODO: make this depend on any input default sigma value
         # TODO: add feedback of resetting sigma to the sigma per individual
 

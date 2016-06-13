@@ -20,18 +20,18 @@ except NotImplementedError:
 # The following list contains all possible options from which the Evolving ES can choose.
 # To give this list a 'constant' property, it is defined as a tuple (i.e. immutable)
 options = (
-    #'Name',         (Tuple, of, options),                  Number of associated parameters
-    ('active',       (False, True),                         0),
-    ('elitism',      (False, True),                         0),
-    ('mirrored',     (False, True),                         0),
-    ('orthogonal',   (False, True),                         0),
-    ('sequential',   (False, True),                         0),
-    ('threshold',    (False, True),                         2),
-    ('two-point',    (False, True),                         4),
-    ('selection',    (None, 'pairwise'),                    0),
-    ('weights',      (None, '1/n'),                         0),
-    ('base-sampler', (None, 'quasi-sobol', 'quasi-halton'), 0),
-    ('ipop',         (None, 'IPOP',        'BIPOP'),        1),
+    #'Name',           (Tuple, of, options),                  Number of associated parameters
+    ('active',         (False, True),                         0),
+    ('elitist',        (False, True),                         0),
+    ('mirrored',       (False, True),                         0),
+    ('orthogonal',     (False, True),                         0),
+    ('sequential',     (False, True),                         0),
+    ('threshold',      (False, True),                         2),
+    ('tpa',            (False, True),                         4),
+    ('selection',      (None, 'pairwise'),                    0),
+    ('weights_option', (None, '1/n'),                         0),
+    ('base-sampler',   (None, 'quasi-sobol', 'quasi-halton'), 0),
+    ('ipop',           (None, 'IPOP',        'BIPOP'),        1),
 )
 
 # The names of all parameters that may be changed on initialization. See Parameters.__init_values()
@@ -111,15 +111,15 @@ def getFullOpts(opts):
 def getPrintName(opts):
     # getFullOpts(opts)
 
-    elitist = '+' if opts['elitism'] else ','
+    elitist = '+' if opts['elitist'] else ','
     active = 'Active-' if opts['active'] else ''
     thres = 'Threshold ' if opts['threshold'] else ''
     mirror = 'Mirrored-' if opts['mirrored'] else ''
     ortho = 'Orthogonal-' if opts['orthogonal'] else ''
-    tpa = 'TPA-' if opts['two-point'] else ''
+    tpa = 'TPA-' if opts['tpa'] else ''
     seq = 'Sequential ' if opts['sequential'] else ''
     ipop = '{}-'.format(opts['ipop']) if opts['ipop'] is not None else ''
-    weight = '${}$-weighted '.format(opts['weights']) if opts['weights'] is not None else ''
+    weight = '${}$-weighted '.format(opts['weights_option']) if opts['weights_option'] is not None else ''
 
     sel = 'Pairwise selection' if opts['selection'] == 'pairwise' else ''
     sampler = 'a {} sampler'.format(opts['base-sampler']) if opts['base-sampler'] is not None else ''

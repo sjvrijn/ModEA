@@ -32,7 +32,7 @@ def bestGA(population, new_population, param):
         new_population.extend(population)
     new_population.sort(key=getFitness)  # sort ascending
 
-    return new_population[:param.mu]
+    return new_population[:param.mu_int]
 
 
 def best(population, new_population, param):
@@ -55,7 +55,7 @@ def best(population, new_population, param):
     param.all_offspring = offspring
     param.offset = offset
 
-    return new_population[:param.mu]
+    return new_population[:param.mu_int]
 
 
 def pairwise(population, new_population, param):
@@ -117,13 +117,13 @@ def roulette(population, new_population, param, force_unique=False):
 
     if force_unique:
         indices = set()
-        while len(indices) < param.mu:
-            to_be_sampled = param.mu - len(indices)
+        while len(indices) < param.mu_int:
+            to_be_sampled = param.mu_int - len(indices)
             # Draw <to_be_sampled> samples from the defined distribution
             sample = roulette_sampler.rvs(size=to_be_sampled)
             indices.update(sample)
     else:
-        indices = roulette_sampler.rvs(size=param.mu)
+        indices = roulette_sampler.rvs(size=param.mu_int)
 
     return [new_population[index] for index in indices]
 
