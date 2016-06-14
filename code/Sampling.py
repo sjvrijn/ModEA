@@ -102,6 +102,9 @@ class OrthogonalSampling(object):
             :param base_sampler:    A different Sampling object from which samples to be mirrored are drawn
             :param lambda_:         Number of samples to be drawn and orthonormalized per generation
         """
+        if n == 0 or lambda_ == 0:
+            raise Exception("Invalid value(s)! n={}, lambda={}".format(n, lambda_))
+
         self.n = n
         self.shape = (n,1) if shape == 'col' else (1,n)
         if base_sampler is None:

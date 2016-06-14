@@ -274,7 +274,7 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None, v
     if opts['orthogonal']:
         orth_lambda = eff_lambda
         if opts['mirrored']:
-            orth_lambda //= 2
+            orth_lambda = max(orth_lambda//2, 1)
         sampler = Sam.OrthogonalSampling(n, lambda_=orth_lambda, base_sampler=sampler)
 
     # Create a mirrored sampler using the sampler (structure) chosen so far
