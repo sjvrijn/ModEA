@@ -223,6 +223,8 @@ class Parameters(BaseParameters):
 
     @property
     def mu_int(self):
+        if self.eff_lambda < 1:
+            raise Exception("Effective lambda ({}) should be at least 1!".format(self.eff_lambda))
         return int(1 + floor((self.eff_lambda-1) * self.mu))
 
 
