@@ -10,17 +10,18 @@ write_output = True
 
 ### GA Settings ###
 GA_mu = 1        # Assuming a dimensionality of 11
-GA_lambda = 12   # (8 boolean + 3 triples)
+GA_lambda = 10   # (9 boolean + 2 triples)
 GA_budget = 250  # Roughly 20 generations
-GA_parallel = True
+GA_parallel = False
 GA_debug = False
 
 ### ES Settings ###
-ES_budget_factor = 1e3
+ES_budget_factor = 1e3  # budget = ndim * ES_budget_factor
 ES_num_runs = 15
 ES_parallel = True
 
 ### Experiment Settings ###
 default_target = 1e-8
 experiment_dims = (2, 3, 5, 10, 20)  # Problem dimensionalities to be tested
-experiment_funcs = (3, 4, 7, 9, 10, 12, 13, 16, 17, 19, 20, 21, 23, 24)  # BBOB function numbers
+experiment_funcs = ( 1,  2,  3,  4,  5,  5,  7,  8,  9, 10, 11, 12,
+                    13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24)  # BBOB function numbers
