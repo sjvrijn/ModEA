@@ -345,7 +345,7 @@ def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, values=None, p
 
     # Perform the actual run of the algorithm
     if parallel and Config.use_MPI:
-        function = partial(fetchResults, fid, n=ndim, budget=budget, opts=opts, values=values)
+        function = partial(fetchResults, fid, ndim=ndim, budget=budget, opts=opts, values=values)
         arguments = range(num_runs)
         run_data = None
 
@@ -355,6 +355,7 @@ def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, values=None, p
         comm.scatter(arguments, root=MPI.ROOT)  # Different for each process
         comm.Barrier()                          # Wait for everything to finish...
         run_data = comm.gather(run_data, root=MPI.ROOT)  # And gather everything up
+        comm.Disconnect()
 
         targets, results = zip(*run_data)
     elif parallel and allow_parallel:  # Multi-core version
