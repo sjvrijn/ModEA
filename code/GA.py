@@ -47,7 +47,7 @@ class ESFitness(object):
     """
     def __init__(self, fitnesses=None, target=Config.default_target,         # Original values
                  min_fitnesses=None, min_indices=None, num_successful=None,  # Summary values
-                 ERT=None, FCE=None, std_dev=None):                          # Human-readable values
+                 ERT=None, FCE=float('inf'), std_dev=None):                  # Human-readable values
 
         # If original fitness values are given, calculate everything from scratch
         if fitnesses is not None:
@@ -226,7 +226,7 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
         budget = Config.ES_budget_factor * ndim
     num_runs = Config.ES_num_runs
     parallel = Config.ES_parallel
-    medians = []
+    fitness_results = []
     comms = []
 
     for bitstring in bitstrings:
@@ -267,19 +267,18 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
         # TODO: replace by use of ESFitness objects
         # Subtract the target fitness value from all returned fitnesses to only get the absolute distance
         fitnesses = np.subtract(np.array(fitnesses), np.array(targets).T[:,np.newaxis])
-        # From all different runs, retrieve the median fitness to be used as fitness for this ES
-        min_fitnesses = np.min(fitnesses, axis=1)
+        fitness = ESFitness(fitnesses)
+        fitness_results.append(fitness)
+
         if not isinstance(bitstrings[i], list):
             bitstrings[i] = bitstrings[i].tolist()
 
         if storage_file:
             with open(storage_file, 'a') as f:
-                f.write("{}\t{}\n".format(bitstrings[i], min_fitnesses.tolist()))
-        median = np.median(min_fitnesses)
-        print("\t{}".format(median))
-        medians.append(median)
+                f.write(str("{}\t{}\n".format(bitstrings[i], repr(fitness))))
+        print('\t', fitness)
 
-    return medians
+    return fitness_results
 
 
 def evaluate_ES(es_genotype, fid, ndim, budget=None, storage_file=None, opts=None, values=None):
@@ -399,14 +398,15 @@ def testEachOption():
     # Test all individual options
     n = len(options)
     dna = [0]*n
-    extra = [None, None]
-    dna.extend(extra)
+    # lambda_mu = [None, None]
+    lambda_mu = [2, 0.01]
+    dna.extend(lambda_mu)
     evaluate_ES(dna, fid=1, ndim=10,)
     for i in range(n):
         for j in range(1, num_options[i]):
             dna = [0]*n
             dna[i] = j
-            dna.extend(extra)
+            dna.extend(lambda_mu)
             evaluate_ES(dna, fid=1, ndim=10,)
 
     print("\n\n")
@@ -466,7 +466,7 @@ def bruteForce(ndim, fid, parallel=1, part=0):
     import os
 
     best_ES = None
-    best_result = np.inf
+    best_result = ESFitness()
 
     progress_log = 'progress-f{}-{}dim.log'.format(fid, ndim)
     progress_fname = "{}{}".format(non_bbob_datapath, progress_log)
@@ -490,7 +490,10 @@ def bruteForce(ndim, fid, parallel=1, part=0):
     for num, count in sorted(counts.items(), key=lambda x: x[0]):
         products.append(product(range(num), repeat=count))
 
-    storage_file = '{}bruteforce_{}_f{}.tdat'.format(non_bbob_datapath, ndim, fid)
+    if Config.write_output:
+        storage_file = '{}bruteforce_{}_f{}.tdat'.format(non_bbob_datapath, ndim, fid)
+    else:
+        storage_file = None
     x = datetime.now()
 
     all_combos = []
@@ -511,8 +514,12 @@ def bruteForce(ndim, fid, parallel=1, part=0):
 
     for i in range(num_iters):
         bitstrings = all_combos[(start_at + i*parallel):(start_at + (i+1)*parallel)]
+        if parallel == 1:
+            bitstrings[0].extend([2, 0.01])
+            result = evaluate_ES(bitstrings[0], fid=fid, ndim=ndim, storage_file=storage_file)
+        else:
+            result = ALT_evaluate_ES(bitstrings, fid=fid, ndim=ndim, storage_file=storage_file)
 
-        result = ALT_evaluate_ES(bitstrings, fid=fid, ndim=ndim, storage_file=storage_file)
         with open(progress_fname, 'w') as progress_file:
             cPickle.dump((start_at + (i+1)*parallel), progress_file)
         if Config.write_output:
@@ -579,9 +586,9 @@ def runExperiments():
 
 def run():
     # testEachOption()
-    problemCases()
+    # problemCases()
     # exampleRuns()
-    # bruteForce()
+    bruteForce(ndim=10, fid=1)
     runGA()
     # runExperiments()
     pass
