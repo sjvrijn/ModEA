@@ -181,7 +181,7 @@ def GA(ndim, fid, budget=None):
         budget = Config.GA_budget
 
     parameters = Parameters(len(options) + 15, budget, mu=GA_mu, lambda_=GA_lambda)
-    parameters.l_bound[len(options):] = np.array([2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15,1)
+    parameters.l_bound[len(options):] = np.array([  2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15,1)
     parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15,1)
     # Initialize the first individual in the population
     population = [MixedIntIndividual(ndim, num_ints=len(num_options)+1)]
@@ -192,7 +192,7 @@ def GA(ndim, fid, budget=None):
     # float_part = [None, 2,    None, None, None, None, None, 0.2, 0.995, 0.5,  0,    0.3,  0.5,  2]
 
     population[0].genotype = np.array(int_part + float_part)
-    population[0].fitness = ESFitness(FCE=np.inf)
+    population[0].fitness = ESFitness()
 
     while len(population) < GA_mu:
         population.append(copy(population[0]))
@@ -341,11 +341,11 @@ def fetchResults(fid, instance, ndim, budget, opts, values=None):
     return f_target, results
 
 
-def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, parallel=False):
+def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, values=None, parallel=False):
 
     # Perform the actual run of the algorithm
     if parallel and Config.use_MPI:
-        function = partial(fetchResults, fid, n=ndim, budget=budget, opts=opts)
+        function = partial(fetchResults, fid, n=ndim, budget=budget, opts=opts, values=values)
         arguments = range(num_runs)
         run_data = None
 
@@ -359,7 +359,7 @@ def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, parallel=False
         targets, results = zip(*run_data)
     elif parallel and allow_parallel:  # Multi-core version
         num_workers = min(num_threads, num_runs)
-        function = partial(fetchResults, fid, ndim=ndim, budget=budget, opts=opts)
+        function = partial(fetchResults, fid, ndim=ndim, budget=budget, opts=opts, values=values)
 
         # multiprocessing
         p = Pool(num_workers)
@@ -588,7 +588,7 @@ def run():
     # testEachOption()
     # problemCases()
     # exampleRuns()
-    bruteForce(ndim=10, fid=1)
+    # bruteForce(ndim=10, fid=1)
     runGA()
     # runExperiments()
     pass
