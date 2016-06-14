@@ -237,7 +237,11 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None, v
             opts[op] = None
 
     if opts['tpa']:
-        eff_lambda = lambda_ - 2
+        if lambda_ <= 4:
+            lambda_ = 4
+            eff_lambda = 2
+        else:
+            eff_lambda = lambda_ - 2
 
     if opts['selection'] == 'pairwise':
         selector = Sel.pairwise
