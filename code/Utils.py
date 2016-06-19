@@ -29,9 +29,9 @@ class ESFitness(object):
             ERT, FCE, std_dev = self._calcFCEandERT(min_fitnesses, min_indices, num_successful)
 
         # The interesting values to display or use as comparison
-        self.ERT = ERT          # Expected Running Time
-        self.FCE = FCE          # Fixed Cost Error
-        self.std_dev = std_dev  # Standard deviation of FCE
+        self.ERT = ERT                              # Expected Running Time
+        self.FCE = FCE if FCE > target else target  # Fixed Cost Error
+        self.std_dev = std_dev                      # Standard deviation of FCE
         # Summary/memory values to use for reproducability
         self.min_fitnesses = min_fitnesses
         self.min_indices = min_indices
@@ -81,7 +81,7 @@ class ESFitness(object):
             :param target:      Target value to use for basing the ERT on. Default: 1e-8
             :return:            ESFitness object with FCE and ERT properly set
         """
-        min_fitnesses = np.min(fitnesses, axis=1).tolist()
+        min_fitnesses = np.min(fitnesses, axis=1).tolist()  # Save as list to ensure eval() can read it as summary
 
         num_runs, num_evals = fitnesses.shape
         below_target = fitnesses < target
