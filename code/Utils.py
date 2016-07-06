@@ -113,7 +113,7 @@ class ESFitness(object):
         """
 
         ### FCE ###
-        FCE = np.median(min_fitnesses)
+        FCE = np.mean(min_fitnesses)
         std_dev = np.std(min_fitnesses)
 
         ### ERT ###
