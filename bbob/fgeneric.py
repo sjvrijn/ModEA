@@ -39,12 +39,13 @@ from pdb import set_trace
 import copy
 import numpy as np
 
-deltaftarget = 1e-8
+# deltaftarget = 1e-8
+deltaftarget = 0
 nb_evaluations_always_written = '1' # '100 + 10 * dim'  # 100 + dim;10*dim add about 7;17MB to final data
 nb_triggers_per_delta_f_decade = 5 # using 10 should be perfectly fine
 fileprefix = 'bbobexp'
 
-write_output = True
+write_output = False
 
 class LoggingFunction( object ):
     """Class for a function that records data from experiments with a given
