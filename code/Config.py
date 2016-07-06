@@ -9,15 +9,16 @@ use_MPI = True
 write_output = True
 
 ### GA Settings ###
-GA_mu = 1        # Assuming a dimensionality of 11
-GA_lambda = 10   # (9 boolean + 2 triples)
-GA_budget = 250  # Roughly 20 generations
+GA_mu = 1            # Assuming a dimensionality of 11
+GA_lambda = 10       # (9 boolean + 2 triples)
+GA_generations = 50
+GA_budget = GA_lambda * GA_generations
 GA_parallel = False
 GA_debug = False
 
 ### ES Settings ###
 ES_budget_factor = 1e3  # budget = ndim * ES_budget_factor
-ES_num_runs = 15
+ES_num_runs = 32
 ES_parallel = True
 
 ### Experiment Settings ###
