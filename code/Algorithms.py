@@ -8,7 +8,7 @@ from copy import copy
 from functools import partial
 from mpi4py import MPI
 from multiprocessing import Pool
-from numpy import floor, log, ones
+from numpy import ceil, floor, log, ones
 from numpy.random import randn, random
 import sys
 # Internal classes
@@ -498,17 +498,18 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
 
         if parallel:
             if Config.use_MPI:
+                fitnesses = []
+                for i in range(int(ceil(len(new_population) / Config.GA_num_parallel))):
+                    # In this case, it is hardcoded that the parallelization takes place one level further!!!!!!!!!
+                    genes = []
+                    for ind in new_population[i*Config.GA_num_parallel:(i+1)*Config.GA_num_parallel]:
+                        mutate(ind, parameters)
+                        genes.append(ind.genotype)
 
-                # In this case, it is hardcoded that the parallelization takes place one level further!!!!!!!!!
-                genes = []
-                for ind in new_population:
-                    mutate(ind, parameters)
-                    genes.append(ind.genotype)
+                    fitnesses.extend(fitnessFunction(genes))
 
-                fitnesses = fitnessFunction(genes)
-
-                for i, ind in enumerate(new_population):
-                    ind.fitness = fitnesses[i]
+                for j, ind in enumerate(new_population):
+                    ind.fitness = fitnesses[j]
 
             else:
                 new_population = p.map(mutEval, new_population)
@@ -526,7 +527,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
             else:
                 used_budget += parameters.lambda_
                 i = parameters.lambda_
-        else:
+        else:  # Sequential
             for i, individual in enumerate(new_population):
                 mutate(individual, parameters)  # Mutation
                 # Evaluation
