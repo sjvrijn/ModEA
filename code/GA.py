@@ -402,7 +402,6 @@ def bruteForce(ndim, fid, parallel=1, part=0):
     for i in range(num_iters):
         bitstrings = all_combos[(start_at + i*parallel):(start_at + (i+1)*parallel)]
         if parallel == 1:
-            bitstrings[0].extend([2, 0.01])
             result = evaluate_ES(bitstrings[0], fid=fid, ndim=ndim, storage_file=storage_file)
         else:
             result = ALT_evaluate_ES(bitstrings, fid=fid, ndim=ndim, storage_file=storage_file)
@@ -421,7 +420,7 @@ def bruteForce(ndim, fid, parallel=1, part=0):
 
 
     print("Best ES found:       {}\n"
-          "With median fitness: {}\n".format(best_ES, best_result))
+          "With fitness: {}\n".format(best_ES, best_result))
     z = y - x
     days = z.days
     hours = z.seconds//3600
