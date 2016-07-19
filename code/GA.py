@@ -408,8 +408,6 @@ def bruteForce(ndim, fid, parallel=1, part=0):
 
         with open(progress_fname, 'w') as progress_file:
             cPickle.dump((start_at + (i+1)*parallel), progress_file)
-        if Config.write_output:
-            cleanResults(fid)
 
         for j, res in enumerate(result):
             if res < best_result:
