@@ -12,14 +12,16 @@ import os
 import pprint
 import cPickle
 from code import getPrintName, getOpts
+from code.Utils import ESFitness
 
 np.set_printoptions(linewidth=156)
-brute_location = 'C:\\Users\\Sander\\Dropbox\\Liacs\\Semester12\\Thesis\\output\\brute_force\\final_results'
+brute_location = 'C:\\Users\\Sander\\Dropbox\\Liacs\\DAS4\\Experiments\\BF runs'
 
-ga_location = 'D:\\test_results'  # laptop
+ga_location = 'C:\\Users\\Sander\\Dropbox\\Liacs\\DAS4\\Experiments\\GA runs'  # laptop
 # ga_location = '/home/sander/Dropbox/Liacs/Semester12/Thesis/test_results'  # desktop
 dims = [2, 3, 5, 10, 20]
-functions = [3, 4, 7, 9, 10, 12, 13, 16, 17, 19, 20, 21, 23, 24]
+# functions = [3, 4, 7, 9, 10, 12, 13, 16, 17, 19, 20, 21, 23, 24]
+functions = range(1, 17)#25)
 np_save_names = ['time_spent', 'generation_sizes', 'sigma', 'best_result', 'best_fitness']
 
 
@@ -29,21 +31,16 @@ def getBestEs():
     results = {dim: {} for dim in dims}
 
     for dim in dims:
-        folder = 'results_{}dim'.format(dim)
-        os.chdir(folder)
-
         results[dim] = {func: {} for func in functions}
 
         # for file in final_files:
         for func in functions:
-            filename = 'final_GA_results_{}dim_f{}.npz'.format(dim, func)
+            filename = 'final_stats\\final_GA_results_{}dim_f{}.npz'.format(dim, func)
             x = np.load(filename)
 
             # for data in ['time_spent', 'best_result']:
             for data in x.files:  # ['time_spent', 'generation_sizes', 'sigma', 'best_result', 'best_fitness']
                 results[dim][func][data] = x[data]
-
-        os.chdir('..')
 
     return results
 
@@ -75,7 +72,7 @@ def storeRepresentation():
         print("{}-dimensional:".format(dim))
         for func in functions:
             to_store[dim][func] = results[dim][func]['best_result'].tolist()
-            # print("  F{}:\t{} {}".format(func, results[dim][func]['best_result']))
+            print("  F{}:\t{}".format(func, results[dim][func]['best_result']))
 
     pprint.pprint(to_store)
     with open('ES_per_experiment.json', 'w') as json_out:
@@ -84,23 +81,24 @@ def storeRepresentation():
 
 def printTable(results):
     print('\\hline')
-    print('F-ID & N & GA & Fitness\\\\')
+    print('F-ID & N & GA & FCE & ERT \\\\')
     print('\\hline')
     print('\\hline')
     for fid in functions:
         for dim in dims:
             result, fit = results[dim][fid]
             string = ''
-            for i in range(len(result)):
+            # for i in range(len(result)):
+            for i in range(11):
                 string += str(result[i])
 
-            print('F{0} & {1} & {2} & {3:.3g}\\\\'.format(fid, dim, string, fit))
+            print('F{0} & {1} & {2} & {3:.3g} & {4}\\\\'.format(fid, dim, string, fit.FCE, fit.ERT))
         print('\\hline')
 
 
 def printCompTable(bf, ga):
     print('\\hline')
-    print('F-ID & N & Brute Force & Fitness & GA & Fitness\\\\')
+    print('F-ID & N & Brute Force & FCE & ERT & GA & FCE & ERT \\\\')
     print('\\hline')
     print('\\hline')
     for fid in functions:
@@ -116,8 +114,11 @@ def printCompTable(bf, ga):
                 else:
                     ga_diff += str(ga_result[i])
 
-            print('F{0} & {1} & {2} & {3:.3g} & {4} & {5:.3g}\\\\'.format(fid, dim, bf_string, bf_fit,
-                                                                          ga_diff, ga_fit))
+            bf_ert = np.inf if bf_fit.ERT is None else bf_fit.ERT
+            ga_ert = np.inf if ga_fit.ERT is None else ga_fit.ERT
+            print('F{0} & {1} & {2} & {3:.3g} & {4:.3g} & {5} & {6:.3g} & {7:.3g}\\\\'.format(
+                fid, dim, bf_string, bf_fit.FCE, bf_ert, ga_diff, ga_fit.FCE, ga_ert
+            ))
         print('\\hline')
 
 
@@ -197,7 +198,8 @@ def createGARunPlots():
     x = np.load('final_GA_results.npz')
     results = x['results'].item()
 
-    matplotlib.rcParams.update({'font.size': 18})
+    # matplotlib.rcParams.update({'font.size': 18})
+    plt.figure(figsize=(12,6.75))
 
     for func in functions:
         print("F{}:".format(func))
@@ -212,37 +214,44 @@ def createGARunPlots():
                 else:
                     best_found_ever.append(best_found_ever[i-1])
 
-            plt.plot(best_found_ever, label='{}-dim'.format(dim))
+            plt.subplot(1, 2, 1)
+            plt.plot([x.FCE for x in best_found_ever], label='{}-dim'.format(dim))
+            plt.subplot(1, 2, 2)
+            plt.plot([x.ERT for x in best_found_ever], label='{}-dim'.format(dim))
 
-        plt.title("F{}".format(func))
+        plt.suptitle("F{}".format(func))
+
+        plt.subplot(1, 2, 1)
+        plt.yscale('log')
         plt.xlabel('Generation')
-        plt.ylabel('Distance to Target Value')
+        plt.ylabel('FCE')
         plt.legend(loc=0)
 
-        plt.savefig('img/F{}.png'.format(func), bbox_inches='tight')
-        plt.savefig('img/F{}.pdf'.format(func), bbox_inches='tight')
+        plt.subplot(1, 2, 2)
+        plt.yscale('log')
+        plt.xlabel('Generation')
+        plt.ylabel('ERT')
+        plt.legend(loc=0)
 
-        # TODO: Limit the lowest value (particularily to prevent negatives which are impossible in logplots)
-        # plt.yscale('log')
         # plt.savefig('img/F{}_log.png'.format(func), bbox_inches='tight')
-        # plt.savefig('img/F{}_log.pdf'.format(func), bbox_inches='tight')
+        plt.savefig('img/F{}_log.pdf'.format(func), bbox_inches='tight')
 
 
 def findBestFromBF():
     os.chdir(brute_location)
 
-    raw_fname = 'bruteforce_{}_f{}.tdat'
+    raw_fname = 'data\\bruteforce_{}_f{}.tdat'
     results = {dim: {} for dim in dims}
 
     for dim in dims:
         for fid in functions:
             best_es = None
-            best_result = np.inf
+            best_result = ESFitness()
             with open(raw_fname.format(dim, fid)) as f:
                 for line in f:
                     parts = line.split('\t')
                     ES = eval(parts[0])
-                    fitness = np.median(eval(parts[1]))
+                    fitness = eval(parts[1])
                     if fitness < best_result:
                         best_result = fitness
                         best_es = ES
@@ -258,7 +267,7 @@ if __name__ == '__main__':
     # storeResults()
     # printResults()
 
-    createGARunPlots()
+    # createGARunPlots()
     # printGATable()
     # printGAcount()
     # storeRepresentation()
