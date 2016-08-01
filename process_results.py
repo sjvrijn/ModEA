@@ -11,6 +11,7 @@ import numpy as np
 import os
 import pprint
 import cPickle
+from collections import Counter
 from code import getPrintName, getOpts
 from code.Utils import ESFitness
 
@@ -320,6 +321,20 @@ def findGAInRankedBF():
     with open('rank_ga_in_bf.dat', 'w') as f:
         cPickle.dump(results, f)
 
+def printGAInRankedBF():
+
+    os.chdir(brute_location)
+    with open('rank_ga_in_bf.dat') as f:
+        results = cPickle.load(f)
+
+    ranks = []
+    for dim in dims:
+        for fid in functions:
+            ranks.append(results[dim][fid][1])
+
+    count = Counter(ranks)
+    print(sorted(count.items(), key=lambda x: x[0]))
+
 if __name__ == '__main__':
 
     ### GA STUFF ###
@@ -341,7 +356,8 @@ if __name__ == '__main__':
 
     # checkFileSizesBF()
     # findBestFromBF()
-    findGAInRankedBF()
+    # findGAInRankedBF()
+    printGAInRankedBF()
     # printDoubleTable()
     # printDoubleCount()
 
