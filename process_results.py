@@ -20,9 +20,24 @@ brute_location = 'C:\\Users\\Sander\\Dropbox\\Liacs\\DAS4\\Experiments\\BF runs'
 ga_location = 'C:\\Users\\Sander\\Dropbox\\Liacs\\DAS4\\Experiments\\GA runs'  # laptop
 # ga_location = '/home/sander/Dropbox/Liacs/Semester12/Thesis/test_results'  # desktop
 dims = [2, 3, 5, 10, 20]
-# functions = [3, 4, 7, 9, 10, 12, 13, 16, 17, 19, 20, 21, 23, 24]
-functions = range(1, 17)#25)
+functions = range(1, 25)
 np_save_names = ['time_spent', 'generation_sizes', 'sigma', 'best_result', 'best_fitness']
+
+
+def reprToString(representation):
+    max_length = 11  # Hardcoded
+    return ''.join([str(i) for i in representation[:max_length]])
+
+
+def reprToInt(representation):
+    # Hardcoded
+    max_length = 11
+    factors = [2304, 1152, 576, 288, 144, 72, 36, 18, 9, 3, 1]
+    result = 0
+    for i in range(max_length):
+        result += representation[i] * factors[i]
+
+    return result
 
 
 def getBestEs():
@@ -261,6 +276,50 @@ def findBestFromBF():
         cPickle.dump(results, f)
 
 
+def checkFileSizesBF():
+    os.chdir(brute_location)
+
+    raw_fname = 'data\\bruteforce_{}_f{}.tdat'
+
+    for dim in dims:
+        print(dim)
+        for fid in functions:
+            with open(raw_fname.format(dim, fid)) as f:
+                lines = [line for line in f]
+                if len(lines) != 4608:
+                    print("File bruteforce_{}_f{}.tdat does not contain 4608 entries! ({})".format(dim, fid, len(lines)))
+
+
+def findGAInRankedBF():
+    os.chdir(ga_location)
+    x = np.load('final_GA_results.npz')
+    ga_results = x['results'].item()
+
+    os.chdir(brute_location)
+    raw_fname = 'data\\bruteforce_{}_f{}.tdat'
+    results = {dim: {} for dim in dims}
+
+    for dim in dims:
+        for fid in functions:
+            ga = reprToInt(ga_results[dim][fid]['best_result'])
+
+            bf_results = []
+            with open(raw_fname.format(dim, fid)) as f:
+                for line in f:
+                    parts = line.split('\t')
+                    ES = eval(parts[0])
+                    fitness = eval(parts[1])
+                    bf_results.append((reprToInt(ES), reprToString(ES), fitness))
+
+            bf_results.sort(key=lambda a: a[2])
+            indexes = [a[0] for a in bf_results]
+            ga_index = indexes.index(ga)
+            results[dim][fid] = (ga, ga_index, indexes)
+            print("{:>2} dim F{:>2}:  GA {:>4} is ranked {:>4}\t\t{}".format(dim, fid, ga, ga_index, indexes[:10]))
+
+    with open('rank_ga_in_bf.dat', 'w') as f:
+        cPickle.dump(results, f)
+
 if __name__ == '__main__':
 
     ### GA STUFF ###
@@ -280,8 +339,10 @@ if __name__ == '__main__':
 
     ### Brute Force STUFF ###
 
+    # checkFileSizesBF()
     # findBestFromBF()
-    printDoubleTable()
+    findGAInRankedBF()
+    # printDoubleTable()
     # printDoubleCount()
 
     pass
