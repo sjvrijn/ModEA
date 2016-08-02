@@ -303,6 +303,7 @@ def findGAInRankedBF():
     for dim in dims:
         for fid in functions:
             ga = reprToInt(ga_results[dim][fid]['best_result'])
+            fit = ga_results[dim][fid]['best_fitness'][-1]
 
             bf_results = []
             with open(raw_fname.format(dim, fid)) as f:
@@ -315,8 +316,17 @@ def findGAInRankedBF():
             bf_results.sort(key=lambda a: a[2])
             indexes = [a[0] for a in bf_results]
             ga_index = indexes.index(ga)
-            results[dim][fid] = (ga, ga_index, indexes)
-            print("{:>2} dim F{:>2}:  GA {:>4} is ranked {:>4}\t\t{}".format(dim, fid, ga, ga_index, indexes[:10]))
+
+            # Where does the GA-found ERT/FCE result rank in the brute-force results?
+            fit_index = 0
+            max_index = len(bf_results)
+            while fit_index < max_index and fit > bf_results[fit_index][2]:
+                fit_index += 1
+
+            results[dim][fid] = (ga, fit_index, ga_index, indexes)
+            print("{:>2}D F{:>2}:  GA {:>4} is ranked {:>4} ({:>4})\t\t\t GA: {} \t BF[0]: {}".format(dim, fid, ga,
+                                                                                             fit_index, ga_index,
+                                                                                             fit, bf_results[0][2]))
 
     with open('rank_ga_in_bf.dat', 'w') as f:
         cPickle.dump(results, f)
@@ -327,12 +337,17 @@ def printGAInRankedBF():
     with open('rank_ga_in_bf.dat') as f:
         results = cPickle.load(f)
 
-    ranks = []
+    fit_ranks = []
+    ga_ranks = []
     for dim in dims:
         for fid in functions:
-            ranks.append(results[dim][fid][1])
+            fit_ranks.append(results[dim][fid][1])
+            ga_ranks.append(results[dim][fid][2])
 
-    count = Counter(ranks)
+    count = Counter(fit_ranks)
+    print(sorted(count.items(), key=lambda x: x[0]))
+
+    count = Counter(ga_ranks)
     print(sorted(count.items(), key=lambda x: x[0]))
 
 if __name__ == '__main__':
