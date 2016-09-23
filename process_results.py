@@ -395,9 +395,10 @@ def findGivenInRankedBF(dim, fid, given):
 
     results = []
     for ES in given:
-        results.append((ES, indexes.index(ES)))
+        results.append((ES, indexes.index(ES), bf_results[indexes.index(ES)][2]))
 
-    results.append((indexes[0], 0))
+    # By default, add the best found structure at the end
+    results.append((indexes[0], 0, bf_results[0][2]))
     return results
 
 
@@ -568,8 +569,8 @@ if __name__ == '__main__':
         print("Results for F1 in {}dim:".format(dim))
         # print(findGivenInRankedBF(dim, 1, given))
         results = findGivenInRankedBF(dim, 1, given)
-        for ES, rank in results:
-            print(intToRepr(ES), rank)
+        for ES, rank, fit in results:
+            print("{0:>33}\t{1:>4}\t{2}".format(intToRepr(ES), rank, fit))
         print()
 
     pass
