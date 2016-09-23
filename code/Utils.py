@@ -67,7 +67,7 @@ class ESFitness(object):
 
     def __unicode__(self):
         # TODO: pretty-print-ify
-        return "ERT: {0:.6}  \tFCE: {1:.4}  \t(std: {2:.4})".format(self.ERT, self.FCE, self.std_dev)
+        return "ERT: {0:>8.7}  FCE: {1:>8.3}  (std: {2:>8.3})".format(self.ERT, self.FCE, self.std_dev)
 
     __str__ = __unicode__
 
