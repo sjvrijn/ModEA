@@ -39,14 +39,53 @@ def reprToString(representation):
 
 
 def reprToInt(representation):
+    """ Encode the ES-structure representation to a single integer """
     # Hardcoded
     max_length = 11
     factors = [2304, 1152, 576, 288, 144, 72, 36, 18, 9, 3, 1]
-    result = 0
+    integer = 0
     for i in range(max_length):
-        result += representation[i] * factors[i]
+        integer += representation[i] * factors[i]
 
-    return result
+    return integer
+
+
+def intToRepr(integer):
+    """ Decode integer to ES-structure representation """
+    # Hardcoded
+    max_length = 11
+    factors = [2304, 1152, 576, 288, 144, 72, 36, 18, 9, 3, 1]
+    representation = []
+    for i in range(max_length):
+        if integer >= factors[i]:
+            gene = integer // factors[i]
+            integer -= gene * factors[i]
+        else:
+            gene = 0
+        representation.append(gene)
+
+    return representation
+
+def BFFileToFitnesses(filename):
+    """
+        Given a brute_force filename, load all associated ESFitness objects and return them in tuples with both an
+        numerical and string value of the relevant ES-structure. N.B.: the filename is **not** checked for correctness
+
+        :param filename:    A string expected to be in the format: 'data\\bruteforce_{}_f{}.tdat'
+        :return:            List of tuples (reprToInt(ES), reprToString(ES), ESFitness), sorted by ESFitness
+    """
+
+    bf_results = []
+    with open(filename) as f:
+        for line in f:
+            parts = line.split('\t')
+            ES = eval(parts[0])
+            fitness = eval(parts[1])
+            bf_results.append((reprToInt(ES), reprToString(ES), fitness))
+
+    bf_results.sort(key=lambda a: a[2])
+    return bf_results
+
 
 
 def getBestEs():
@@ -327,15 +366,7 @@ def findGAInRankedBF():
             ga = reprToInt(ga_results[dim][fid]['best_result'])
             fit = ga_results[dim][fid]['best_fitness'][-1]
 
-            bf_results = []
-            with open(raw_fname.format(dim, fid)) as f:
-                for line in f:
-                    parts = line.split('\t')
-                    ES = eval(parts[0])
-                    fitness = eval(parts[1])
-                    bf_results.append((reprToInt(ES), reprToString(ES), fitness))
-
-            bf_results.sort(key=lambda a: a[2])
+            bf_results = BFFileToFitnesses(raw_fname.format(dim, fid))
             indexes = [a[0] for a in bf_results]
             ga_index = indexes.index(ga)
 
@@ -352,6 +383,22 @@ def findGAInRankedBF():
 
     with open('rank_ga_in_bf.dat', 'w') as f:
         cPickle.dump(results, f)
+
+
+def findGivenInRankedBF(dim, fid, given):
+
+    os.chdir(brute_location)
+    raw_fname = 'data\\bruteforce_{}_f{}.tdat'.format(dim, fid)
+
+    bf_results = BFFileToFitnesses(raw_fname)
+    indexes = [a[0] for a in bf_results]
+
+    results = []
+    for ES in given:
+        results.append((ES, indexes.index(ES)))
+
+    results.append((indexes[0], 0))
+    return results
 
 
 def printGAInRankedBF():
@@ -467,7 +514,7 @@ if __name__ == '__main__':
     # storeResults()
     # printResults()
 
-    createGARunPlots()
+    # createGARunPlots()
     # printGATable()
     # printGAcount()
     # storeRepresentation()
@@ -499,6 +546,31 @@ if __name__ == '__main__':
     # for dim in dimensions:
     #     print(dim)
     #     printDoubleCount(dims=[dim])
+
+    # Default options: just select each module separately. Add/remove choices as you wish
+    given = [
+        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+        reprToInt([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+        reprToInt([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+        reprToInt([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]),
+        reprToInt([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]),
+        reprToInt([0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]),
+        reprToInt([0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]),
+        reprToInt([0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]),
+        reprToInt([0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]),
+        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]),
+        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0]),
+        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0]),
+        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]),
+        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2]),
+    ]
+    for dim in [2, 3, 5, 10, 20]:
+        print("Results for F1 in {}dim:".format(dim))
+        # print(findGivenInRankedBF(dim, 1, given))
+        results = findGivenInRankedBF(dim, 1, given)
+        for ES, rank in results:
+            print(intToRepr(ES), rank)
+        print()
 
     pass
 
