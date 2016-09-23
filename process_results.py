@@ -12,6 +12,7 @@ import os
 import pprint
 import cPickle
 from collections import Counter
+from datetime import timedelta
 from code import getPrintName, getOpts
 from code.Utils import ESFitness
 
@@ -20,8 +21,15 @@ brute_location = 'C:\\Users\\Sander\\Dropbox\\Liacs\\DAS4\\Experiments\\BF runs'
 
 ga_location = 'C:\\Users\\Sander\\Dropbox\\Liacs\\DAS4\\Experiments\\GA runs'  # laptop
 # ga_location = '/home/sander/Dropbox/Liacs/Semester12/Thesis/test_results'  # desktop
-dims = [2, 3, 5, 10, 20]
+dimensions = [2, 3, 5, 10, 20]
 functions = range(1, 25)
+subgroups = [
+    [1,  2,  3,  4,  5],
+    [6,  7,  8,  9],
+    [10, 11, 12, 13, 14],
+    [15, 16, 17, 18, 19],
+    [20, 21, 22, 23, 24]
+]
 np_save_names = ['time_spent', 'generation_sizes', 'sigma', 'best_result', 'best_fitness']
 
 
@@ -44,9 +52,9 @@ def reprToInt(representation):
 def getBestEs():
     os.chdir(ga_location)
 
-    results = {dim: {} for dim in dims}
+    results = {dim: {} for dim in dimensions}
 
-    for dim in dims:
+    for dim in dimensions:
         results[dim] = {func: {} for func in functions}
 
         # for file in final_files:
@@ -63,7 +71,7 @@ def getBestEs():
 
 def storeResults():
     results = getBestEs()
-    np.savez('final_GA_results.npz', results=results, dims=dims, functions=functions, np_save_names=np_save_names)
+    np.savez('final_GA_results.npz', results=results, dims=dimensions, functions=functions, np_save_names=np_save_names)
 
 
 def printResults():
@@ -71,7 +79,7 @@ def printResults():
     os.chdir(ga_location)
     x = np.load('final_GA_results.npz')
     results = x['results'].item()
-    for dim in dims:
+    for dim in dimensions:
         print("{}-dimensional:".format(dim))
         for func in functions:
             print("  F{}:\t{} {}".format(func, results[dim][func]['best_result'], getPrintName(getOpts(results[dim][func]['best_result']))))
@@ -83,8 +91,8 @@ def storeRepresentation():
     x = np.load('final_GA_results.npz')
     results = x['results'].item()
 
-    to_store = {dim: {} for dim in dims}
-    for dim in dims:
+    to_store = {dim: {} for dim in dimensions}
+    for dim in dimensions:
         print("{}-dimensional:".format(dim))
         for func in functions:
             to_store[dim][func] = results[dim][func]['best_result'].tolist()
@@ -101,7 +109,7 @@ def printTable(results):
     print('\\hline')
     print('\\hline')
     for fid in functions:
-        for dim in dims:
+        for dim in dimensions:
             result, fit = results[dim][fid]
             string = ''
             # for i in range(len(result)):
@@ -118,7 +126,7 @@ def printCompTable(bf, ga):
     print('\\hline')
     print('\\hline')
     for fid in functions:
-        for dim in dims:
+        for dim in dimensions:
             bf_result, bf_fit = bf[dim][fid]
             ga_result, ga_fit = ga[dim][fid]
             ga_diff = ''
@@ -143,7 +151,7 @@ def printGATable():
     os.chdir(ga_location)
     x = np.load('final_GA_results.npz')
     results = x['results'].item()
-    ga_results = {dim: {fid: (results[dim][fid]['best_result'], min(results[dim][fid]['best_fitness'])) for fid in functions} for dim in dims}
+    ga_results = {dim: {fid: (results[dim][fid]['best_result'], min(results[dim][fid]['best_fitness'])) for fid in functions} for dim in dimensions}
     printTable(ga_results)
 
 
@@ -160,7 +168,7 @@ def printDoubleTable():
     os.chdir(ga_location)
     x = np.load('final_GA_results.npz')
     results = x['results'].item()
-    ga_results = {dim: {fid: (results[dim][fid]['best_result'], min(results[dim][fid]['best_fitness'])) for fid in functions} for dim in dims}
+    ga_results = {dim: {fid: (results[dim][fid]['best_result'], min(results[dim][fid]['best_fitness'])) for fid in functions} for dim in dimensions}
 
     os.chdir(brute_location)
     with open('brute_results.dat') as f:
@@ -168,12 +176,17 @@ def printDoubleTable():
     printCompTable(bf_results, ga_results)
 
 
-def printIntCount(results):
+def printIntCount(results, fids=None, dims=None):
+
+    if fids is None:
+        fids = functions
+    if dims is None:
+        dims = dimensions
 
     from collections import Counter
 
     all_strings = []
-    for fid in functions:
+    for fid in fids:
         for dim in dims:
             all_strings.append(results[dim][fid][0])
 
@@ -181,32 +194,39 @@ def printIntCount(results):
     counters = [Counter(int_list) for int_list in choice_lists]
     # print(counters)
     # print()
-    for count in counters:
-        for i in range(3):
-            print(count[i], ' ', end='')
-        print()
+    for count in counters[:11]:
+        n = (count[0] + count[1] + count[2]) / 100
+        print("{:>5.3} {:>5.3} {:>5.3}".format(count[0]/n, count[1]/n, count[2]/n))
+        # for i in range(3):
+        #     print(count[i], ' ', end='')
+        # print()
 
 
 def printGAcount():
     os.chdir(ga_location)
     x = np.load('final_GA_results.npz')
     results = x['results'].item()
-    ga_results = {dim: {fid: (results[dim][fid]['best_result'], min(results[dim][fid]['best_fitness'])) for fid in functions} for dim in dims}
+    ga_results = {dim: {fid: (results[dim][fid]['best_result'], min(results[dim][fid]['best_fitness'])) for fid in functions} for dim in dimensions}
     printIntCount(ga_results)
 
 
-def printDoubleCount():
+def printDoubleCount(fids=None, dims=None):
+
+    if fids is None:
+        fids = functions
+    if dims is None:
+        dims = dimensions
 
     os.chdir(ga_location)
     x = np.load('final_GA_results.npz')
     results = x['results'].item()
-    ga_results = {dim: {fid: (results[dim][fid]['best_result'], min(results[dim][fid]['best_fitness'])) for fid in functions} for dim in dims}
-    printIntCount(ga_results)
+    ga_results = {dim: {fid: (results[dim][fid]['best_result'], min(results[dim][fid]['best_fitness'])) for fid in fids} for dim in dims}
+    printIntCount(ga_results, fids, dims)
     print()
     os.chdir(brute_location)
     with open('brute_results.dat') as f:
         bf_results = cPickle.load(f)
-    printIntCount(bf_results)
+    printIntCount(bf_results, fids, dims)
 
 
 def createGARunPlots():
@@ -214,14 +234,14 @@ def createGARunPlots():
     x = np.load('final_GA_results.npz')
     results = x['results'].item()
 
-    # matplotlib.rcParams.update({'font.size': 18})
-    plt.figure(figsize=(12,6.75))
+    matplotlib.rcParams.update({'font.size': 14})
+    plt.figure(figsize=(8,4.5))
 
     for func in functions:
         print("F{}:".format(func))
 
         plt.clf()
-        for dim in dims:
+        for dim in dimensions:
             best_per_generation = results[dim][func]['best_fitness'][::12]
             best_found_ever = []
             for i, fit in enumerate(best_per_generation):
@@ -235,19 +255,21 @@ def createGARunPlots():
             plt.subplot(1, 2, 2)
             plt.plot([x.ERT for x in best_found_ever], label='{}-dim'.format(dim))
 
-        plt.suptitle("F{}".format(func))
+        plt.suptitle("Convergence for F{}".format(func), y=.99)
 
         plt.subplot(1, 2, 1)
         plt.yscale('log')
         plt.xlabel('Generation')
         plt.ylabel('FCE')
-        plt.legend(loc=0)
+        plt.legend(loc=0, prop={'size':11}, labelspacing=0.15)
 
         plt.subplot(1, 2, 2)
         plt.yscale('log')
         plt.xlabel('Generation')
         plt.ylabel('ERT')
-        plt.legend(loc=0)
+        plt.legend(loc=0, prop={'size':11}, labelspacing=0.15)
+
+        plt.tight_layout()
 
         # plt.savefig('img/F{}_log.png'.format(func), bbox_inches='tight')
         plt.savefig('img/F{}_log.pdf'.format(func), bbox_inches='tight')
@@ -257,9 +279,9 @@ def findBestFromBF():
     os.chdir(brute_location)
 
     raw_fname = 'data\\bruteforce_{}_f{}.tdat'
-    results = {dim: {} for dim in dims}
+    results = {dim: {} for dim in dimensions}
 
-    for dim in dims:
+    for dim in dimensions:
         for fid in functions:
             best_es = None
             best_result = ESFitness()
@@ -282,7 +304,7 @@ def checkFileSizesBF():
 
     raw_fname = 'data\\bruteforce_{}_f{}.tdat'
 
-    for dim in dims:
+    for dim in dimensions:
         print(dim)
         for fid in functions:
             with open(raw_fname.format(dim, fid)) as f:
@@ -298,9 +320,9 @@ def findGAInRankedBF():
 
     os.chdir(brute_location)
     raw_fname = 'data\\bruteforce_{}_f{}.tdat'
-    results = {dim: {} for dim in dims}
+    results = {dim: {} for dim in dimensions}
 
-    for dim in dims:
+    for dim in dimensions:
         for fid in functions:
             ga = reprToInt(ga_results[dim][fid]['best_result'])
             fit = ga_results[dim][fid]['best_fitness'][-1]
@@ -331,6 +353,7 @@ def findGAInRankedBF():
     with open('rank_ga_in_bf.dat', 'w') as f:
         cPickle.dump(results, f)
 
+
 def printGAInRankedBF():
 
     os.chdir(brute_location)
@@ -339,16 +362,104 @@ def printGAInRankedBF():
 
     fit_ranks = []
     ga_ranks = []
-    for dim in dims:
+    for dim in dimensions:
         for fid in functions:
             fit_ranks.append(results[dim][fid][1])
             ga_ranks.append(results[dim][fid][2])
 
     count = Counter(fit_ranks)
-    print(sorted(count.items(), key=lambda x: x[0]))
-
+    fit_ranking = sorted(count.items(), key=lambda x: x[0])
+    fit_ranking.reverse()
     count = Counter(ga_ranks)
-    print(sorted(count.items(), key=lambda x: x[0]))
+    struct_ranking = sorted(count.items(), key=lambda x: x[0])
+    struct_ranking.reverse()
+
+    f = s = 0
+    full_ranking = []
+    while len(fit_ranking) > 0 or len(struct_ranking) > 0:
+        if len(fit_ranking) > 0:
+            fit_rank, fit_count = fit_ranking[-1]
+        else:
+            fit_rank = fit_count = 1e5
+        str_rank, str_count = struct_ranking[-1]
+
+        if fit_rank == str_rank:
+            full_ranking.append((fit_rank, fit_count, str_count))
+            fit_ranking.pop()
+            struct_ranking.pop()
+        elif fit_rank < str_rank:
+            full_ranking.append((fit_rank, fit_count, 0))
+            fit_ranking.pop()
+        elif str_rank < fit_rank:
+            full_ranking.append((str_rank, 0, str_count))
+            struct_ranking.pop()
+
+    for rank, f_count, s_count in full_ranking:
+        print("{:>4} & {:>2} & {:>2} \\\\".format(rank+1, f_count, s_count))
+
+
+def printBFFitDistances():
+    os.chdir(brute_location)
+    raw_fname = 'data\\bruteforce_{}_f{}.tdat'
+    for dim in dimensions:
+        for fid in functions:
+
+            bf_results = []
+            with open(raw_fname.format(dim, fid)) as f:
+                for line in f:
+                    parts = line.split('\t')
+                    fitness = eval(parts[1])
+                    bf_results.append(fitness)
+
+            bf_results.sort()
+            print("{:>2}dim F{:>2}: {}".format(dim, fid, [str(res) for res in bf_results[::100]]))
+
+
+def correlationMatrix(fids=None):
+
+    if fids is None:
+        fids = functions
+
+    os.chdir(ga_location)
+    x = np.load('final_GA_results.npz')
+    results = x['results'].item()
+    ga_results = {dim: {fid: results[dim][fid]['best_result'] for fid in fids} for dim in dimensions}
+
+    os.chdir(brute_location)
+    with open('brute_results.dat') as f:
+        bf_all = cPickle.load(f)
+    bf_results = {dim: {fid: bf_all[dim][fid][0] for fid in fids} for dim in dimensions}
+
+    ga_corr = np.zeros((11, 11))
+    bf_corr = np.zeros((11, 11))
+
+    for dim in dimensions:
+        for fid in fids:
+            ga = ga_results[dim][fid]
+            bf = bf_results[dim][fid]
+
+            for i in range(11):
+                for j in range(i, 11):
+                    ga_corr[i, j] += 1 if ga[i] * ga[j] != 0 else 0
+                    bf_corr[i, j] += 1 if bf[i] * bf[j] != 0 else 0
+
+    print(ga_corr)
+    print(bf_corr)
+
+
+def GAtimeSpent():
+    os.chdir(ga_location)
+
+    times = []
+
+    for dim in dimensions:
+        for func in functions:
+            filename = 'final_stats\\final_GA_results_{}dim_f{}.npz'.format(dim, func)
+            x = np.load(filename)
+            times.append(x['time_spent'])
+
+    print(min(times), max(times), sum(times, timedelta(0)) // len(times))
+
 
 if __name__ == '__main__':
 
@@ -356,10 +467,11 @@ if __name__ == '__main__':
     # storeResults()
     # printResults()
 
-    # createGARunPlots()
+    createGARunPlots()
     # printGATable()
     # printGAcount()
     # storeRepresentation()
+    # GAtimeSpent()
 
 
     # os.chdir(ga_location)
@@ -371,10 +483,22 @@ if __name__ == '__main__':
 
     # checkFileSizesBF()
     # findBestFromBF()
+    # printBFFitDistances()
+
     # findGAInRankedBF()
-    printGAInRankedBF()
+    # printGAInRankedBF()
     # printDoubleTable()
     # printDoubleCount()
+    # correlationMatrix()
+
+    # for i, subgroup in enumerate(subgroups):
+    #     print(i)
+    #     printDoubleCount(fids=subgroup)
+    #     correlationMatrix(fids=subgroup)
+
+    # for dim in dimensions:
+    #     print(dim)
+    #     printDoubleCount(dims=[dim])
 
     pass
 
