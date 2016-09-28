@@ -107,8 +107,12 @@ class ESFitness(object):
 
     def __unicode__(self):
         # TODO: pretty-print-ify
-        return "ERT: {0:>8.7}  (std: {1:>8.3})  |  FCE: {2:>8.3}  (std: {3:>8.3})".format(self.ERT, self.std_dev_ERT,
-                                                                                          self.FCE, self.std_dev_FCE)
+        try:
+            return "ERT: {0:>8.7}  (std: {1:>8.3})  |  FCE: {2:>8.3}  (std: {3:>8.3})".format(self.ERT, self.std_dev_ERT,
+                                                                                              self.FCE, self.std_dev_FCE)
+        except AttributeError:
+            # self.std_dev_ERT probably does not exist, we somehow have an old ESFitness object?
+            return "ERT: {0:>8.7}  FCE: {2:>8.3}  (std: {2:>8.3})".format(self.ERT, self.FCE, self.std_dev)
 
     __str__ = __unicode__
 
