@@ -11,7 +11,7 @@ import numpy as np
 import os
 import pprint
 import cPickle
-from collections import Counter
+from collections import Counter, namedtuple
 from datetime import timedelta
 from code import getPrintName, getOpts
 from code.Utils import ESFitness, intToRepr, reprToInt, reprToString
@@ -33,6 +33,8 @@ subgroups = [
 ]
 np_save_names = ['time_spent', 'generation_sizes', 'sigma', 'best_result', 'best_fitness']
 
+ES_result = namedtuple('ES_result', ['ES', 'fitness'])
+
 
 def BFFileToFitnesses(filename):
     """
@@ -47,11 +49,11 @@ def BFFileToFitnesses(filename):
     with open(filename) as f:
         for line in f:
             parts = line.split('\t')
-            ES = eval(parts[0])
-            fitness = eval(parts[1])
-            bf_results.append((reprToInt(ES), reprToString(ES), fitness))
+            bf_results.append(ES_result(eval(parts[0]), eval(parts[1])))
+            # ES = eval(parts[0])
+            # fitness = eval(parts[1])
+            # bf_results.append((reprToInt(ES), reprToString(ES), fitness))
 
-    bf_results.sort(key=lambda a: a[2])
     return bf_results
 
 
@@ -331,19 +333,21 @@ def findGAInRankedBF():
             fit = ga_results[dim][fid]['best_fitness'][-1]
 
             bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
-            indexes = [a[0] for a in bf_results]
+            bf_results.sort(key=lambda a: a.fitness)
+            indexes = [reprToInt(a.ES) for a in bf_results]
             ga_index = indexes.index(ga)
 
             # Where does the GA-found ERT/FCE result rank in the brute-force results?
             fit_index = 0
             max_index = len(bf_results)
-            while fit_index < max_index and fit > bf_results[fit_index][2]:
+            while fit_index < max_index and fit > bf_results[fit_index].fitness:
                 fit_index += 1
 
             results[dim][fid] = (ga, fit_index, ga_index, indexes)
             print("{:>2}D F{:>2}:  GA {:>4} is ranked {:>4} ({:>4})\t\t\t GA: {} \t BF[0]: {}".format(dim, fid, ga,
-                                                                                             fit_index, ga_index,
-                                                                                             fit, bf_results[0][2]))
+                                                                                                      fit_index, ga_index,
+                                                                                                      fit,
+                                                                                                      bf_results[0].fitness))
 
     with open('rank_ga_in_bf.dat', 'w') as f:
         cPickle.dump(results, f)
@@ -354,14 +358,15 @@ def findGivenInRankedBF(dim, fid, given):
     os.chdir(brute_location)
 
     bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
-    indexes = [a[0] for a in bf_results]
+    bf_results.sort(key=lambda a: a.fitness)
+    indexes = [reprToInt(a.ES) for a in bf_results]
 
     results = []
     for ES in given:
-        results.append((ES, indexes.index(ES), bf_results[indexes.index(ES)][2]))
+        results.append((ES, indexes.index(ES), bf_results[indexes.index(ES)].fitness))
 
     # By default, add the best found structure at the end
-    results.append((indexes[0], 0, bf_results[0][2]))
+    results.append((indexes[0], 0, bf_results[0].fitness))
     return results
 
 
@@ -370,11 +375,12 @@ def getBestFromRankedBF(dim, fid, num=10):
     os.chdir(brute_location)
 
     bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
-    indexes = [a[0] for a in bf_results]
+    bf_results.sort(key=lambda a: a.fitness)
+    indexes = [reprToInt(a.ES) for a in bf_results]
 
     results = []
     for i in range(num):
-        results.append((indexes[i], i, bf_results[i][2]))
+        results.append((indexes[i], i, bf_results[i].fitness))
 
     return results
 
