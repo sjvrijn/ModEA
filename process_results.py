@@ -18,6 +18,7 @@ from code.Utils import ESFitness, intToRepr, reprToInt, reprToString
 
 np.set_printoptions(linewidth=156)
 brute_location = 'C:\\Users\\Sander\\Dropbox\\Liacs\\DAS4\\Experiments\\BF runs'
+raw_bfname = 'data\\bruteforce_{}_f{}.tdat'
 
 ga_location = 'C:\\Users\\Sander\\Dropbox\\Liacs\\DAS4\\Experiments\\GA runs'  # laptop
 # ga_location = '/home/sander/Dropbox/Liacs/Semester12/Thesis/test_results'  # desktop
@@ -284,14 +285,13 @@ def createGARunPlots():
 def findBestFromBF():
     os.chdir(brute_location)
 
-    raw_fname = 'data\\bruteforce_{}_f{}.tdat'
     results = {dim: {} for dim in dimensions}
 
     for dim in dimensions:
         for fid in functions:
             best_es = None
             best_result = ESFitness()
-            with open(raw_fname.format(dim, fid)) as f:
+            with open(raw_bfname.format(dim, fid)) as f:
                 for line in f:
                     parts = line.split('\t')
                     ES = eval(parts[0])
@@ -308,12 +308,10 @@ def findBestFromBF():
 def checkFileSizesBF():
     os.chdir(brute_location)
 
-    raw_fname = 'data\\bruteforce_{}_f{}.tdat'
-
     for dim in dimensions:
         print(dim)
         for fid in functions:
-            with open(raw_fname.format(dim, fid)) as f:
+            with open(raw_bfname.format(dim, fid)) as f:
                 lines = [line for line in f]
                 if len(lines) != 4608:
                     print("File bruteforce_{}_f{}.tdat does not contain 4608 entries! ({})".format(dim, fid, len(lines)))
@@ -325,7 +323,6 @@ def findGAInRankedBF():
     ga_results = x['results'].item()
 
     os.chdir(brute_location)
-    raw_fname = 'data\\bruteforce_{}_f{}.tdat'
     results = {dim: {} for dim in dimensions}
 
     for dim in dimensions:
@@ -333,7 +330,7 @@ def findGAInRankedBF():
             ga = reprToInt(ga_results[dim][fid]['best_result'])
             fit = ga_results[dim][fid]['best_fitness'][-1]
 
-            bf_results = BFFileToFitnesses(raw_fname.format(dim, fid))
+            bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
             indexes = [a[0] for a in bf_results]
             ga_index = indexes.index(ga)
 
@@ -355,9 +352,8 @@ def findGAInRankedBF():
 def findGivenInRankedBF(dim, fid, given):
 
     os.chdir(brute_location)
-    raw_fname = 'data\\bruteforce_{}_f{}.tdat'.format(dim, fid)
 
-    bf_results = BFFileToFitnesses(raw_fname)
+    bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
     indexes = [a[0] for a in bf_results]
 
     results = []
@@ -372,9 +368,8 @@ def findGivenInRankedBF(dim, fid, given):
 def getBestFromRankedBF(dim, fid, num=10):
 
     os.chdir(brute_location)
-    raw_fname = 'data\\bruteforce_{}_f{}.tdat'.format(dim, fid)
 
-    bf_results = BFFileToFitnesses(raw_fname)
+    bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
     indexes = [a[0] for a in bf_results]
 
     results = []
@@ -430,12 +425,11 @@ def printGAInRankedBF():
 
 def printBFFitDistances():
     os.chdir(brute_location)
-    raw_fname = 'data\\bruteforce_{}_f{}.tdat'
     for dim in dimensions:
         for fid in functions:
 
             bf_results = []
-            with open(raw_fname.format(dim, fid)) as f:
+            with open(raw_bfname.format(dim, fid)) as f:
                 for line in f:
                     parts = line.split('\t')
                     fitness = eval(parts[1])
