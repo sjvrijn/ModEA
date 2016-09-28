@@ -9,6 +9,43 @@ from functools import total_ordering
 
 from code import Config
 
+
+
+def reprToString(representation):
+    max_length = 11  # Hardcoded
+    return ''.join([str(i) for i in representation[:max_length]])
+
+
+def reprToInt(representation):
+    """ Encode the ES-structure representation to a single integer """
+    # Hardcoded
+    max_length = 11
+    factors = [2304, 1152, 576, 288, 144, 72, 36, 18, 9, 3, 1]
+    integer = 0
+    for i in range(max_length):
+        integer += representation[i] * factors[i]
+
+    return integer
+
+
+def intToRepr(integer):
+    """ Decode integer to ES-structure representation """
+    # Hardcoded
+    max_length = 11
+    factors = [2304, 1152, 576, 288, 144, 72, 36, 18, 9, 3, 1]
+    representation = []
+    for i in range(max_length):
+        if integer >= factors[i]:
+            gene = integer // factors[i]
+            integer -= gene * factors[i]
+        else:
+            gene = 0
+        representation.append(gene)
+
+    return representation
+
+
+
 @total_ordering
 class ESFitness(object):
     """
@@ -16,9 +53,9 @@ class ESFitness(object):
         This measure consists of both the always available Fixed Cost Error (FCE)
         and the less available but more rigorous Expected Running Time (ERT).
     """
-    def __init__(self, fitnesses=None, target=Config.default_target,         # Original values
-                 min_fitnesses=None, min_indices=None, num_successful=None,  # Summary values
-                 ERT=None, FCE=float('inf'), std_dev=None):                  # Human-readable values
+    def __init__(self, fitnesses=None, target=Config.default_target,               # Original values
+                 min_fitnesses=None, min_indices=None, num_successful=None,        # Summary values
+                 ERT=None, FCE=float('inf'), std_dev_ERT=None, std_dev_FCE=None):  # Human-readable values
 
         # If original fitness values are given, calculate everything from scratch
         if fitnesses is not None:
@@ -26,12 +63,13 @@ class ESFitness(object):
 
         # If 'summary data' is available, calculate ERT, FCE and its std_dev using the summary data
         if min_fitnesses is not None and min_indices is not None and num_successful is not None:
-            ERT, FCE, std_dev = self._calcFCEandERT(min_fitnesses, min_indices, num_successful)
+            ERT, FCE, std_dev_ERT, std_dev_FCE = self._calcFCEandERT(min_fitnesses, min_indices, num_successful)
 
         # The interesting values to display or use as comparison
         self.ERT = ERT                              # Expected Running Time
         self.FCE = FCE if FCE > target else target  # Fixed Cost Error
-        self.std_dev = std_dev                      # Standard deviation of FCE
+        self.std_dev_ERT = std_dev_ERT              # Standard deviation of ERT
+        self.std_dev_FCE = std_dev_FCE              # Standard deviation of FCE
         # Summary/memory values to use for reproducability
         self.min_fitnesses = min_fitnesses
         self.min_indices = min_indices
@@ -62,12 +100,15 @@ class ESFitness(object):
                 self.target, self.min_fitnesses, self.min_indices, self.num_successful
             )
         else:
-            kwargs = "target={},ERT={},FCE={},std_dev={}".format(self.target, self.ERT, self.FCE, self.std_dev)
+            kwargs = "target={},ERT={},FCE={},std_dev_ERT={},std_dev_FCE={}".format(
+                self.target, self.ERT, self.FCE, self.std_dev_ERT, self.std_dev_FCE
+            )
         return "ESFitness({})".format(kwargs)
 
     def __unicode__(self):
         # TODO: pretty-print-ify
-        return "ERT: {0:>8.7}  FCE: {1:>8.3}  (std: {2:>8.3})".format(self.ERT, self.FCE, self.std_dev)
+        return "ERT: {0:>8.7}  (std: {1:>8.3})  |  FCE: {2:>8.3}  (std: {3:>8.3})".format(self.ERT, self.std_dev_ERT,
+                                                                                          self.FCE, self.std_dev_FCE)
 
     __str__ = __unicode__
 
@@ -114,10 +155,11 @@ class ESFitness(object):
 
         ### FCE ###
         FCE = np.mean(min_fitnesses)
-        std_dev = np.std(min_fitnesses)
+        std_dev_FCE = np.std(min_fitnesses)
 
         ### ERT ###
         # If none of the runs reached the target, there is no (useful) ERT to be calculated
         ERT = np.sum(min_indices) / num_successful if num_successful != 0 else None
+        std_dev_ERT = np.std(min_indices)
 
-        return ERT, FCE, std_dev
+        return ERT, FCE, std_dev_ERT, std_dev_FCE
