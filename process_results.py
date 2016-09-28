@@ -14,7 +14,7 @@ import cPickle
 from collections import Counter
 from datetime import timedelta
 from code import getPrintName, getOpts
-from code.Utils import ESFitness
+from code.Utils import ESFitness, intToRepr, reprToInt, reprToString
 
 np.set_printoptions(linewidth=156)
 brute_location = 'C:\\Users\\Sander\\Dropbox\\Liacs\\DAS4\\Experiments\\BF runs'
@@ -32,39 +32,6 @@ subgroups = [
 ]
 np_save_names = ['time_spent', 'generation_sizes', 'sigma', 'best_result', 'best_fitness']
 
-
-def reprToString(representation):
-    max_length = 11  # Hardcoded
-    return ''.join([str(i) for i in representation[:max_length]])
-
-
-def reprToInt(representation):
-    """ Encode the ES-structure representation to a single integer """
-    # Hardcoded
-    max_length = 11
-    factors = [2304, 1152, 576, 288, 144, 72, 36, 18, 9, 3, 1]
-    integer = 0
-    for i in range(max_length):
-        integer += representation[i] * factors[i]
-
-    return integer
-
-
-def intToRepr(integer):
-    """ Decode integer to ES-structure representation """
-    # Hardcoded
-    max_length = 11
-    factors = [2304, 1152, 576, 288, 144, 72, 36, 18, 9, 3, 1]
-    representation = []
-    for i in range(max_length):
-        if integer >= factors[i]:
-            gene = integer // factors[i]
-            integer -= gene * factors[i]
-        else:
-            gene = 0
-        representation.append(gene)
-
-    return representation
 
 def BFFileToFitnesses(filename):
     """
@@ -402,6 +369,21 @@ def findGivenInRankedBF(dim, fid, given):
     return results
 
 
+def getBestFromRankedBF(dim, fid, num=10):
+
+    os.chdir(brute_location)
+    raw_fname = 'data\\bruteforce_{}_f{}.tdat'.format(dim, fid)
+
+    bf_results = BFFileToFitnesses(raw_fname)
+    indexes = [a[0] for a in bf_results]
+
+    results = []
+    for i in range(num):
+        results.append((indexes[i], i, bf_results[i][2]))
+
+    return results
+
+
 def printGAInRankedBF():
 
     os.chdir(brute_location)
@@ -549,29 +531,40 @@ if __name__ == '__main__':
     #     printDoubleCount(dims=[dim])
 
     # Default options: just select each module separately. Add/remove choices as you wish
-    given = [
-        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
-        reprToInt([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
-        reprToInt([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
-        reprToInt([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]),
-        reprToInt([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]),
-        reprToInt([0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]),
-        reprToInt([0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]),
-        reprToInt([0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]),
-        reprToInt([0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]),
-        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]),
-        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0]),
-        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0]),
-        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]),
-        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2]),
-    ]
-    for dim in [2, 3, 5, 10, 20]:
-        print("Results for F1 in {}dim:".format(dim))
-        # print(findGivenInRankedBF(dim, 1, given))
-        results = findGivenInRankedBF(dim, 1, given)
-        for ES, rank, fit in results:
-            print("{0:>33}\t{1:>4}\t{2}".format(intToRepr(ES), rank, fit))
-        print()
+    # given = [
+    #     reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+    #     reprToInt([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+    #     reprToInt([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+    #     reprToInt([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]),
+    #     reprToInt([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]),
+    #     reprToInt([0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]),
+    #     reprToInt([0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]),
+    #     reprToInt([0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]),
+    #     reprToInt([0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]),
+    #     reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]),
+    #     reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0]),
+    #     reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0]),
+    #     reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]),
+    #     reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2]),
+    # ]
+    # for dim in dimensions:
+    #     print("Results for F1 in {}dim:".format(dim))
+    #     # print(findGivenInRankedBF(dim, 1, given))
+    #     results = findGivenInRankedBF(dim, 1, given)
+    #     for ES, rank, fit in results:
+    #         print("{0:>33}\t{1:>4}\t{2}".format(intToRepr(ES), rank, fit))
+    #     print()
+
+    for dim in dimensions:
+        for fid in functions:
+            print("Results for F{} in {}dim:".format(fid, dim))
+            # print(findGivenInRankedBF(dim, 1, given))
+            results = getBestFromRankedBF(dim, fid, num=5)
+            for ES, rank, fit in results:
+                print("Rank: {0:>4}\t{1:>33}\t{2}".format(rank+1, intToRepr(ES), fit))
+            print()
+
+
 
     pass
 
