@@ -45,15 +45,12 @@ def BFFileToFitnesses(filename):
         :return:            List of tuples (reprToInt(ES), reprToString(ES), ESFitness), sorted by ESFitness
     """
 
+    os.chdir(brute_location)
     bf_results = []
     with open(filename) as f:
         for line in f:
             parts = line.split('\t')
             bf_results.append(ES_result(eval(parts[0]), eval(parts[1])))
-            # ES = eval(parts[0])
-            # fitness = eval(parts[1])
-            # bf_results.append((reprToInt(ES), reprToString(ES), fitness))
-
     return bf_results
 
 
@@ -285,7 +282,6 @@ def createGARunPlots():
 
 
 def findBestFromBF():
-    os.chdir(brute_location)
 
     results = {dim: {} for dim in dimensions}
 
@@ -303,6 +299,7 @@ def findBestFromBF():
                         best_es = ES
             results[dim][fid] = (best_es, best_result)
 
+    os.chdir(brute_location)
     with open('brute_results.dat', 'w') as f:
         cPickle.dump(results, f)
 
@@ -324,7 +321,6 @@ def findGAInRankedBF():
     x = np.load('final_GA_results.npz')
     ga_results = x['results'].item()
 
-    os.chdir(brute_location)
     results = {dim: {} for dim in dimensions}
 
     for dim in dimensions:
@@ -355,8 +351,6 @@ def findGAInRankedBF():
 
 def findGivenInRankedBF(dim, fid, given):
 
-    os.chdir(brute_location)
-
     bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
     bf_results.sort(key=lambda a: a.fitness)
     indexes = [reprToInt(a.ES) for a in bf_results]
@@ -371,8 +365,6 @@ def findGivenInRankedBF(dim, fid, given):
 
 
 def getBestFromRankedBF(dim, fid, num=10):
-
-    os.chdir(brute_location)
 
     bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
     bf_results.sort(key=lambda a: a.fitness)
@@ -430,19 +422,11 @@ def printGAInRankedBF():
 
 
 def printBFFitDistances():
-    os.chdir(brute_location)
     for dim in dimensions:
         for fid in functions:
-
-            bf_results = []
-            with open(raw_bfname.format(dim, fid)) as f:
-                for line in f:
-                    parts = line.split('\t')
-                    fitness = eval(parts[1])
-                    bf_results.append(fitness)
-
-            bf_results.sort()
-            print("{:>2}dim F{:>2}: {}".format(dim, fid, [str(res) for res in bf_results[::100]]))
+            bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
+            bf_results.sort(key=lambda a: a.fitness)
+            print("{:>2}dim F{:>2}: {}".format(dim, fid, [str(res.fitness) for res in bf_results[::100]]))
 
 
 def correlationMatrix(fids=None):
