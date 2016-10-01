@@ -222,6 +222,118 @@ def printCompTable(bf, ga):
 
 
 ### BF STUFF ###
+def checkFileSizesBF():
+    os.chdir(brute_location)
+
+    for dim in dimensions:
+        print(dim)
+        for fid in functions:
+            with open(raw_bfname.format(dim, fid)) as f:
+                lines = [line for line in f]
+                if len(lines) != 4608:
+                    print("File bruteforce_{}_f{}.tdat does not contain 4608 entries! ({})".format(dim, fid, len(lines)))
+
+
+def storeBestFromBF():
+
+    results = {dim: {} for dim in dimensions}
+    for dim in dimensions:
+        for fid in functions:
+
+            bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
+            bf_results.sort(key=lambda a: a.fitness)
+            results[dim][fid] = bf_results[0]
+
+    os.chdir(brute_location)
+    with open('brute_results.dat', 'w') as f:
+        cPickle.dump(results, f)
+
+
+def printBFFitDistances():
+    for dim in dimensions:
+        for fid in functions:
+            bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
+            bf_results.sort(key=lambda a: a.fitness)
+            print("{:>2}dim F{:>2}: {}".format(dim, fid, [str(res.fitness) for res in bf_results[::100]]))
+
+
+def findGAInRankedBF():
+    os.chdir(ga_location)
+    x = np.load('final_GA_results.npz')
+    ga_results = x['results'].item()
+
+    results = {dim: {} for dim in dimensions}
+
+    for dim in dimensions:
+        for fid in functions:
+            ga = reprToInt(ga_results[dim][fid]['best_result'])
+            fit = ga_results[dim][fid]['best_fitness'][-1]
+
+            bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
+            bf_results.sort(key=lambda a: a.fitness)
+            indexes = [reprToInt(a.ES) for a in bf_results]
+            ga_index = indexes.index(ga)
+
+            # Where does the GA-found ERT/FCE result rank in the brute-force results?
+            fit_index = 0
+            max_index = len(bf_results)
+            while fit_index < max_index and fit > bf_results[fit_index].fitness:
+                fit_index += 1
+
+            results[dim][fid] = (ga, fit_index, ga_index, indexes)
+            print("{:>2}D F{:>2}:  GA {:>4} is ranked {:>4} ({:>4})\t\t\t GA: {} \t BF[0]: {}".format(dim, fid, ga,
+                                                                                                      fit_index, ga_index,
+                                                                                                      fit,
+                                                                                                      bf_results[0].fitness))
+
+    with open('rank_ga_in_bf.dat', 'w') as f:
+        cPickle.dump(results, f)
+
+
+def printGAInRankedBF():
+
+    os.chdir(brute_location)
+    with open('rank_ga_in_bf.dat') as f:
+        results = cPickle.load(f)
+
+    fit_ranks = []
+    ga_ranks = []
+    for dim in dimensions:
+        for fid in functions:
+            fit_ranks.append(results[dim][fid][1])
+            ga_ranks.append(results[dim][fid][2])
+
+    count = Counter(fit_ranks)
+    fit_ranking = sorted(count.items(), key=lambda x: x[0])
+    fit_ranking.reverse()
+    count = Counter(ga_ranks)
+    struct_ranking = sorted(count.items(), key=lambda x: x[0])
+    struct_ranking.reverse()
+
+    f = s = 0
+    full_ranking = []
+    while len(fit_ranking) > 0 or len(struct_ranking) > 0:
+        if len(fit_ranking) > 0:
+            fit_rank, fit_count = fit_ranking[-1]
+        else:
+            fit_rank = fit_count = 1e5
+        str_rank, str_count = struct_ranking[-1]
+
+        if fit_rank == str_rank:
+            full_ranking.append((fit_rank, fit_count, str_count))
+            fit_ranking.pop()
+            struct_ranking.pop()
+        elif fit_rank < str_rank:
+            full_ranking.append((fit_rank, fit_count, 0))
+            fit_ranking.pop()
+        elif str_rank < fit_rank:
+            full_ranking.append((str_rank, 0, str_count))
+            struct_ranking.pop()
+
+    for rank, f_count, s_count in full_ranking:
+        print("{:>4} & {:>2} & {:>2} \\\\".format(rank+1, f_count, s_count))
+
+
 def printBFTable():
 
     os.chdir(brute_location)
@@ -288,66 +400,6 @@ def printDoubleCount(fids=None, dims=None):
     printIntCount(bf_results, fids, dims)
 
 
-def storeBestFromBF():
-
-    results = {dim: {} for dim in dimensions}
-    for dim in dimensions:
-        for fid in functions:
-
-            bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
-            bf_results.sort(key=lambda a: a.fitness)
-            results[dim][fid] = bf_results[0]
-
-    os.chdir(brute_location)
-    with open('brute_results.dat', 'w') as f:
-        cPickle.dump(results, f)
-
-
-def checkFileSizesBF():
-    os.chdir(brute_location)
-
-    for dim in dimensions:
-        print(dim)
-        for fid in functions:
-            with open(raw_bfname.format(dim, fid)) as f:
-                lines = [line for line in f]
-                if len(lines) != 4608:
-                    print("File bruteforce_{}_f{}.tdat does not contain 4608 entries! ({})".format(dim, fid, len(lines)))
-
-
-def findGAInRankedBF():
-    os.chdir(ga_location)
-    x = np.load('final_GA_results.npz')
-    ga_results = x['results'].item()
-
-    results = {dim: {} for dim in dimensions}
-
-    for dim in dimensions:
-        for fid in functions:
-            ga = reprToInt(ga_results[dim][fid]['best_result'])
-            fit = ga_results[dim][fid]['best_fitness'][-1]
-
-            bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
-            bf_results.sort(key=lambda a: a.fitness)
-            indexes = [reprToInt(a.ES) for a in bf_results]
-            ga_index = indexes.index(ga)
-
-            # Where does the GA-found ERT/FCE result rank in the brute-force results?
-            fit_index = 0
-            max_index = len(bf_results)
-            while fit_index < max_index and fit > bf_results[fit_index].fitness:
-                fit_index += 1
-
-            results[dim][fid] = (ga, fit_index, ga_index, indexes)
-            print("{:>2}D F{:>2}:  GA {:>4} is ranked {:>4} ({:>4})\t\t\t GA: {} \t BF[0]: {}".format(dim, fid, ga,
-                                                                                                      fit_index, ga_index,
-                                                                                                      fit,
-                                                                                                      bf_results[0].fitness))
-
-    with open('rank_ga_in_bf.dat', 'w') as f:
-        cPickle.dump(results, f)
-
-
 def findGivenInRankedBF(dim, fid, given):
 
     bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
@@ -382,58 +434,6 @@ def printBestFromRankedBF():
             for ES, rank, fit in results:
                 print("Rank: {0:>4}\t{1:>33}\t{2}".format(rank+1, intToRepr(ES), fit))
             print()
-
-
-def printGAInRankedBF():
-
-    os.chdir(brute_location)
-    with open('rank_ga_in_bf.dat') as f:
-        results = cPickle.load(f)
-
-    fit_ranks = []
-    ga_ranks = []
-    for dim in dimensions:
-        for fid in functions:
-            fit_ranks.append(results[dim][fid][1])
-            ga_ranks.append(results[dim][fid][2])
-
-    count = Counter(fit_ranks)
-    fit_ranking = sorted(count.items(), key=lambda x: x[0])
-    fit_ranking.reverse()
-    count = Counter(ga_ranks)
-    struct_ranking = sorted(count.items(), key=lambda x: x[0])
-    struct_ranking.reverse()
-
-    f = s = 0
-    full_ranking = []
-    while len(fit_ranking) > 0 or len(struct_ranking) > 0:
-        if len(fit_ranking) > 0:
-            fit_rank, fit_count = fit_ranking[-1]
-        else:
-            fit_rank = fit_count = 1e5
-        str_rank, str_count = struct_ranking[-1]
-
-        if fit_rank == str_rank:
-            full_ranking.append((fit_rank, fit_count, str_count))
-            fit_ranking.pop()
-            struct_ranking.pop()
-        elif fit_rank < str_rank:
-            full_ranking.append((fit_rank, fit_count, 0))
-            fit_ranking.pop()
-        elif str_rank < fit_rank:
-            full_ranking.append((str_rank, 0, str_count))
-            struct_ranking.pop()
-
-    for rank, f_count, s_count in full_ranking:
-        print("{:>4} & {:>2} & {:>2} \\\\".format(rank+1, f_count, s_count))
-
-
-def printBFFitDistances():
-    for dim in dimensions:
-        for fid in functions:
-            bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
-            bf_results.sort(key=lambda a: a.fitness)
-            print("{:>2}dim F{:>2}: {}".format(dim, fid, [str(res.fitness) for res in bf_results[::100]]))
 
 
 def correlationMatrix(fids=None):
@@ -518,7 +518,7 @@ if __name__ == '__main__':
     ### Brute Force STUFF ###
 
     # checkFileSizesBF()
-    # findBestFromBF()
+    # storeBestFromBF()
     # printBFFitDistances()
 
     # findGAInRankedBF()
