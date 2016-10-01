@@ -55,17 +55,6 @@ def BFFileToFitnesses(filename):
 
 
 ### GA STUFF ###
-def GAtimeSpent():
-    os.chdir(ga_location)
-    times = []
-    for dim in dimensions:
-        for fid in functions:
-            filename = 'final_stats\\final_GA_results_{}dim_f{}.npz'.format(dim, fid)
-            x = np.load(filename)
-            times.append(x['time_spent'])
-    print(min(times), max(times), sum(times, timedelta(0)) // len(times))
-
-
 def getBestEs():
     os.chdir(ga_location)
     results = {dim: {} for dim in dimensions}
@@ -97,6 +86,86 @@ def printResults():
             print("  F{}:\t{} {}".format(func, results[dim][func]['best_result'], getPrintName(getOpts(results[dim][func]['best_result']))))
 
 
+def createGARunPlots():
+    os.chdir(ga_location)
+    x = np.load('final_GA_results.npz')
+    results = x['results'].item()
+
+    matplotlib.rcParams.update({'font.size': 14})
+    plt.figure(figsize=(8,4.5))
+
+    for func in functions:
+        print("F{}:".format(func))
+
+        plt.clf()
+        for dim in dimensions:
+            best_per_generation = results[dim][func]['best_fitness'][::12]
+            best_found_ever = []
+            for i, fit in enumerate(best_per_generation):
+                if fit <= min(best_per_generation[:i+1]):
+                    best_found_ever.append(fit)
+                else:
+                    best_found_ever.append(best_found_ever[i-1])
+
+            plt.subplot(1, 2, 1)
+            plt.plot([x.FCE for x in best_found_ever], label='{}-dim'.format(dim))
+            plt.subplot(1, 2, 2)
+            plt.plot([x.ERT for x in best_found_ever], label='{}-dim'.format(dim))
+
+        plt.suptitle("Convergence for F{}".format(func), y=.99)
+
+        plt.subplot(1, 2, 1)
+        plt.yscale('log')
+        plt.xlabel('Generation')
+        plt.ylabel('FCE')
+        plt.legend(loc=0, prop={'size':11}, labelspacing=0.15)
+
+        plt.subplot(1, 2, 2)
+        plt.yscale('log')
+        plt.xlabel('Generation')
+        plt.ylabel('ERT')
+        plt.legend(loc=0, prop={'size':11}, labelspacing=0.15)
+
+        plt.tight_layout()
+
+        # plt.savefig('img/F{}_log.png'.format(func), bbox_inches='tight')
+        plt.savefig('img/F{}_log.pdf'.format(func), bbox_inches='tight')
+
+
+def printTable(results):
+    print('\\hline')
+    print('F-ID & N & GA & FCE & ERT \\\\')
+    print('\\hline')
+    print('\\hline')
+    for fid in functions:
+        for dim in dimensions:
+            result, fit = results[dim][fid]
+            string = ''
+            # for i in range(len(result)):
+            for i in range(11):
+                string += str(result[i])
+
+            print('F{0} & {1} & {2} & {3:.3g} & {4}\\\\'.format(fid, dim, string, fit.FCE, fit.ERT))
+        print('\\hline')
+
+
+def printGATable():
+
+    os.chdir(ga_location)
+    x = np.load('final_GA_results.npz')
+    results = x['results'].item()
+    ga_results = {dim: {fid: (results[dim][fid]['best_result'], min(results[dim][fid]['best_fitness'])) for fid in functions} for dim in dimensions}
+    printTable(ga_results)
+
+
+def printGAcount():
+    os.chdir(ga_location)
+    x = np.load('final_GA_results.npz')
+    results = x['results'].item()
+    ga_results = {dim: {fid: (results[dim][fid]['best_result'], min(results[dim][fid]['best_fitness'])) for fid in functions} for dim in dimensions}
+    printIntCount(ga_results)
+
+
 def storeRepresentation():
 
     os.chdir(ga_location)
@@ -115,21 +184,15 @@ def storeRepresentation():
         json.dump(to_store, json_out)
 
 
-def printTable(results):
-    print('\\hline')
-    print('F-ID & N & GA & FCE & ERT \\\\')
-    print('\\hline')
-    print('\\hline')
-    for fid in functions:
-        for dim in dimensions:
-            result, fit = results[dim][fid]
-            string = ''
-            # for i in range(len(result)):
-            for i in range(11):
-                string += str(result[i])
-
-            print('F{0} & {1} & {2} & {3:.3g} & {4}\\\\'.format(fid, dim, string, fit.FCE, fit.ERT))
-        print('\\hline')
+def GAtimeSpent():
+    os.chdir(ga_location)
+    times = []
+    for dim in dimensions:
+        for fid in functions:
+            filename = 'final_stats\\final_GA_results_{}dim_f{}.npz'.format(dim, fid)
+            x = np.load(filename)
+            times.append(x['time_spent'])
+    print(min(times), max(times), sum(times, timedelta(0)) // len(times))
 
 
 def printCompTable(bf, ga):
@@ -158,15 +221,7 @@ def printCompTable(bf, ga):
         print('\\hline')
 
 
-def printGATable():
-
-    os.chdir(ga_location)
-    x = np.load('final_GA_results.npz')
-    results = x['results'].item()
-    ga_results = {dim: {fid: (results[dim][fid]['best_result'], min(results[dim][fid]['best_fitness'])) for fid in functions} for dim in dimensions}
-    printTable(ga_results)
-
-
+### BF STUFF ###
 def printBFTable():
 
     os.chdir(brute_location)
@@ -214,14 +269,6 @@ def printIntCount(results, fids=None, dims=None):
         # print()
 
 
-def printGAcount():
-    os.chdir(ga_location)
-    x = np.load('final_GA_results.npz')
-    results = x['results'].item()
-    ga_results = {dim: {fid: (results[dim][fid]['best_result'], min(results[dim][fid]['best_fitness'])) for fid in functions} for dim in dimensions}
-    printIntCount(ga_results)
-
-
 def printDoubleCount(fids=None, dims=None):
 
     if fids is None:
@@ -239,52 +286,6 @@ def printDoubleCount(fids=None, dims=None):
     with open('brute_results.dat') as f:
         bf_results = cPickle.load(f)
     printIntCount(bf_results, fids, dims)
-
-
-def createGARunPlots():
-    os.chdir(ga_location)
-    x = np.load('final_GA_results.npz')
-    results = x['results'].item()
-
-    matplotlib.rcParams.update({'font.size': 14})
-    plt.figure(figsize=(8,4.5))
-
-    for func in functions:
-        print("F{}:".format(func))
-
-        plt.clf()
-        for dim in dimensions:
-            best_per_generation = results[dim][func]['best_fitness'][::12]
-            best_found_ever = []
-            for i, fit in enumerate(best_per_generation):
-                if fit <= min(best_per_generation[:i+1]):
-                    best_found_ever.append(fit)
-                else:
-                    best_found_ever.append(best_found_ever[i-1])
-
-            plt.subplot(1, 2, 1)
-            plt.plot([x.FCE for x in best_found_ever], label='{}-dim'.format(dim))
-            plt.subplot(1, 2, 2)
-            plt.plot([x.ERT for x in best_found_ever], label='{}-dim'.format(dim))
-
-        plt.suptitle("Convergence for F{}".format(func), y=.99)
-
-        plt.subplot(1, 2, 1)
-        plt.yscale('log')
-        plt.xlabel('Generation')
-        plt.ylabel('FCE')
-        plt.legend(loc=0, prop={'size':11}, labelspacing=0.15)
-
-        plt.subplot(1, 2, 2)
-        plt.yscale('log')
-        plt.xlabel('Generation')
-        plt.ylabel('ERT')
-        plt.legend(loc=0, prop={'size':11}, labelspacing=0.15)
-
-        plt.tight_layout()
-
-        # plt.savefig('img/F{}_log.png'.format(func), bbox_inches='tight')
-        plt.savefig('img/F{}_log.pdf'.format(func), bbox_inches='tight')
 
 
 def storeBestFromBF():
