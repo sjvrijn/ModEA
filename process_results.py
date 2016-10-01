@@ -33,7 +33,6 @@ subgroups = [
 ]
 np_save_names = ['time_spent', 'generation_sizes', 'sigma', 'best_result', 'best_fitness']
 
-ES_result = namedtuple('ES_result', ['ES', 'fitness'])
 
 
 def BFFileToFitnesses(filename):
@@ -47,10 +46,11 @@ def BFFileToFitnesses(filename):
 
     os.chdir(brute_location)
     bf_results = []
+    ES_and_result = namedtuple('ES_and_result', ['ES', 'fitness'])
     with open(filename) as f:
         for line in f:
             parts = line.split('\t')
-            bf_results.append(ES_result(eval(parts[0]), eval(parts[1])))
+            bf_results.append(ES_and_result(eval(parts[0]), eval(parts[1])))
     return bf_results
 
 
@@ -281,23 +281,15 @@ def createGARunPlots():
         plt.savefig('img/F{}_log.pdf'.format(func), bbox_inches='tight')
 
 
-def findBestFromBF():
+def storeBestFromBF():
 
     results = {dim: {} for dim in dimensions}
-
     for dim in dimensions:
         for fid in functions:
-            best_es = None
-            best_result = ESFitness()
-            with open(raw_bfname.format(dim, fid)) as f:
-                for line in f:
-                    parts = line.split('\t')
-                    ES = eval(parts[0])
-                    fitness = eval(parts[1])
-                    if fitness < best_result:
-                        best_result = fitness
-                        best_es = ES
-            results[dim][fid] = (best_es, best_result)
+
+            bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
+            bf_results.sort(key=lambda a: a.fitness)
+            results[dim][fid] = bf_results[0]
 
     os.chdir(brute_location)
     with open('brute_results.dat', 'w') as f:
@@ -467,8 +459,8 @@ def GAtimeSpent():
     times = []
 
     for dim in dimensions:
-        for func in functions:
-            filename = 'final_stats\\final_GA_results_{}dim_f{}.npz'.format(dim, func)
+        for fid in functions:
+            filename = 'final_stats\\final_GA_results_{}dim_f{}.npz'.format(dim, fid)
             x = np.load(filename)
             times.append(x['time_spent'])
 
