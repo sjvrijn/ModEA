@@ -34,7 +34,7 @@ subgroups = [
 np_save_names = ['time_spent', 'generation_sizes', 'sigma', 'best_result', 'best_fitness']
 
 
-
+### Utility functions ###
 def BFFileToFitnesses(filename):
     """
         Given a brute_force filename, load all associated ESFitness objects and return them in tuples with both an
@@ -54,24 +54,30 @@ def BFFileToFitnesses(filename):
     return bf_results
 
 
+### GA STUFF ###
+def GAtimeSpent():
+    os.chdir(ga_location)
+    times = []
+    for dim in dimensions:
+        for fid in functions:
+            filename = 'final_stats\\final_GA_results_{}dim_f{}.npz'.format(dim, fid)
+            x = np.load(filename)
+            times.append(x['time_spent'])
+    print(min(times), max(times), sum(times, timedelta(0)) // len(times))
+
 
 def getBestEs():
     os.chdir(ga_location)
-
     results = {dim: {} for dim in dimensions}
-
     for dim in dimensions:
         results[dim] = {func: {} for func in functions}
-
         # for file in final_files:
-        for func in functions:
-            filename = 'final_stats\\final_GA_results_{}dim_f{}.npz'.format(dim, func)
+        for fid in functions:
+            filename = 'final_stats\\final_GA_results_{}dim_f{}.npz'.format(dim, fid)
             x = np.load(filename)
-
             # for data in ['time_spent', 'best_result']:
             for data in x.files:  # ['time_spent', 'generation_sizes', 'sigma', 'best_result', 'best_fitness']
-                results[dim][func][data] = x[data]
-
+                results[dim][fid][data] = x[data]
     return results
 
 
@@ -350,9 +356,6 @@ def findGivenInRankedBF(dim, fid, given):
     results = []
     for ES in given:
         results.append((ES, indexes.index(ES), bf_results[indexes.index(ES)].fitness))
-
-    # By default, add the best found structure at the end
-    results.append((indexes[0], 0, bf_results[0].fitness))
     return results
 
 
@@ -367,6 +370,17 @@ def getBestFromRankedBF(dim, fid, num=10):
         results.append((indexes[i], i, bf_results[i].fitness))
 
     return results
+
+
+def printBestFromRankedBF():
+    for dim in dimensions:
+        for fid in functions:
+            print("Results for F{} in {}dim:".format(fid, dim))
+            # print(findGivenInRankedBF(dim, 1, given))
+            results = getBestFromRankedBF(dim, fid, num=5)
+            for ES, rank, fit in results:
+                print("Rank: {0:>4}\t{1:>33}\t{2}".format(rank+1, intToRepr(ES), fit))
+            print()
 
 
 def printGAInRankedBF():
@@ -453,18 +467,33 @@ def correlationMatrix(fids=None):
     print(bf_corr)
 
 
-def GAtimeSpent():
-    os.chdir(ga_location)
+def printComparisonBestAndGivenBF():
 
-    times = []
-
+    # Default options: just select each module separately. Add/remove choices as you wish
+    given = [
+        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+        reprToInt([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+        reprToInt([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+        reprToInt([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]),
+        reprToInt([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]),
+        reprToInt([0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]),
+        reprToInt([0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]),
+        reprToInt([0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]),
+        reprToInt([0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]),
+        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]),
+        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0]),
+        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0]),
+        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]),
+        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2]),
+    ]
     for dim in dimensions:
         for fid in functions:
-            filename = 'final_stats\\final_GA_results_{}dim_f{}.npz'.format(dim, fid)
-            x = np.load(filename)
-            times.append(x['time_spent'])
-
-    print(min(times), max(times), sum(times, timedelta(0)) // len(times))
+            print("Results for F1 in {}dim:".format(dim))
+            # print(findGivenInRankedBF(dim, 1, given))
+            results = findGivenInRankedBF(dim, fid, given)
+            for ES, rank, fit in results:
+                print("{0:>33}\t{1:>4}\t{2}".format(intToRepr(ES), rank, fit))
+            print()
 
 
 if __name__ == '__main__':
@@ -506,39 +535,8 @@ if __name__ == '__main__':
     #     print(dim)
     #     printDoubleCount(dims=[dim])
 
-    # Default options: just select each module separately. Add/remove choices as you wish
-    # given = [
-    #     reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
-    #     reprToInt([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
-    #     reprToInt([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
-    #     reprToInt([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]),
-    #     reprToInt([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]),
-    #     reprToInt([0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]),
-    #     reprToInt([0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]),
-    #     reprToInt([0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]),
-    #     reprToInt([0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]),
-    #     reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]),
-    #     reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0]),
-    #     reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0]),
-    #     reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]),
-    #     reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2]),
-    # ]
-    # for dim in dimensions:
-    #     print("Results for F1 in {}dim:".format(dim))
-    #     # print(findGivenInRankedBF(dim, 1, given))
-    #     results = findGivenInRankedBF(dim, 1, given)
-    #     for ES, rank, fit in results:
-    #         print("{0:>33}\t{1:>4}\t{2}".format(intToRepr(ES), rank, fit))
-    #     print()
-
-    for dim in dimensions:
-        for fid in functions:
-            print("Results for F{} in {}dim:".format(fid, dim))
-            # print(findGivenInRankedBF(dim, 1, given))
-            results = getBestFromRankedBF(dim, fid, num=5)
-            for ES, rank, fit in results:
-                print("Rank: {0:>4}\t{1:>33}\t{2}".format(rank+1, intToRepr(ES), fit))
-            print()
+    printComparisonBestAndGivenBF()
+    printBestFromRankedBF()
 
 
 
