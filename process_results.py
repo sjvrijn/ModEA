@@ -430,7 +430,7 @@ def printBestFromRankedBF():
         for fid in functions:
             print("Results for F{} in {}dim:".format(fid, dim))
             # print(findGivenInRankedBF(dim, 1, given))
-            results = getBestFromRankedBF(dim, fid, num=5)
+            results = getBestFromRankedBF(dim, fid, num=10)
             for ES, rank, fit in results:
                 print("Rank: {0:>4}\t{1:>33}\t{2}".format(rank+1, intToRepr(ES), fit))
             print()
@@ -472,28 +472,23 @@ def printComparisonBestAndGivenBF():
 
     # Default options: just select each module separately. Add/remove choices as you wish
     given = [
-        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
-        reprToInt([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
-        reprToInt([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
-        reprToInt([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]),
-        reprToInt([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]),
-        reprToInt([0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]),
-        reprToInt([0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]),
-        reprToInt([0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]),
-        reprToInt([0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]),
-        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]),
-        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0]),
-        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0]),
-        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]),
-        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2]),
+        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),  # CMA_ES
+        reprToInt([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),  # active CMA_ES
+        reprToInt([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]),  # elitist CMA_ES
+        reprToInt([0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0]),  # mirrored-pairwise CMA_ES
+        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]),  # IPOP CMA_ES
+        reprToInt([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]),  # active-IPOP CMA_ES
+        reprToInt([1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1]),  # elitist active-IPOP CMA_ES
+        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2]),  # BIPOP CMA_ES
+        reprToInt([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2]),  # active-BIPOP CMA_ES
+        reprToInt([1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2]),  # elitistactive-BIPOP CMA_ES
     ]
     for dim in dimensions:
         for fid in functions:
-            print("Results for F1 in {}dim:".format(dim))
-            # print(findGivenInRankedBF(dim, 1, given))
+            print("Results for F{} in {}dim:".format(fid, dim))
             results = findGivenInRankedBF(dim, fid, given)
             for ES, rank, fit in results:
-                print("{0:>33}\t{1:>4}\t{2}".format(intToRepr(ES), rank, fit))
+                print("Rank: {0:>4}\t{1:>33}\t{2}".format(rank + 1, intToRepr(ES), fit))
             print()
 
 
