@@ -22,6 +22,8 @@ raw_bfname = 'data\\bruteforce_{}_f{}.tdat'
 
 ga_location = 'C:\\Users\\Sander\\Dropbox\\Liacs\\DAS4\\Experiments\\GA runs'  # laptop
 # ga_location = '/home/sander/Dropbox/Liacs/Semester12/Thesis/test_results'  # desktop
+raw_ganame = 'data\\GA_results_{}dim_f{}.tdat'
+
 dimensions = [2, 3, 5, 10, 20]
 functions = range(1, 25)
 subgroups = [
@@ -35,7 +37,7 @@ np_save_names = ['time_spent', 'generation_sizes', 'sigma', 'best_result', 'best
 
 
 ### Utility functions ###
-def BFFileToFitnesses(filename):
+def tdatFileToFitnesses(filename):
     """
         Given a brute_force filename, load all associated ESFitness objects and return them in tuples with both an
         numerical and string value of the relevant ES-structure. N.B.: the filename is **not** checked for correctness
@@ -45,13 +47,13 @@ def BFFileToFitnesses(filename):
     """
 
     os.chdir(brute_location)
-    bf_results = []
+    results = []
     ES_and_result = namedtuple('ES_and_result', ['ES', 'fitness'])
     with open(filename) as f:
         for line in f:
             parts = line.split('\t')
-            bf_results.append(ES_and_result(eval(parts[0]), eval(parts[1])))
-    return bf_results
+            results.append(ES_and_result(eval(parts[0]), eval(parts[1])))
+    return results
 
 
 ### GA STUFF ###
@@ -240,7 +242,7 @@ def storeBestFromBF():
     for dim in dimensions:
         for fid in functions:
 
-            bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
+            bf_results = tdatFileToFitnesses(raw_bfname.format(dim, fid))
             bf_results.sort(key=lambda a: a.fitness)
             results[dim][fid] = bf_results[0]
 
@@ -252,7 +254,7 @@ def storeBestFromBF():
 def printBFFitDistances():
     for dim in dimensions:
         for fid in functions:
-            bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
+            bf_results = tdatFileToFitnesses(raw_bfname.format(dim, fid))
             bf_results.sort(key=lambda a: a.fitness)
             print("{:>2}dim F{:>2}: {}".format(dim, fid, [str(res.fitness) for res in bf_results[::100]]))
 
@@ -269,7 +271,7 @@ def findGAInRankedBF():
             ga = reprToInt(ga_results[dim][fid]['best_result'])
             fit = ga_results[dim][fid]['best_fitness'][-1]
 
-            bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
+            bf_results = tdatFileToFitnesses(raw_bfname.format(dim, fid))
             bf_results.sort(key=lambda a: a.fitness)
             indexes = [reprToInt(a.ES) for a in bf_results]
             ga_index = indexes.index(ga)
@@ -402,7 +404,7 @@ def printDoubleCount(fids=None, dims=None):
 
 def findGivenInRankedBF(dim, fid, given):
 
-    bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
+    bf_results = tdatFileToFitnesses(raw_bfname.format(dim, fid))
     bf_results.sort(key=lambda a: a.fitness)
     indexes = [reprToInt(a.ES) for a in bf_results]
 
@@ -414,7 +416,7 @@ def findGivenInRankedBF(dim, fid, given):
 
 def getBestFromRankedBF(dim, fid, num=10):
 
-    bf_results = BFFileToFitnesses(raw_bfname.format(dim, fid))
+    bf_results = tdatFileToFitnesses(raw_bfname.format(dim, fid))
     bf_results.sort(key=lambda a: a.fitness)
     indexes = [reprToInt(a.ES) for a in bf_results]
 
