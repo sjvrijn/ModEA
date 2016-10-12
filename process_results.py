@@ -524,16 +524,17 @@ def printRelativeComparisonBestAndGivenBF(given=None):
         brute_results = cPickle.load(f)
 
     all_relatives = []
+    relatives = {i: [] for i in range(len(default_ESs))}
     counts = [0] * len(default_ESs)
     for dim in dimensions:
         for fid in functions:
             print("Results for F{} in {}dim:".format(fid, dim))
             results = findGivenInRankedBF(dim, fid, given)
             ranks = []
-
-            for ES in results:
+            for i, ES in enumerate(results):
                 if ES.fitness.ERT is not None:
                     relative_fitness = ES.fitness.ERT / brute_results[dim][fid].fitness.ERT
+                    relatives[i].append(relative_fitness)
                 elif brute_results[dim][fid].fitness.ERT is not None and brute_results[dim][fid].fitness.FCE > ES.fitness.FCE:
                     relative_fitness = "Unclear???"
                 else:
@@ -547,6 +548,7 @@ def printRelativeComparisonBestAndGivenBF(given=None):
             print()
 
     print(all_relatives)
+    print(relatives)
     print(counts)
 
 
@@ -561,15 +563,17 @@ def printRelativeComparisonBestGAAndGivenBF(given=None):
         ga_results = cPickle.load(f)
 
     all_relatives = []
+    relatives = {i: [] for i in range(len(default_ESs))}
     counts = [0] * len(default_ESs)
     for dim in dimensions:
         for fid in functions:
             print("Results for F{} in {}dim:".format(fid, dim))
             results = findGivenInRankedBF(dim, fid, given)
             ranks = []
-            for ES in results:
+            for i, ES in enumerate(results):
                 if ES.fitness.ERT is not None:
                     relative_fitness = ES.fitness.ERT / ga_results[dim][fid].fitness.ERT
+                    relatives[i].append(relative_fitness)
                 elif ga_results[dim][fid].fitness.ERT is not None and ga_results[dim][fid].fitness.FCE > ES.fitness.FCE:
                     relative_fitness = "Unclear???"
                 else:
@@ -583,6 +587,7 @@ def printRelativeComparisonBestGAAndGivenBF(given=None):
             print()
 
     print(all_relatives)
+    print(relatives)
     print(counts)
 
 
