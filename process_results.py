@@ -35,6 +35,21 @@ subgroups = [
 ]
 np_save_names = ['time_spent', 'generation_sizes', 'sigma', 'best_result', 'best_fitness']
 
+default_ESs = [
+    reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),  # CMA_ES                          6
+    reprToInt([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),  # active CMA_ES                   5
+    reprToInt([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]),  # elitist CMA_ES                 14
+    reprToInt([0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0]),  # mirrored-pairwise CMA_ES        9
+    reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]),  # IPOP CMA_ES                    25
+    reprToInt([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]),  # active-IPOP CMA_ES              5
+    reprToInt([1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1]),  # elitist active-IPOP CMA_ES     14
+    reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2]),  # BIPOP CMA_ES                   19
+    reprToInt([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2]),  # active-BIPOP CMA_ES             9
+    reprToInt([1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2]),  # elitist active-BIPOP CMA_ES    14
+]
+
+ES_and_result = namedtuple('ES_and_result', ['ES', 'fitness'])
+ranked_ES_and_result = namedtuple('ranked_ES_and_result', ['ES', 'rank', 'fitness'])
 
 ### Utility functions ###
 def tdatFileToFitnesses(filename):
@@ -42,13 +57,11 @@ def tdatFileToFitnesses(filename):
         Given a brute_force filename, load all associated ESFitness objects and return them in tuples with both an
         numerical and string value of the relevant ES-structure. N.B.: the filename is **not** checked for correctness
 
-        :param filename:    A string expected to be in the format: 'data\\bruteforce_{}_f{}.tdat'
+        :param filename:    A string expected to be in the format: 'data\\<experiment_name>_{}_f{}.tdat'
         :return:            List of tuples (reprToInt(ES), reprToString(ES), ESFitness), sorted by ESFitness
     """
 
-    os.chdir(brute_location)
     results = []
-    ES_and_result = namedtuple('ES_and_result', ['ES', 'fitness'])
     with open(filename) as f:
         for line in f:
             parts = line.split('\t')
@@ -237,7 +250,7 @@ def checkFileSizesBF():
 
 
 def storeBestFromBF():
-
+    os.chdir(brute_location)
     results = {dim: {} for dim in dimensions}
     for dim in dimensions:
         for fid in functions:
@@ -246,12 +259,12 @@ def storeBestFromBF():
             bf_results.sort(key=lambda a: a.fitness)
             results[dim][fid] = bf_results[0]
 
-    os.chdir(brute_location)
     with open('brute_results.dat', 'w') as f:
         cPickle.dump(results, f)
 
 
 def printBFFitDistances():
+    os.chdir(brute_location)
     for dim in dimensions:
         for fid in functions:
             bf_results = tdatFileToFitnesses(raw_bfname.format(dim, fid))
@@ -265,11 +278,12 @@ def findGAInRankedBF():
     ga_results = x['results'].item()
 
     results = {dim: {} for dim in dimensions}
-
+    os.chdir(brute_location)
     for dim in dimensions:
         for fid in functions:
             ga = reprToInt(ga_results[dim][fid]['best_result'])
             fit = ga_results[dim][fid]['best_fitness'][-1]
+
 
             bf_results = tdatFileToFitnesses(raw_bfname.format(dim, fid))
             bf_results.sort(key=lambda a: a.fitness)
@@ -403,19 +417,20 @@ def printDoubleCount(fids=None, dims=None):
 
 
 def findGivenInRankedBF(dim, fid, given):
-
+    os.chdir(brute_location)
     bf_results = tdatFileToFitnesses(raw_bfname.format(dim, fid))
     bf_results.sort(key=lambda a: a.fitness)
     indexes = [reprToInt(a.ES) for a in bf_results]
 
     results = []
     for ES in given:
-        results.append((ES, indexes.index(ES), bf_results[indexes.index(ES)].fitness))
+        index = indexes.index(ES)
+        results.append(ranked_ES_and_result(ES, index, bf_results[index].fitness))
     return results
 
 
 def getBestFromRankedBF(dim, fid, num=10):
-
+    os.chdir(brute_location)
     bf_results = tdatFileToFitnesses(raw_bfname.format(dim, fid))
     bf_results.sort(key=lambda a: a.fitness)
     indexes = [reprToInt(a.ES) for a in bf_results]
@@ -470,27 +485,18 @@ def correlationMatrix(fids=None):
     print(bf_corr)
 
 
-def printComparisonBestAndGivenBF():
+def printComparisonGivenInBF(given=None):
 
-    # Default options: just select each module separately. Add/remove choices as you wish
-    given = [
-        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),  # CMA_ES
-        reprToInt([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),  # active CMA_ES
-        reprToInt([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]),  # elitist CMA_ES
-        reprToInt([0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0]),  # mirrored-pairwise CMA_ES
-        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]),  # IPOP CMA_ES
-        reprToInt([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]),  # active-IPOP CMA_ES
-        reprToInt([1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1]),  # elitist active-IPOP CMA_ES
-        reprToInt([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2]),  # BIPOP CMA_ES
-        reprToInt([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2]),  # active-BIPOP CMA_ES
-        reprToInt([1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2]),  # elitistactive-BIPOP CMA_ES
-    ]
+    # Add/remove choices as you wish
+    if given is None:
+        given = default_ESs
+
     for dim in dimensions:
         for fid in functions:
             print("Results for F{} in {}dim:".format(fid, dim))
             results = findGivenInRankedBF(dim, fid, given)
-            for ES, rank, fit in results:
-                print("Rank: {0:>4}\t{1:>33}\t{2}".format(rank + 1, intToRepr(ES), fit))
+            for ES in results:
+                print("Rank: {0:>4}\t{1:>33}\t{2}".format(ES.rank + 1, intToRepr(ES.ES), ES.fitness))
             print()
 
 
@@ -533,7 +539,7 @@ if __name__ == '__main__':
     #     print(dim)
     #     printDoubleCount(dims=[dim])
 
-    printComparisonBestAndGivenBF()
+    printComparisonGivenInBF()
     printBestFromRankedBF()
 
 
