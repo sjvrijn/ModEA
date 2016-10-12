@@ -70,6 +70,19 @@ def tdatFileToFitnesses(filename):
 
 
 ### GA STUFF ###
+def storeBestFromGA():
+    os.chdir(ga_location)
+    results = {dim: {} for dim in dimensions}
+    for dim in dimensions:
+        for fid in functions:
+
+            ga_results = tdatFileToFitnesses(raw_ganame.format(dim, fid))
+            ga_results.sort(key=lambda a: a.fitness)
+            results[dim][fid] = ga_results[0]
+
+    with open('ga_results.dat', 'w') as f:
+        cPickle.dump(results, f)
+
 def getBestEs():
     os.chdir(ga_location)
     results = {dim: {} for dim in dimensions}
@@ -500,9 +513,83 @@ def printComparisonGivenInBF(given=None):
             print()
 
 
+def printRelativeComparisonBestAndGivenBF(given=None):
+
+    # Add/remove choices as you wish
+    if given is None:
+        given = default_ESs
+
+    os.chdir(brute_location)
+    with open('brute_results.dat') as f:
+        brute_results = cPickle.load(f)
+
+    all_relatives = []
+    counts = [0] * len(default_ESs)
+    for dim in dimensions:
+        for fid in functions:
+            print("Results for F{} in {}dim:".format(fid, dim))
+            results = findGivenInRankedBF(dim, fid, given)
+            ranks = []
+
+            for ES in results:
+                if ES.fitness.ERT is not None:
+                    relative_fitness = ES.fitness.ERT / brute_results[dim][fid].fitness.ERT
+                elif brute_results[dim][fid].fitness.ERT is not None and brute_results[dim][fid].fitness.FCE > ES.fitness.FCE:
+                    relative_fitness = "Unclear???"
+                else:
+                    relative_fitness = ES.fitness.FCE / brute_results[dim][fid].fitness.FCE
+                all_relatives.append(relative_fitness)
+                ranks.append(ES.rank)
+                print("Rank: {0:>4}\t{1:>33}\t{2}".format(ES.rank + 1, intToRepr(ES.ES), relative_fitness))
+            for i, rank in enumerate(ranks):
+                if rank == min(ranks):
+                    counts[i] += 1
+            print()
+
+    print(all_relatives)
+    print(counts)
+
+
+def printRelativeComparisonBestGAAndGivenBF(given=None):
+
+    # Add/remove choices as you wish
+    if given is None:
+        given = default_ESs
+
+    os.chdir(ga_location)
+    with open('ga_results.dat') as f:
+        ga_results = cPickle.load(f)
+
+    all_relatives = []
+    counts = [0] * len(default_ESs)
+    for dim in dimensions:
+        for fid in functions:
+            print("Results for F{} in {}dim:".format(fid, dim))
+            results = findGivenInRankedBF(dim, fid, given)
+            ranks = []
+            for ES in results:
+                if ES.fitness.ERT is not None:
+                    relative_fitness = ES.fitness.ERT / ga_results[dim][fid].fitness.ERT
+                elif ga_results[dim][fid].fitness.ERT is not None and ga_results[dim][fid].fitness.FCE > ES.fitness.FCE:
+                    relative_fitness = "Unclear???"
+                else:
+                    relative_fitness = ES.fitness.FCE / ga_results[dim][fid].fitness.FCE
+                all_relatives.append(relative_fitness)
+                ranks.append(ES.rank)
+                print("Rank: {0:>4}\t{1:>33}\t{2}".format(ES.rank + 1, intToRepr(ES.ES), relative_fitness))
+            for i, rank in enumerate(ranks):
+                if rank == min(ranks):
+                    counts[i] += 1
+            print()
+
+    print(all_relatives)
+    print(counts)
+
+
 if __name__ == '__main__':
 
     ### GA STUFF ###
+    # storeBestFromGA()
     # storeResults()
     # printResults()
 
@@ -539,9 +626,11 @@ if __name__ == '__main__':
     #     print(dim)
     #     printDoubleCount(dims=[dim])
 
-    printComparisonGivenInBF()
-    printBestFromRankedBF()
+    # printComparisonGivenInBF()
+    # printBestFromRankedBF()
 
+    printRelativeComparisonBestAndGivenBF()
+    printRelativeComparisonBestGAAndGivenBF()
 
 
     pass
