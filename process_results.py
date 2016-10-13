@@ -591,6 +591,44 @@ def printRelativeComparisonBestGAAndGivenBF(given=None):
     print(counts)
 
 
+def printComparisonTable(given=None):
+    # Add/remove choices as you wish
+    if given is None:
+        given = default_ESs
+
+    os.chdir(ga_location)
+    with open('ga_results.dat') as f:
+        ga_results = cPickle.load(f)
+
+    print('\\hline')
+    print('F-ID & N & Brute Force & ERT & FCE & GA & ERT & FCE & Relative \\\\')
+    print('\\hline')
+    print('\\hline')
+
+    for fid in functions:
+        for dim in dimensions:
+            results = findGivenInRankedBF(dim, fid, given)
+            results.sort(key=lambda a: a.rank)
+
+            bf_string = reprToString(intToRepr(results[0].ES))
+            bf_ERT = "{:>9.6g}".format(results[0].fitness.ERT) if results[0].fitness.ERT is not None else "      N/A"
+            bf_FCE = results[0].fitness.FCE
+
+            ga_string = reprToString(ga_results[dim][fid].ES[:11])
+            ga_ERT = "{:>9.6g}".format(ga_results[dim][fid].fitness.ERT) if ga_results[dim][fid].fitness.ERT is not None else "      N/A"
+            ga_FCE = ga_results[dim][fid].fitness.FCE
+
+            if results[0].fitness.ERT is not None:
+                relative_fitness = results[0].fitness.ERT / ga_results[dim][fid].fitness.ERT
+            else:
+                relative_fitness = results[0].fitness.FCE / ga_results[dim][fid].fitness.FCE
+
+            print('F{0:<2} & {1:>2} & {2} & {3} & {4:>9.4g} & {5} & {6} & {7:>9.4g} & {8:>8.3g} \\\\'.format(
+                fid, dim, bf_string, bf_ERT, bf_FCE, ga_string, ga_ERT, ga_FCE, relative_fitness
+            ))
+        print('\\hline')
+
+
 if __name__ == '__main__':
 
     ### GA STUFF ###
@@ -634,9 +672,10 @@ if __name__ == '__main__':
     # printComparisonGivenInBF()
     # printBestFromRankedBF()
 
-    printRelativeComparisonBestAndGivenBF()
-    printRelativeComparisonBestGAAndGivenBF()
+    # printRelativeComparisonBestAndGivenBF()
+    # printRelativeComparisonBestGAAndGivenBF()
 
+    printComparisonTable()
 
     pass
 
