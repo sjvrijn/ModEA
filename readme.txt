@@ -1,10 +1,10 @@
-+-------------------------------------------+
-| Author:       Sander van Rijn             |
-| Email:        svr003@gmail.com            |
-|                                           |
-| Institute:    LIACS, Leiden University    |
-| Project:      Master Thesis               |
-+-------------------------------------------+
++--------------------------------------------------------------+
+| Author:       Sander van Rijn                                |
+| Email:        svr003@gmail.com                               |
+|                                                              |
+| Institute:    LIACS, Leiden University                       |
+| Project:      Evolving the Structure of Evolution Strategies |
++--------------------------------------------------------------+
 
 This project contains the code for the Master Thesis of Sander van Rijn.
 
