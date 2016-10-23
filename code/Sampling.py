@@ -173,6 +173,13 @@ class OrthogonalSampling(object):
 
         return vectors
 
+    def reset(self):
+        """
+            Reset the internal state of this sampler, so the next sample is forced to be taken new.
+        """
+        self.current_sample = 0
+        self.samples = None
+
 
 class MirroredSampling(object):
     """
@@ -212,3 +219,10 @@ class MirroredSampling(object):
             self.last_sample = sample
 
         return sample
+
+    def reset(self):
+        """
+            Reset the internal state of this sampler, so the next sample is forced to be taken new.
+        """
+        self.mirror_next = False
+        self.last_sample = None
