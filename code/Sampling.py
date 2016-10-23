@@ -7,7 +7,6 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 import numpy as np
 from numpy import array, dot, any, isnan
 from numpy.linalg import norm
-from numpy.random import randn, randint
 from scipy.stats import norm as norm_dist
 from sobol_seq import i4_sobol
 try:
@@ -17,12 +16,13 @@ except ImportError:
     halton_available = False
 
 class GaussianSampling(object):
-    """ A sampler to create random vectors using a Gaussian distribution """
+    """
+        A sampler to create random vectors using a Gaussian distribution
+
+        :param n:       Dimensionality of the vectors to be sampled
+        :param shape:   String to select between ``'col'`` and ``'row'``. Default: ``'col'``
+    """
     def __init__(self, n, shape='col'):
-        """
-            :param n:       Dimensionality of the vectors to be sampled
-            :param shape:   String to select between 'col' and 'row'. Default: 'col'
-        """
         self.n = n
         self.shape = (n,1) if shape == 'col' else (1,n)
 
@@ -32,20 +32,21 @@ class GaussianSampling(object):
 
             :return:    A new vector sampled from a Gaussian distribution with mean 0 and standard deviation 1
         """
-        return randn(*self.shape)
+        return np.random.randn(*self.shape)
 
 
 class QuasiGaussianSobolSampling(object):
-    """ A quasi-Gaussian sampler """
+    """
+        A quasi-Gaussian sampler
+
+        :param n:       Dimensionality of the vectors to be sampled
+        :param shape:   String to select between ``'col'`` and ``'row'``. Default: ``'col'``
+    """
     def __init__(self, n, shape='col', seed=None):
-        """
-            :param n:       Dimensionality of the vectors to be sampled
-            :param shape:   String to select between 'col' and 'row'. Default: 'col'
-        """
         self.n = n
         self.shape = (n,1) if shape == 'col' else (1,n)
         if seed is None or seed < 2:
-            self.seed = randint(2, n**2)  # seed=1 will give a null-vector as first result
+            self.seed = np.random.randint(2, n**2)  # seed=1 will give a null-vector as first result
         else:
             self.seed = seed
 
@@ -62,46 +63,48 @@ class QuasiGaussianSobolSampling(object):
         vec = vec.reshape(self.shape)
         return vec
 
-# '''
-if halton_available:
-    class QuasiGaussianHaltonSampling(object):
-        """ A quasi-Gaussian sampler """
-        def __init__(self, n, shape='col'):
-            """
-                :param n:       Dimensionality of the vectors to be sampled
-                :param shape:   String to select between 'col' and 'row'. Default: 'col'
-            """
-            self.n = n
-            self.shape = (n,1) if shape == 'col' else (1,n)
-            self.halton = Halton(n)
 
+class QuasiGaussianHaltonSampling(object):
+    """
+        A quasi-Gaussian sampler
 
-        def next(self):
-            """
-                Draw the next sample from the Sampler
+        :param n:       Dimensionality of the vectors to be sampled
+        :param shape:   String to select between ``'col'`` and ``'row'``. Default: ``'col'``
+    """
+    def __init__(self, n, shape='col'):
 
-                :return:    A new vector sampled from a Gaussian distribution with mean 0 and standard deviation 1
-            """
-            vec = self.halton.get(1)[0]
-
-            vec = array(norm_dist.ppf(vec))
-            vec = vec.reshape(self.shape)
-            return vec
-else:
-    class QuasiGaussianHaltonSampling(object):
-        def __init__(self, *args, **kwargs):
+        if not halton_available:
             raise ImportError("Package 'ghalton' not found, QuasiGaussianHaltonSampling not available.")
-# '''
+        self.n = n
+        self.shape = (n,1) if shape == 'col' else (1,n)
+        self.halton = Halton(n)
+
+
+    def next(self):
+        """
+            Draw the next sample from the Sampler
+
+            :return:    A new vector sampled from a Gaussian distribution with mean 0 and standard deviation 1
+        """
+        vec = self.halton.get(1)[0]
+
+        vec = array(norm_dist.ppf(vec))
+        vec = vec.reshape(self.shape)
+        return vec
+
 
 class OrthogonalSampling(object):
-    """ A sampler to create orthogonal samples using some base sampler (Gaussian as default) """
+    """
+        A sampler to create orthogonal samples using some base sampler (Gaussian as default)
+
+        :param n:               Dimensionality of the vectors to be sampled
+        :param lambda_:         Number of samples to be drawn and orthonormalized per generation
+        :param shape:           String to select between ``'col'`` and ``'row'``. Default: ``'col'``
+        :param base_sampler:    A different Sampling object from which samples to be mirrored are drawn. If no
+                                base_sampler is given, a :class:`~GaussianSampling` object will be
+                                created and used.
+    """
     def __init__(self, n, lambda_, shape='col', base_sampler=None):
-        """
-            :param n:               Dimensionality of the vectors to be sampled
-            :param shape:           String to select between 'col' and 'row'. Default: 'col'
-            :param base_sampler:    A different Sampling object from which samples to be mirrored are drawn
-            :param lambda_:         Number of samples to be drawn and orthonormalized per generation
-        """
         if n == 0 or lambda_ == 0:
             raise Exception("Invalid value(s)! n={}, lambda={}".format(n, lambda_))
 
@@ -174,14 +177,16 @@ class OrthogonalSampling(object):
 class MirroredSampling(object):
     """
         A sampler to create mirrored samples using some base sampler (Gaussian as default)
-        Returns a single vector each time, remembers its state (next is new/mirror)
+        Returns a single vector each time, while remembering the internal state of whether the ``next()`` should return
+        a new sample, or the mirror of the previous one.
+
+        :param n:               Dimensionality of the vectors to be sampled
+        :param shape:           String to select between ``'col'`` and ``'row'``. Default: ``'col'``
+        :param base_sampler:    A different Sampling object from which samples to be mirrored are drawn. If no
+                                base_sampler is given, a :class:`~GaussianSampling` object will be
+                                created and used.
     """
     def __init__(self, n, shape='col', base_sampler=None):
-        """
-            :param n:               Dimensionality of the vectors to be sampled
-            :param shape:           String to select between 'col' and 'row'. Default: 'col'
-            :param base_sampler:    A different Sampling object from which samples to be mirrored are drawn
-        """
         self.n = n
         self.shape = (n,1) if shape == 'col' else (1,n)
         self.mirror_next = False
