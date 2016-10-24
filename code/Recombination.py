@@ -1,24 +1,32 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, division, print_function, unicode_literals
-
-__author__ = 'Sander van Rijn <svr003@gmail.com>'
-
 """
-This Module contains a collection of Recombination operators to be used in the ES-Framework
+This Module contains a collection of Recombination operators
 
 A Recombination operator accepts (mu) individuals and returns (lambda) created individuals
 that are to form the new population
 """
+from __future__ import absolute_import, division, print_function, unicode_literals
+
+__author__ = 'Sander van Rijn <svr003@gmail.com>'
+
 
 import numpy as np
 from copy import copy
-from numpy import dot, mean, sqrt
+from numpy import dot
 from random import choice
 
 
 def onePointCrossover(ind_a, ind_b):
-    crossover_point = np.random.randint(1, len(ind_a.genotype) - 2)  # -1 as randint is inclusive, -1 to not choose the last element
+    """
+        Perform one-point crossover between two individuals.
+
+        :param ind_a:   An individual
+        :param ind_b:   Another individual
+        :returns:       The original individuals, whose genotype has been modified inline
+    """
+    # -1 as randint is inclusive, -1 to not choose the last element
+    crossover_point = np.random.randint(1, len(ind_a.genotype) - 2)
     ind_a[:crossover_point], ind_b[:crossover_point] = ind_b[:crossover_point], ind_a[:crossover_point]
     return ind_a, ind_b
 
@@ -29,7 +37,7 @@ def random(pop, param):
         To be used when no actual recombination occurs
 
         :param pop:     The population to be recombined
-        :param param:   Parameter object
+        :param param:   :class:`~code.Parameters.Parameters` object
         :returns:       A list of lambda individuals, each a copy of a randomly chosen individual from the population
     """
 
@@ -37,11 +45,12 @@ def random(pop, param):
     return new_population
 
 
-def onePlusOne(pop, _):
+def onePlusOne(pop, param):
     """
         Utility function for 1+1 ES strategies where the recombination is merely a copy
 
         :param pop:     The population to be recombined
+        :param param:   :class:`~code.Parameters.Parameters` object
         :returns:       A copy of the first individual in the given population
     """
     return [copy(pop[0])]
@@ -49,13 +58,14 @@ def onePlusOne(pop, _):
 
 def weighted(pop, param):
     """
-        Given the population and weights, return the weighted average of the mu best
+        Returns a new set of individuals whose genotype is initialized to the weighted average of that
+        of the given population, using the weights stored in the :class:`~code.Parameters.Parameters` object.
+        Set weights to 1/n to simply use the arithmetic mean
 
         :param pop:     The population to be recombined
-        :param param:   Parameter object
-        :returns:       A list of lambda individuals, the dna of each set to the numerical mean of the given population,
-                        corrected by the weights set in the Parameters object. Set weights to 1/n for plain numerical
-                        mean.
+        :param param:   :class:`~code.Parameters.Parameters` object, of which ``param.weights``
+                        will be used to calculate the weighted average
+        :returns:       A list of lambda individuals, with as genotype the weighted average of the given population.
     """
 
     param.wcm_old = param.wcm
