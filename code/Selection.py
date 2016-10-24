@@ -1,53 +1,51 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+This module contains a collection of Selection operators.
+
+Selection accepts (mu + lambda) individuals and returns (mu) individuals
+that are chosen to be the best of this generation according to which selection
+module is chosen.
+"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
 from scipy import stats
-
-"""
-This Module contains a collection of Selection operators to be used in the ES-Framework
-
-A Selection operator accepts (mu + lambda) individuals and returns (mu) individuals
-that are chosen to be the best of this generation.
-"""
-
-def getFitness(individual):
-    """ Helper function that can be used as key when sorting """
-    return individual.fitness
+from code import Utils
 
 
 def bestGA(population, new_population, param):
     """
         Given the population, return the (mu) best
 
-        :param population:      List of :py:class:code.MixedIntIndividual objects containing the previous generation
-        :param new_population:  List of :py:class:code.MixedIntIndividual objects containing the new generation
-        :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
+        :param population:      List of :class:`~code.Individual.MixedIntIndividual` objects containing the previous generation
+        :param new_population:  List of :class:`~code.Individual.MixedIntIndividual` objects containing the new generation
+        :param param:           :class:`~code.Parameters.Parameters` object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
     if param.elitist:
         new_population.extend(population)
-    new_population.sort(key=getFitness)  # sort ascending
+    new_population.sort(key=Utils.getFitness)  # sort ascending
 
     return new_population[:param.mu_int]
 
 
 def best(population, new_population, param):
     """
-        Given the population, return the (mu) best
+        Given the population, return the (mu) best. Also performs some 'housekeeping' for the CMA-ES by collecting
+        all genotypes and most recent mutation vectors and storing them in the ``param`` object.
 
-        :param population:      List of :py:class:code.FloatIndividual objects containing the previous generation
-        :param new_population:  List of :py:class:code.FloatIndividual objects containing the new generation
-        :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
+        :param population:      List of :class:`~code.Individual.FloatIndividual` objects containing the previous generation
+        :param new_population:  List of :class:`~code.Individual.FloatIndividual` objects containing the new generation
+        :param param:           :class:`~code.Parameters.Parameters` object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
     if param.elitist:
         new_population.extend(population)
 
-    new_population.sort(key=getFitness)  # sort ascending
+    new_population.sort(key=Utils.getFitness)  # sort ascending
 
     # TODO: REMOVE THESE OPERATIONS FROM THIS FUNCTION, UNEXPECTED/UNDOCUMENTED FUNCTIONALITY
     offspring = np.column_stack((ind.genotype for ind in new_population))  # Update to use the actual mutations
@@ -60,14 +58,15 @@ def best(population, new_population, param):
 
 def pairwise(population, new_population, param):
     """
-        Perform a pairwise selection on a population.
-        Intended for use with a mirrored sampling strategy to prevent bias.
+        Perform a selection on individuals in a population per pair, before letting :func:`~best`
+        make the final selection. Intended for use with a :class:`~code.Sampling.MirroredSampling`
+        sampler to prevent step-size bias.
 
         Assumes that new_population contains pairs as [P1_a, P1_b, P2_a, P2_b, etc ... ]
 
-        :param population:      List of :py:class:code.FloatIndividual objects containing the previous generation
-        :param new_population:  List of :py:class:code.FloatIndividual objects containing the new generation
-        :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
+        :param population:      List of :class:`~code.Individual.FloatIndividual` objects containing the previous generation
+        :param new_population:  List of :class:`~code.Individual.FloatIndividual` objects containing the new generation
+        :param param:           :class:`~code.Parameters.Parameters` object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
     pairwise_filtered = []
@@ -94,16 +93,16 @@ def roulette(population, new_population, param, force_unique=False):
     """
         Given the population, return mu individuals, selected by roulette, using 1/fitness as probability
 
-        :param population:      List of :py:class:code.FloatIndividual objects containing the previous generation
-        :param new_population:  List of :py:class:code.FloatIndividual objects containing the new generation
-        :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
+        :param population:      List of :class:`~code.Individual.FloatIndividual` objects containing the previous generation
+        :param new_population:  List of :class:`~code.Individual.FloatIndividual` objects containing the new generation
+        :param param:           :class:`~code.Parameters.Parameters` object for storing all parameters, options, etc.
         :param force_unique:    Determine if an individual from the original population may be selected multiple times
         :returns:               A slice of the sorted new_population list.
     """
     if param.elitist:
         new_population.extend(population)
 
-    new_population.sort(key=getFitness)  # sort descending
+    new_population.sort(key=Utils.getFitness)  # sort descending
     offspring = np.column_stack((ind.genotype for ind in new_population))
     param.all_offspring = offspring
 
@@ -132,10 +131,10 @@ def onePlusOneSelection(population, new_population, t, param):
     """
         (1+1)-selection (with success history)
 
-        :param population:      List of :py:class:code.FloatIndividual objects containing the previous generation
-        :param new_population:  List of :py:class:code.FloatIndividual objects containing the new generation
+        :param population:      List of :class:`~code.Individual.FloatIndividual` objects containing the previous generation
+        :param new_population:  List of :class:`~code.Individual.FloatIndividual` objects containing the new generation
         :param t:               Timestamp of the current generation being evaluated
-        :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
+        :param param:           :class:`~code.Parameters.Parameters` object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
 
@@ -157,9 +156,9 @@ def onePlusOneCholeskySelection(population, new_population, param):
     """
         (1+1)-selection (with success history)
 
-        :param population:      List of :py:class:code.FloatIndividual objects containing the previous generation
-        :param new_population:  List of :py:class:code.FloatIndividual objects containing the new generation
-        :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
+        :param population:      List of :class:`~code.Individual.FloatIndividual` objects containing the previous generation
+        :param new_population:  List of :class:`~code.Individual.FloatIndividual` objects containing the new generation
+        :param param:           :class:`~code.Parameters.Parameters` object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
 
@@ -181,9 +180,9 @@ def onePlusOneActiveSelection(population, new_population, param):
     """
         (1+1)-selection (with success history)
 
-        :param population:      List of :py:class:code.FloatIndividual objects containing the previous generation
-        :param new_population:  List of :py:class:code.FloatIndividual objects containing the new generation
-        :param param:           :py:class:code.Parameters object for storing all parameters, options, etc.
+        :param population:      List of :class:`~code.Individual.FloatIndividual` objects containing the previous generation
+        :param new_population:  List of :class:`~code.Individual.FloatIndividual` objects containing the new generation
+        :param param:           :class:`~code.Parameters.Parameters` object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
 
