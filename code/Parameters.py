@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+This Parameters module is a container for all possible parameters and all ways in which they are adapted
+by various optimization methods.
+"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
@@ -9,7 +13,6 @@ import numpy as np
 from numpy import abs, all, any, append, arange, ceil, diag, dot, exp, eye, floor, isfinite, isinf, isreal,\
                   ones, log, max, mean, median, mod, newaxis, outer, real, sqrt, square, sum, triu, zeros
 from numpy.linalg import cond, eig, eigh, norm, LinAlgError
-from numpy.random import randn
 
 
 class BaseParameters(object):
@@ -40,30 +43,29 @@ class Parameters(BaseParameters):
         Data holder class that initializes *all* possible parameters, regardless of what functions/algorithm are used
         If multiple functions/algorithms use the same parameter name, but differently, these will be split into
         separate parameters.
+
+        :param n:               Dimensionality of the problem to be solved
+        :param budget:          Number of fitness evaluations the algorithm may perform
+        :param mu:              Number of individuals that form the parents of each generation
+        :param lambda_:         Number of individuals in the offspring of each generation
+        :param weights_option:  String to determine which weignts to use.
+                                Choose between ``default`` (CMA-ES) and ``1/n``
+        :param l_bound:         Lower bound of the search space
+        :param u_bound:         Upper bound of the search space
+        :param seq_cutoff:      Minimal cut-off allowed in sequential selection
+        :param wcm:             Initial weighted center of mass
+        :param active:          Boolean switch on using an active update. Default: False
+        :param elitist:         Boolean switch on using a (mu, l) strategy rather than (mu + l). Default: False
+        :param sequential:      Boolean switch on using sequential evaluation. Default: False
+        :param tpa:             Boolean switch on using two-point step-size adaptation. Default: False
+        :param values:          Dictionary in the form of ``{'name': value}`` of initial values for allowed parameters.
+                                Any values for names not in :data:`code.initializable_parameters` are ignored.
     """
 
     def __init__(self, n, budget, sigma=None,
                  mu=None, lambda_=None, weights_option=None, l_bound=None, u_bound=None, seq_cutoff=1, wcm=None,
                  active=False, elitist=False, local_restart=None, sequential=False, tpa=False,
                  values=None):
-        """
-            Setup the set of parameters
-
-            :param n:               Dimensionality of the problem to be solved
-            :param budget:          Number of fitness evaluations the algorithm may perform
-            :param mu:              Number of individuals that form the parents of each generation
-            :param lambda_:         Number of individuals in the offspring of each generation
-            :param weights_option:  String to determine which weignts to use. Choose from 'default' (CMA-ES), '1/n'
-            :param l_bound:         Lower bound of the search space
-            :param u_bound:         Upper bound of the search space
-            :param seq_cutoff:      Minimal cut-off allowed in sequential selection
-            :param wcm:             Initial 'weighted center of mass'
-            :param active:          Boolean switch on using an active update. Default: False
-            :param elitist:         Boolean switch on using a (mu, l) strategy rather than (mu + l). Default: False
-            :param sequential:      Boolean switch on using sequential evaluation. Default: False
-            :param tpa:             Boolean switch on using two-point step-size adaptation. Default: False
-            :param values:          Dictionary of initial values for allowed parameters
-        """
 
         if lambda_ is None:
             lambda_ = int(4 + floor(3 * log(n)))
@@ -85,7 +87,7 @@ class Parameters(BaseParameters):
         if seq_cutoff is None:
             seq_cutoff = mu * eff_lambda
         if wcm is None:
-            wcm = (randn(n,1) * (u_bound - l_bound)) + l_bound
+            wcm = (np.random.randn(n,1) * (u_bound - l_bound)) + l_bound
 
         ### Basic parameters ###
         self.n = n
@@ -177,10 +179,10 @@ class Parameters(BaseParameters):
         self.tolupx = 1e3 * self.sigma
 
 
-        '''
-        All parameters below this comment are currently NOT in use by any (CMA-)ES variants
-        that are included in the optimization of ES-structures
-        '''
+        ###
+        # All parameters below this comment are currently NOT in use by any (CMA-)ES variants
+        # that are included in the optimization of ES-structures
+        ###
 
         ### CMSA-ES ###
         self.tau = 1 / sqrt(2*n)
@@ -213,8 +215,8 @@ class Parameters(BaseParameters):
         """
             Dynamically initialize parameters in this parameter object based on the given dictionary
 
-            :param values:  Dictionary in the form of {'name': value} of initial values for allowed parameters.
-                            Any values for names not in Parameters.initializable_parameters are ignored
+            :param values:  Dictionary in the form of ``{'name': value}`` of initial values for allowed parameters.
+                            Any values for names not in :data:`code.initializable_parameters` are ignored
         """
         for name, value in list(values.items()):
             if name in initializable_parameters:
@@ -223,6 +225,11 @@ class Parameters(BaseParameters):
 
     @property
     def mu_int(self):
+        """
+            Adapts sigma based on the 1/5-th success rule
+
+            :returns:   Integer value for mu, based on ``eff_lambda``
+        """
         if self.eff_lambda < 1:
             raise Exception("Effective lambda ({}) should be at least 1!".format(self.eff_lambda))
         return int(1 + floor((self.eff_lambda-1) * self.mu))
@@ -231,6 +238,7 @@ class Parameters(BaseParameters):
     def oneFifthRule(self, t):
         """
             Adapts sigma based on the 1/5-th success rule
+
             :param t:   Number of evaluations used by the algorithm so far
         """
 
@@ -253,7 +261,8 @@ class Parameters(BaseParameters):
 
     def addToSuccessHistory(self, t, success):
         """
-            Record the (boolean) 'success' value at time 't'
+            Record the (boolean) ``success`` value at time ``t``
+
             :param t:       Number of evaluations used by the algorithm so far
             :param success: Boolean that records whether the last update was a success
         """
@@ -264,7 +273,8 @@ class Parameters(BaseParameters):
 
     def addToFitnessHistory(self, fitness):
         """
-            Record the latest fitness value (with a history of 5 generations)
+            Record the latest ``fitness`` value (with a history of 5 generations)
+
             :param fitness: Fitness value to be recorded
         """
 
@@ -275,8 +285,9 @@ class Parameters(BaseParameters):
 
     def adaptCovarianceMatrix(self, evalcount):
         """
-            Adapt the covariance matrix according to the CMA-ES
-            :param t:   Number of evaluations used by the algorithm so far
+            Adapt the covariance matrix according to the (Active-)CMA-ES.
+
+            :param evalcount:   Number of evaluations used by the algorithm so far
         """
 
         cc, cs, c_1, c_mu, n = self.c_c, self.c_sigma, self.c_1, self.c_mu, self.n
@@ -498,7 +509,10 @@ class Parameters(BaseParameters):
 
     def getWeights(self, weights_option=None):
         """
-            Defines a list of weights to be used in weighted recombination
+            Defines a list of weights to be used in weighted recombination. Available options are:
+* ``1/n``: Each weight is set to 1/n
+* ``1/2^n``: Each weight is set to 1/2^n + (1/2^n)/mu
+* ``default``: Each weight is set to log((lambda-1)/2) - log(i)
 
             :param weights_option:  String to indicate which weights should be used.
             :returns:               Returns a np.array of weights, adding to 1
@@ -534,6 +548,9 @@ class Parameters(BaseParameters):
 
 
     def restart(self):
+        """
+            Very basic restart, done by resetting some of the variables for CMA-ES
+        """
 
         n = self.n
         self.C = eye(n)
@@ -545,6 +562,13 @@ class Parameters(BaseParameters):
 
 
     def localRestart(self, evalcount, fitnesses):
+        """
+            Check for local restart conditions according to (B)IPOP
+
+            :param evalcount:   Counter for the current generation
+            :param fitnesses:   Fitness values of the most recent generation, used to detect stagnation
+            :returns:           Boolean value ``restart_required``, True if a restart should be performed
+        """
 
         if not self.local_restart:
             return False
