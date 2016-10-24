@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Master Thesis documentation build configuration file, created by
+# Modular CMA-ES Framework documentation build configuration file, created by
 # sphinx-quickstart on Wed Jul  8 15:04:15 2015.
 #
 # This file is execfile()d with the current directory set to its
@@ -53,8 +53,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'Master Thesis'
-copyright = '2015, Sander van Rijn'
+project = 'Modular CMA-ES Framework'
+copyright = '2016, Sander van Rijn'
 author = 'Sander van Rijn'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -208,7 +208,7 @@ html_static_path = ['_static']
 #html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'MasterThesisdoc'
+htmlhelp_basename = 'ModularCMAESFrameworkdoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -230,7 +230,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'MasterThesis.tex', 'Master Thesis Documentation',
+  (master_doc, 'ModularCMAESFramework.tex', 'Modular CMA-ES Framework Documentation',
    'Sander van Rijn', 'manual'),
 ]
 
@@ -260,7 +260,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'masterthesis', 'Master Thesis Documentation',
+    (master_doc, 'modularcmaesframework', 'Modular CMA-ES Framework Documentation',
      [author], 1)
 ]
 
@@ -274,8 +274,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  (master_doc, 'MasterThesis', 'Master Thesis Documentation',
-   author, 'MasterThesis', 'One line description of project.',
+  (master_doc, 'ModularCMAESFramework', 'Modular CMA-ES Framework Documentation',
+   author, 'ModularCMAESFramework', 'One line description of project.',
    'Miscellaneous'),
 ]
 
