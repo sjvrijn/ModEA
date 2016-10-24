@@ -90,7 +90,8 @@ def getBitString(opts):
 
 def getFullOpts(opts):
     """
-        Ensures that an options dictionary actually contains all options that have been defined
+        Ensures that an options dictionary actually contains all options that have been defined. Any missing options
+        are given default values inline.
 
         :param opts:    Dictionary to be checked for option names and the chosen option
     """
@@ -109,6 +110,12 @@ def getFullOpts(opts):
         #     opts[name] = choices[0]
 
 def getPrintName(opts):
+    """
+        Create a human-readable name from an options dictionary
+
+        :param opts:    Dictionary to be checked for option names and the chosen option
+        :returns:       Human-readable string listing all active CMA-ES options for the given dictionary
+    """
     # getFullOpts(opts)
 
     elitist = '+' if opts['elitist'] else ','
