@@ -7,6 +7,7 @@ Submodules
 .. toctree::
 
    code.Algorithms
+   code.Config
    code.GA
    code.Individual
    code.Mutation
@@ -14,6 +15,7 @@ Submodules
    code.Recombination
    code.Sampling
    code.Selection
+   code.Utils
 
 Module contents
 ---------------
