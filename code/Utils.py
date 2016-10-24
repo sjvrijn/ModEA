@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+A collection of utilities for internal use by this package. Besides some trivial functions, this mainly includes
+the :class:`~ESFitness` class definition.
+"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
@@ -10,14 +14,41 @@ from functools import total_ordering
 from code import Config
 
 
+def getFitness(individual):
+    """
+        Function that can be used as key when sorting
+
+        :param individual:  Some object of one of the classes from the :class:`~code.Individual` module
+        :returns:           Fitness attribute of the given individual object
+    """
+    return individual.fitness
+
 
 def reprToString(representation):
+    """
+        Function that converts the structure parameters of a given ES-structure representation to a string
+
+        >>> reprToInt([0,0,0,0,0,1,0,1,0,1,0])
+        >>> '00000101010'
+
+        :param representation:  Iterable; the genotype of the ES-structure
+        :returns:               String consisting of all structure choices concatenated, e.g.: ``00000101010``
+    """
     max_length = 11  # Hardcoded
     return ''.join([str(i) for i in representation[:max_length]])
 
 
 def reprToInt(representation):
-    """ Encode the ES-structure representation to a single integer """
+    """
+        Encode the ES-structure representation to a single integer by converting it to base-10 as if it is a
+        mixed base-2 or 3 number. Reverse of :func:`~intToRepr`
+
+        >>> reprToInt([0,0,0,0,0,1,0,1,0,1,0])
+        >>> 93
+
+        :param representation:  Iterable; the genotype of the ES-structure
+        :returns:               String consisting of all structure choices concatenated,
+    """
     # Hardcoded
     max_length = 11
     factors = [2304, 1152, 576, 288, 144, 72, 36, 18, 9, 3, 1]
@@ -29,7 +60,16 @@ def reprToInt(representation):
 
 
 def intToRepr(integer):
-    """ Decode integer to ES-structure representation """
+    """
+        Dencode the ES-structure from a single integer back to the mixed base-2 and 3 representation.
+        Reverse of :func:`~reprToInt`
+
+        >>> intToRepr(93)
+        >>> [0,0,0,0,0,1,0,1,0,1,0]
+
+        :param integer: Integer (e.g. outoutput from
+        :returns:       String consisting of all structure choices concatenated,
+    """
     # Hardcoded
     max_length = 11
     factors = [2304, 1152, 576, 288, 144, 72, 36, 18, 9, 3, 1]
@@ -52,6 +92,28 @@ class ESFitness(object):
         Object to calculate and store the fitness measure for an ES and allow easy comparison.
         This measure consists of both the always available Fixed Cost Error (FCE)
         and the less available but more rigorous Expected Running Time (ERT).
+
+        All parameters are listed as optional, but at least one of the following combinations have to be given to
+        obtain FCE/ERT values.
+
+        >>> ESFitness(fitnesses=fitnesses)
+        >>> ESFitness(min_fitnesses=min_fitnesses, min_indices=min_indices, num_successful=num_successful)
+        >>> ESFitness(ERT=ERT, FCE=FCE)
+
+        If ``fitnesses`` is specified, all other parameters other than ``target`` are ignored and everything is
+        calculated from that. Otherwise, ERT and FCE are calculated from ``min_fitnesses``, ``min_indices`` and
+        ``num_successful``. Only if none of these are specified, the direct ``ERT`` and ``FCE`` values are stored
+        (together with their corresponding ``std_dev_`` values if specified)
+
+        :param fitnesses:       Nested lists: A list of the fitness progression for each run
+        :param target:          What value to use as target for calculating ERT. Default set in :mod:`~code.Config`
+        :param min_fitnesses:   Single list containing the minimum value of the ``fitnesses`` list (if given instead)
+        :param min_indices:     Single list containing the index in the ``fitnesses`` list where the minimum was found
+        :param num_successful:  Integer to simply track how many of the runs reached the target
+        :param ERT:             *Estimated Running Time*
+        :param FCE:             *Fixed Cost Error*
+        :param std_dev_ERT:     Standard deviation corresponding to the ERT value
+        :param std_dev_FCE:     Standard deviation corresponding to the FCE value
     """
     def __init__(self, fitnesses=None, target=Config.default_target,               # Original values
                  min_fitnesses=None, min_indices=None, num_successful=None,        # Summary values
