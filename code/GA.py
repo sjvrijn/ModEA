@@ -38,20 +38,27 @@ fitness_functions = {'sphere': free_function_ids[0], 'elipsoid': free_function_i
                      'rastrigin': free_function_ids[2], }
 
 
-def cleanResults(fid):
+def _cleanResults(fid):
     import os
     import shutil
     shutil.rmtree('{}data_f{}'.format(datapath, fid))
     os.remove("{}bbobexp_f{}.info".format(datapath, fid))
 
-def sysPrint(string):
+def _sysPrint(string):
     """ Small function to take care of the 'overhead' of sys.stdout.write + flush """
     sys.stdout.write(string)
     sys.stdout.flush()
 
 
 def GA(ndim, fid, budget=None):
-    """ Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function """
+    """
+        Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function
+
+        :param ndim:    What dimensionality should the ES be evaluated in?
+        :param fid:     Which BBOB function should the ES be evaluated on?
+        :param budget:  The budget for the GA (N.B., this is *not* the underlying ES-budget)
+        :returns:       A tuple containing a bunch of optimization results
+    """
 
     # Where to store genotype-fitness information
     storage_file = '{}GA_results_{}dim_f{}.tdat'.format(non_bbob_datapath, ndim, fid)
@@ -105,7 +112,19 @@ def GA(ndim, fid, budget=None):
 
 
 def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=None):
-    """ Single function to run all desired combinations of algorithms * fitness functions """
+    """
+        Single function to run all desired combinations of algorithms * fitness functions - MPI4PY VERSION
+
+        :param bitstrings:      The genotype to be translated into customizedES-ready options. Must manually be set to
+                                None if options are given as opts
+        :param fid:             The BBOB function ID to use in the evaluation
+        :param ndim:            The dimensionality to test the BBOB function with
+        :param budget:          The allowed number of BBOB function evaluations
+        :param storage_file:    Filename to use when storing fitness information
+        :param opts:            Dictionary of options for customizedES. If omitted, the bitstring will be translated
+                                into this options automatically
+        :returns:               A list containing one instance of ESFitness representing the fitness of the defined ES
+    """
 
     # Set parameters
     if budget is None:
@@ -118,12 +137,12 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
     for bitstring in bitstrings:
         # Setup the bbob logger
         bbob_opts['algid'] = bitstring  # Save the bitstring of the ES we are currently evaluating
-        f = fgeneric.LoggingFunction(datapath, **bbob_opts)  # TODO: Why is this here when it is done in fetchResults?
+        f = fgeneric.LoggingFunction(datapath, **bbob_opts)  # TODO: Why is this here when it is done in _fetchResults?
 
         print(bitstring)
         opts = getOpts(bitstring)
 
-        function = partial(fetchResults, fid, ndim=ndim, budget=budget, opts=opts)
+        function = partial(_fetchResults, fid, ndim=ndim, budget=budget, opts=opts)
         arguments = range(num_runs)
 
         # mpi4py
@@ -218,7 +237,7 @@ def evaluate_ES(es_genotype, fid, ndim, budget=None, storage_file=None, opts=Non
     print('\t', fitness)
     return [fitness]
 
-def fetchResults(fid, instance, ndim, budget, opts, values=None):
+def _fetchResults(fid, instance, ndim, budget, opts, values=None):
     """ Small overhead-function to enable multi-processing """
     f = fgeneric.LoggingFunction(datapath, **bbob_opts)
     f_target = f.setfun(*bbobbenchmarks.instantiate(fid, iinstance=instance)).ftarget
@@ -228,10 +247,28 @@ def fetchResults(fid, instance, ndim, budget, opts, values=None):
 
 
 def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, values=None, parallel=False):
+    """
+        Run the ES specified by ``opts`` and ``values`` on BBOB function ``fid`` in ``ndim``
+        dimensionalities with ``budget``. Repeat ``num_runs`` times.
+
+        ``algorithm`` and ``f`` are basically the same information, but are only used if this
+        function is executed with ``parallel=False``
+
+        :param fid:         BBOB function ID
+        :param algorithm:   :func:`~code.Algorithms.customizedES` instance that is prepared using ``partial()``
+        :param ndim:        Dimensionality to run the ES in
+        :param num_runs:    Number of times to run the ES (in parallel) for calculating ERT/FCE
+        :param f:           BBOB fitness function
+        :param budget:      Evaluation budget for the ES
+        :param opts:        Dictionary containing keyword options defining the ES-structure to run
+        :param values:      Dictionary containing keyword-value pairs for the tunable parameters
+        :param parallel:    Boolean, should the ES be run in parallel?
+        :return:            Tuple(list of sigma-values over time, list of fitness-values over time)
+    """
 
     # Perform the actual run of the algorithm
     if parallel and Config.use_MPI:
-        function = partial(fetchResults, fid, ndim=ndim, budget=budget, opts=opts, values=values)
+        function = partial(_fetchResults, fid, ndim=ndim, budget=budget, opts=opts, values=values)
         arguments = range(num_runs)
         run_data = None
 
@@ -246,7 +283,7 @@ def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, values=None, p
         targets, results = zip(*run_data)
     elif parallel and allow_parallel:  # Multi-core version
         num_workers = min(num_threads, num_runs)
-        function = partial(fetchResults, fid, ndim=ndim, budget=budget, opts=opts, values=values)
+        function = partial(_fetchResults, fid, ndim=ndim, budget=budget, opts=opts, values=values)
 
         # multiprocessing
         p = Pool(num_workers)
@@ -257,7 +294,7 @@ def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, values=None, p
         results = []
         targets = []
         for j in range(num_runs):
-            # sysPrint('    Run: {}\r'.format(j))  # I want the actual carriage return here! No output clutter
+            # _sysPrint('    Run: {}\r'.format(j))  # I want the actual carriage return here! No output clutter
             f_target = f.setfun(*bbobbenchmarks.instantiate(fid, iinstance=j)).ftarget
             targets.append(f_target)
             results.append(algorithm(ndim, f.evalfun, budget))
@@ -281,7 +318,7 @@ def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, values=None, p
 '''-----------------------------------------------------------------------------
 #                                Run Functions                                 #
 -----------------------------------------------------------------------------'''
-def testEachOption():
+def _testEachOption():
     # Test all individual options
     n = len(options)
     dna = [0]*n
@@ -299,7 +336,7 @@ def testEachOption():
     print("\n\n")
 
 
-def problemCases():
+def _problemCases():
     # Known problems
     print("Combinations known to cause problems:")
 
@@ -323,7 +360,7 @@ def problemCases():
     print("None! Good job :D\n")
 
 
-def exampleRuns():
+def _exampleRuns():
     print("Mirrored vs Mirrored-pairwise")
     evaluate_ES(None, fid=1, ndim=10, opts={'mirrored': True})
     evaluate_ES(None, fid=1, ndim=10, opts={'mirrored': True, 'selection': 'pairwise'})
@@ -339,7 +376,7 @@ def exampleRuns():
     evaluate_ES(None, fid=1, ndim=10, opts={'ipop': 'BIPOP'})
 
 
-def bruteForce(ndim, fid, parallel=1, part=0):
+def _bruteForce(ndim, fid, parallel=1, part=0):
     # Exhaustive/brute-force search over *all* possible combinations
     # NB: THIS ASSUMES OPTIONS ARE SORTED ASCENDING BY NUMBER OF VALUES
     num_combinations = np.product(num_options)
@@ -430,7 +467,7 @@ def bruteForce(ndim, fid, parallel=1, part=0):
           "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
 
 
-def runGA(ndim=10, fid=1):
+def _runGA(ndim=10, fid=1):
 
     x = datetime.now()
     gen_sizes, sigmas, fitness, best = GA(ndim=ndim, fid=fid)  # This line does all the work!
@@ -454,7 +491,7 @@ def runGA(ndim=10, fid=1):
                  generation_sizes=gen_sizes, time_spent=z)
 
 
-def runExperiments():
+def _runExperiments():
     for ndim in Config.experiment_dims:
         for fid in Config.experiment_funcs:
             print("Optimizing for function ID {} in {}-dimensional space:".format(fid, ndim))
@@ -468,13 +505,13 @@ def runExperiments():
                      generation_sizes=gen_sizes, time_spent=z)
 
 
-def run():
-    # testEachOption()
-    # problemCases()
-    # exampleRuns()
-    # bruteForce(ndim=10, fid=1)
-    runGA()
-    # runExperiments()
+def _run():
+    # _testEachOption()
+    # _problemCases()
+    # _exampleRuns()
+    # _bruteForce(ndim=10, fid=1)
+    _runGA()
+    # _runExperiments()
     pass
 
 
@@ -490,17 +527,17 @@ if __name__ == '__main__':
     if len(sys.argv) == 3:
         ndim = int(sys.argv[1])
         fid = int(sys.argv[2])
-        runGA(ndim, fid)
+        _runGA(ndim, fid)
     elif len(sys.argv) == 4:
         ndim = int(sys.argv[1])
         fid = int(sys.argv[2])
         parallel = int(sys.argv[3])
-        bruteForce(ndim, fid, parallel)
+        _bruteForce(ndim, fid, parallel)
     elif len(sys.argv) == 5:
         ndim = int(sys.argv[1])
         fid = int(sys.argv[2])
         parallel = int(sys.argv[3])
         part = int(sys.argv[4])
-        bruteForce(ndim, fid, parallel, part)
+        _bruteForce(ndim, fid, parallel, part)
     else:
-        run()
+        _run()

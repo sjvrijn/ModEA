@@ -6,7 +6,7 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 ### NOTE: Do not remove these 'unused' imports! ###
 # The following are imports that are required by the functions that are passed to this MPI slave in order to run
-from code.GA import fetchResults, evaluate_ES  # Required for the MPI calls for the GA
+from code.GA import _fetchResults, evaluate_ES  # Required for the MPI calls for the GA
 
 import numpy as np
 from mpi4py import MPI
