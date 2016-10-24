@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+This module contains definitions of Individual classes, that allow for a common interface with different
+underlying genotypes (float, int, mixed-integer).
+"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
@@ -11,15 +15,13 @@ class FloatIndividual(object):
     """
         Data holder class for individuals using a vector of floating point values as genotype.
         This type of individual can therefore be used by an Evolution Strategy (ES) such as the CMA-ES.
+        Stores the genotype column vector and all individual-specific parameters.
+        Default genotype is np.ones((n,1))
+
+        :param n: dimensionality of the problem to be solved
     """
 
     def __init__(self, n):
-        """
-            Create an FloatIndividual. Stores the genotype column vector and all individual-specific parameters.
-            Default genotype is np.ones((n,1))
-
-            :param n: dimensionality of the problem to be solved
-        """
         self.n = n
         self.genotype = np.ones((n, 1))               # Column vector
         self.fitness = np.inf                   # Default 'unset' value
@@ -55,19 +57,17 @@ class MixedIntIndividualError(Exception):
 class MixedIntIndividual(object):
     """
         Data holder class for individuals using a vector containing both floating point and integer values as genotype.
-        This type of individual can therefore be used by an Evolution Strategy (ES) such as the CMA-ES.
+        This type of individual can therefore be used by a GA with mixed-integer mutation operators.
+        Stores the genotype column vector and all individual-specific parameters.
+        Default genotype is np.ones((n,1))
+
+        :param n:           Dimensionality of the problem to be solved, consisting of num_ints integers and
+                            num_floats (= n - num_ints) floating point values
+        :param num_ints:    Number of integer values in the genotype.
+        :param num_floats:  Number of floating point values in the genotype. Must be given is num_ints is omitted
     """
 
     def __init__(self, n, num_ints=None, num_floats=None):
-        """
-            Create a MixedIntIndividual. Stores the genotype column vector and all individual-specific parameters.
-            Default genotype is np.ones((n,1))
-
-            :param n:           Dimensionality of the problem to be solved, consisting of num_ints integers and
-                                num_floats (= n - num_ints) floating point values
-            :param num_ints:    Number of integer values in the genotype.
-            :param num_floats:  Number of floating point values in the genotype. Must be given is num_ints is omitted
-        """
 
         if n < 2:
             raise MixedIntIndividualError("Cannot define a mixed-integer representation in < 2 dimensions")
