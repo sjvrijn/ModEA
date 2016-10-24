@@ -1,5 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+This module contains several sampling options that can be used when drawing random values for mutations.
+
+Some of the sampling options in this module can be considered `base-samplers`. This means that they produce a set
+of values without requiring any input. The remaining options will have a ``base_sampler`` optional argument, as they
+need input from some other sampler to produce values, as they perform operations on them such as mirroring.
+
+=============
+Base samplers
+=============
+* :class:`~GaussianSampling`
+* :class:`~QuasiGaussianHaltonSampling`
+* :class:`~QuasiGaussianSobolSampling`
+
+=================
+Indirect samplers
+=================
+* :class:`~OrthogonalSampling`
+* :class:`~MirroredSampling`
+"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
@@ -15,12 +35,14 @@ try:
 except ImportError:
     halton_available = False
 
+
 class GaussianSampling(object):
     """
         A sampler to create random vectors using a Gaussian distribution
 
         :param n:       Dimensionality of the vectors to be sampled
-        :param shape:   String to select between ``'col'`` and ``'row'``. Default: ``'col'``
+        :param shape:   String to select between whether column (``'col'``) or row (``'row'``) vectors should be
+                        returned. Defaults to column vectors.
     """
     def __init__(self, n, shape='col'):
         self.n = n
@@ -40,7 +62,8 @@ class QuasiGaussianSobolSampling(object):
         A quasi-Gaussian sampler
 
         :param n:       Dimensionality of the vectors to be sampled
-        :param shape:   String to select between ``'col'`` and ``'row'``. Default: ``'col'``
+        :param shape:   String to select between whether column (``'col'``) or row (``'row'``) vectors should be
+                        returned. Defaults to column vectors
     """
     def __init__(self, n, shape='col', seed=None):
         self.n = n
@@ -69,7 +92,8 @@ class QuasiGaussianHaltonSampling(object):
         A quasi-Gaussian sampler
 
         :param n:       Dimensionality of the vectors to be sampled
-        :param shape:   String to select between ``'col'`` and ``'row'``. Default: ``'col'``
+        :param shape:   String to select between whether column (``'col'``) or row (``'row'``) vectors should be
+                        returned. Defaults to column vectors
     """
     def __init__(self, n, shape='col'):
 
@@ -99,7 +123,8 @@ class OrthogonalSampling(object):
 
         :param n:               Dimensionality of the vectors to be sampled
         :param lambda_:         Number of samples to be drawn and orthonormalized per generation
-        :param shape:           String to select between ``'col'`` and ``'row'``. Default: ``'col'``
+        :param shape:           String to select between whether column (``'col'``) or row (``'row'``) vectors should be
+                                returned. Defaults to column vectors
         :param base_sampler:    A different Sampling object from which samples to be mirrored are drawn. If no
                                 base_sampler is given, a :class:`~GaussianSampling` object will be
                                 created and used.
@@ -188,7 +213,8 @@ class MirroredSampling(object):
         a new sample, or the mirror of the previous one.
 
         :param n:               Dimensionality of the vectors to be sampled
-        :param shape:           String to select between ``'col'`` and ``'row'``. Default: ``'col'``
+        :param shape:           String to select between whether column (``'col'``) or row (``'row'``) vectors should be
+                                returned. Defaults to column vectors
         :param base_sampler:    A different Sampling object from which samples to be mirrored are drawn. If no
                                 base_sampler is given, a :class:`~GaussianSampling` object will be
                                 created and used.
