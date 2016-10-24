@@ -1,22 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+This Module contains a collection of Mutation operators to be used in the ES-Framework
+
+A Mutation operator mutates an Individual's genotype inline, thus returning nothing.
+"""
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
-"""
-This Module contains a collection of Mutation operators to be used in the ES-Framework
-
-A Mutation operator mutates an Individual's Genotype inline, thus returning nothing.
-"""
-
-
-# TODO: (future work) Split (CMA-based) mutations into multiple/as many parts as possible. E.g. step size control & CMA
 
 import numpy as np
-from numpy import add, bitwise_and, dot, exp, floor, isfinite, mod, newaxis, shape, zeros
+import random
+from numpy import add, bitwise_and, dot, exp, floor, mod, shape, zeros
 from numpy.linalg import norm
-from random import gauss, getrandbits
+from random import gauss
 
 
 def keepInBounds(x, l_bound, u_bound):
@@ -27,22 +25,12 @@ def keepInBounds(x, l_bound, u_bound):
         for Parameter Optimization and Their Applications to Medical Image
         Analysis" as alorithm 6.
 
-        x, l_bound and u_bound are column vectors
+        :param x:       Column vector to be kept in bounds
+        :param l_bound: Lower bound column vector
+        :param u_bound: Upper bound column vector
     """
 
     # TODO: Move this check (or a similar one) to Parameters.py
-    '''
-    l_bound, u_bound = l_bound.flatten(), u_bound.flatten()
-
-    lb_index = isfinite(l_bound)
-    up_index = isfinite(u_bound)
-
-    valid = bitwise_and(lb_index,  up_index)
-
-    LB = l_bound[valid][:, newaxis]
-    UB = u_bound[valid][:, newaxis]
-    '''
-
     y = (x - l_bound) / (u_bound - l_bound)
     floor_y = floor(y)                              # Local storage to prevent double calls
     I = mod(floor_y, 2) == 0
@@ -52,16 +40,6 @@ def keepInBounds(x, l_bound, u_bound):
 
     x = l_bound + (u_bound - l_bound) * yprime
 
-    '''
-    y = (x[valid, :] - LB) / (UB - LB)
-    I = mod(floor(y), 2) == 0
-    yprime = zeros(shape(y))
-    yprime[I] = np.abs(y[I] - floor(y[I]))
-    yprime[~I] = 1.0 - np.abs(y[~I] - floor(y[~I]))
-
-    x[valid, :] = LB + (UB - LB) * yprime
-    '''
-
     return x
 
 
@@ -70,7 +48,7 @@ def adaptStepSize(individual):
         Given the current step size for a candidate, randomly determine a new step size offset,
         that can be no greater than maxStepSize - baseStepSize
 
-        :param individual:  The FloatIndividual object whose step size should be adapted
+        :param individual:  The :class:`~code.Individual.FloatIndividual` object whose step size should be adapted
     """
     # Empirically determined, see paper
     gamma = 0.22
@@ -85,9 +63,9 @@ def addRandomOffset(individual, param, sampler):
     """
         Mutation 1: x = x + sigma*N(0,I)
 
-        :param individual:  FloatIndividual to be mutated
-        :param param:       Parameters object to store settings
-        :param sampler:     Sampler from which the random values should be drawn
+        :param individual:  :class:`~code.Individual.FloatIndividual` to be mutated
+        :param param:       :class:`~code.Parameters.Parameters` object to store settings
+        :param sampler:     :mod:`~code.Sampling` module from which the random values should be drawn
     """
 
     individual.genotype += param.sigma * sampler.next()
@@ -97,9 +75,9 @@ def CMAMutation(individual, param, sampler, threshold_convergence=False):
     """
         CMA mutation: x = x + (sigma * B*D*N(0,I))
 
-        :param individual:              FloatIndividual to be mutated
-        :param param:                   Parameters object to store settings
-        :param sampler:                 Sampler from which the random values should be drawn
+        :param individual:              :class:`~code.Individual.FloatIndividual` to be mutated
+        :param param:                   :class:`~code.Parameters.Parameters` object to store settings
+        :param sampler:                 :mod:`~code.Sampling` module from which the random values should be drawn
         :param threshold_convergence:   Boolean: Should threshold convergence be applied. Default: False
     """
 
@@ -118,9 +96,9 @@ def choleskyCMAMutation(individual, param, sampler):
     """
         Cholesky CMA based mutation
 
-        :param individual:  FloatIndividual to be mutated
-        :param param:       Parameters object to store settings
-        :param sampler:     Sampler from which the random values should be drawn
+        :param individual:  :class:`~code.Individual.FloatIndividual` to be mutated
+        :param param:       :class:`~code.Parameters.Parameters` object to store settings
+        :param sampler:     :mod:`~code.Sampling` module from which the random values should be drawn
     """
 
     param.last_z = sampler.next()
@@ -171,7 +149,7 @@ def _getXi():
         Randomly returns 5/7 or 7/5 with equal probability
         :return: float Xi
     """
-    if bool(getrandbits(1)):
+    if bool(random.getrandbits(1)):
         return 5/7
     else:
         return 7/5
@@ -179,7 +157,11 @@ def _getXi():
 
 ### GA MUTATIONS ###
 def mutateBitstring(individual):
-    """ Extremely simple 1/n bit-flip mutation """
+    """
+        Extremely simple 1/n bit-flip mutation
+
+        :param individual:  :mod:`~code.Individual` with a bit-string as genotype to undergo p=1/n mutation
+    """
     bitstring = individual.genotype
     n = len(bitstring)
     p = 1/n
@@ -189,7 +171,14 @@ def mutateBitstring(individual):
 
 
 def mutateIntList(individual, param, num_options):
-    """ self-adaptive random integer mutation """
+    """
+        Self-adaptive random integer mutation to mutate the structure of an ES
+
+        :param individual:  :class:`~code.Individual.MixedIntegerIndividual` whose integer-part will be mutated
+        :param param:       :class:`~code.Parameters.Parameters` object
+        :param num_options: List :data:`~code.num_options` with the number of available modules per module position
+                            that are available to choose from
+    """
 
     p = individual.baseStepSize + individual.stepSizeOffset
     num_ints = individual.num_ints
@@ -209,6 +198,13 @@ def mutateIntList(individual, param, num_options):
         individual.genotype[num_ints-1] = new_lambda
 
 def mutateFloatList(individual, param, options):
+    """
+        Self-adaptive, uniformly random real mutation to mutate the tunable parameters for the structure of an ES
+
+        :param individual:  :class:`~code.Individual.MixedIntegerIndividual` whose integer-part will be mutated
+        :param param:       :class:`~code.Parameters.Parameters` object
+        :param options:     List of tuples :data:`~code.options` with the number of tunable parameters per module
+    """
 
     # Setup of values
     p = individual.baseStepSize + individual.stepSizeOffset
@@ -232,7 +228,15 @@ def mutateFloatList(individual, param, options):
 
 
 def mutateMixedInteger(individual, param, options, num_options):
-    """ Self-adaptive mutation of a mixed-integer individual """
+    """
+        Self-adaptive mixed-integer mutation of the structure of an ES
+
+        :param individual:  :class:`~code.Individual.MixedIntegerIndividual` whose integer-part will be mutated
+        :param param:       :class:`~code.Parameters.Parameters` object
+        :param options:     List of tuples :data:`~code.options` with the number of tunable parameters per module
+        :param num_options: List :data:`~code.num_options` with the number of available modules per module position
+                            that are available to choose from
+    """
 
     adaptStepSize(individual)
     mutateIntList(individual, param, num_options)
