@@ -9,7 +9,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
-
 import numpy as np
 import random
 from numpy import add, bitwise_and, dot, exp, floor, mod, shape, zeros
@@ -17,7 +16,7 @@ from numpy.linalg import norm
 from random import gauss
 
 
-def keepInBounds(x, l_bound, u_bound):
+def _keepInBounds(x, l_bound, u_bound):
     """
         This function transforms x to t w.r.t. the low and high
         boundaries lb and ub. It implements the function T^{r}_{[a,b]} as
@@ -28,9 +27,10 @@ def keepInBounds(x, l_bound, u_bound):
         :param x:       Column vector to be kept in bounds
         :param l_bound: Lower bound column vector
         :param u_bound: Upper bound column vector
+        :returns:       An in-bounds kept version of the column vector ``x``
     """
 
-    # TODO: Move this check (or a similar one) to Parameters.py
+    # TODO: Move this check (or a similar one) to Parameters.py ?
     y = (x - l_bound) / (u_bound - l_bound)
     floor_y = floor(y)                              # Local storage to prevent double calls
     I = mod(floor_y, 2) == 0
@@ -39,13 +39,12 @@ def keepInBounds(x, l_bound, u_bound):
     yprime[~I] = 1.0 - np.abs(y[~I] - floor_y[~I])
 
     x = l_bound + (u_bound - l_bound) * yprime
-
     return x
 
 
 def adaptStepSize(individual):
     """
-        Given the current step size for a candidate, randomly determine a new step size offset,
+        Given the current individual, randomly determine a new step size offset
         that can be no greater than maxStepSize - baseStepSize
 
         :param individual:  The :class:`~code.Individual.FloatIndividual` object whose step size should be adapted
@@ -67,7 +66,6 @@ def addRandomOffset(individual, param, sampler):
         :param param:       :class:`~code.Parameters.Parameters` object to store settings
         :param sampler:     :mod:`~code.Sampling` module from which the random values should be drawn
     """
-
     individual.genotype += param.sigma * sampler.next()
 
 
@@ -89,7 +87,7 @@ def CMAMutation(individual, param, sampler, threshold_convergence=False):
     individual.mutation_vector = dot(param.B, (param.D * individual.last_z))  # y_k in cmatutorial.pdf)
     mutation_vector = individual.mutation_vector * param.sigma
 
-    individual.genotype = keepInBounds(add(individual.genotype, mutation_vector), param.l_bound, param.u_bound)
+    individual.genotype = _keepInBounds(add(individual.genotype, mutation_vector), param.l_bound, param.u_bound)
 
 
 def choleskyCMAMutation(individual, param, sampler):
@@ -196,6 +194,7 @@ def mutateIntList(individual, param, num_options):
     if np.random.random() < p:
         new_lambda = np.random.random_integers(param.l_bound[num_ints-1], param.u_bound[num_ints-1])
         individual.genotype[num_ints-1] = new_lambda
+
 
 def mutateFloatList(individual, param, options):
     """
