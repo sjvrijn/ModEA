@@ -7,18 +7,17 @@ Some of the sampling options in this module can be considered `base-samplers`. T
 of values without requiring any input. The remaining options will have a ``base_sampler`` optional argument, as they
 need input from some other sampler to produce values, as they perform operations on them such as mirroring.
 
-=============
 Base samplers
 =============
 * :class:`~GaussianSampling`
 * :class:`~QuasiGaussianHaltonSampling`
 * :class:`~QuasiGaussianSobolSampling`
 
-=================
 Indirect samplers
 =================
-* :class:`~OrthogonalSampling`
 * :class:`~MirroredSampling`
+* :class:`~OrthogonalSampling`
+* :class:`~MirroredOrthogonalSampling`
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 
@@ -204,6 +203,7 @@ class OrthogonalSampling(object):
         """
         self.current_sample = 0
         self.samples = None
+        self.base_sampler.reset()
 
 
 class MirroredSampling(object):
@@ -252,3 +252,38 @@ class MirroredSampling(object):
         """
         self.mirror_next = False
         self.last_sample = None
+        self.base_sampler.reset()
+
+
+class MirroredOrthogonalSampling(object):
+    """
+        Factory method returning a pre-defined mirrored orthogonal sampler in the right order: orthogonalize first,
+        mirror second.
+
+        :param n:               Dimensionality of the vectors to be sampled
+        :param shape:           String to select between whether column (``'col'``) or row (``'row'``) vectors should be
+                                returned. Defaults to column vectors
+        :param base_sampler:    A different Sampling object from which samples to be mirrored are drawn. If no
+                                base_sampler is given, a :class:`~GaussianSampling` object will be
+                                created and used.
+        :return:                A ``MirroredSampling`` object with as base sampler an ``OrthogonalSampling`` object
+                                initialized with the given parameters.
+    """
+    def __init__(self, n, shape='col', base_sampler=None):
+        sampler = OrthogonalSampling(n, shape, base_sampler)
+        self.sampler = MirroredSampling(n, shape, sampler)
+
+    def next(self):
+        """
+            Draw the next sample from the Sampler
+
+            :return:    A new vector, alternating between a new orthogonalized sample from the base_sampler and
+                        a mirror of the last.
+        """
+        return self.sampler.next()
+
+    def reset(self):
+        """
+            Reset the internal state of this sampler, so the next sample is forced to be taken new.
+        """
+        return self.sampler.reset()
