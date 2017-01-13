@@ -464,7 +464,6 @@ class _CustomizedES(object):
         functions and combinations of those. Instrumental in Evolving Evolution Strategies
 
         :param n:               Dimensionality of the problem to be solved
-        :param fitnessFunction: Function to determine the fitness of an individual
         :param budget:          Number of function evaluations allowed for this algorithm
         :param mu:              Number of individuals that form the parents of each generation
         :param lambda_:         Number of individuals in the offspring of each generation
@@ -553,7 +552,7 @@ class _CustomizedES(object):
                                'elitist': opts['elitist'],
                                'sequential': opts['sequential'], 'tpa': opts['tpa'], 'local_restart': opts['ipop'],
                                'values': values,
-                              }
+                               }
 
         # In case of pairwise selection, sequential evaluation may only stop after 2mu instead of mu individuals
         self.mu_int = int(1 + floor(mu * (eff_lambda - 1)))
@@ -802,15 +801,12 @@ def localRestartAlgorithm(fitnessFunction, budget, functions, parameter_opts, pa
 
             if regime == 'large':
                 large_budget -= used_budget
-            elif regime == 'small':
-                small_budget -= used_budget
-
-            if regime == 'large':
                 lambda_large *= 2
                 parameter_opts['lambda_'] = lambda_large
                 parameter_opts['sigma'] = 2
 
             elif regime == 'small':
+                small_budget -= used_budget
                 rand_val = np.random.random() ** 2
                 lambda_small = int(floor(lambda_init * (.5 * lambda_large/lambda_init)**rand_val))
                 parameter_opts['lambda_'] = lambda_small
