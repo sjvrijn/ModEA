@@ -169,7 +169,6 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
             min_length = min(fit_lengths)
             fitnesses = [x[:min_length] for x in fitnesses]
 
-        # TODO: replace by use of ESFitness objects
         # Subtract the target fitness value from all returned fitnesses to only get the absolute distance
         fitnesses = np.subtract(np.array(fitnesses), np.array(targets).T[:,np.newaxis])
         fitness = ESFitness(fitnesses)

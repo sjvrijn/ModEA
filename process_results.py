@@ -18,7 +18,7 @@ from code.Utils import ESFitness, intToRepr, reprToInt, reprToString
 
 np.set_printoptions(linewidth=156)
 brute_location = 'C:\\Users\\Sander\\Dropbox\\Liacs\\DAS4\\Experiments\\BF runs'
-raw_bfname = 'data\\bruteforce_{}_f{}.tdat'
+raw_bfname = 'data/bruteforce_{}_f{}.tdat'
 
 ga_location = 'C:\\Users\\Sander\\Dropbox\\Liacs\\DAS4\\Experiments\\GA runs'  # laptop
 # ga_location = '/home/sander/Dropbox/Liacs/Semester12/Thesis/test_results'  # desktop
@@ -629,6 +629,89 @@ def printComparisonTable(given=None):
         print('\\hline')
 
 
+def datToArff(input, output):
+
+    arff_header = """
+% 1. Title: Iris Plants Database
+%
+% 2. Sources:
+%      (a) Creator: S.J. van Rijn (s.j.van.rijn@liacs.leidenuniv.nl)
+%      (b) Donor: Sander van Rijn
+%      (c) Date: January, 2017
+%
+@RELATION ESs
+
+@ATTRIBUTE active       NUMERIC
+@ATTRIBUTE elitist      NUMERIC
+@ATTRIBUTE mirrored     NUMERIC
+@ATTRIBUTE orthogonal   NUMERIC
+@ATTRIBUTE sequential   NUMERIC
+@ATTRIBUTE threshold    NUMERIC
+@ATTRIBUTE tpa          NUMERIC
+@ATTRIBUTE pairwise     NUMERIC
+@ATTRIBUTE weights      NUMERIC
+@ATTRIBUTE base-sampler NUMERIC
+@ATTRIBUTE ipop         NUMERIC
+@ATTRIBUTE class        NUMERIC
+
+@DATA
+"""
+
+    fitnesses = tdatFileToFitnesses(input)
+
+    ERTs, FCEs = zip(*[(case.fitness.ERT, case.fitness.FCE) for case in fitnesses])
+    ERTs = [ert for ert in ERTs if ert is not None]
+
+    with open(output, 'w') as f:
+
+        f.write(arff_header)
+
+        max_ERT = max(ERTs) if len(ERTs) > 0 else None
+        min_FCE = min(FCEs)
+
+        print(max_ERT, min_FCE)
+
+        for single_result in fitnesses:
+
+            fitness = single_result.fitness.ERT
+
+            if max_ERT is None:
+                fitness = single_result.fitness.FCE
+            elif fitness is None:
+                # A bit arbitrary, but should work for now???
+                fitness = max_ERT + single_result.fitness.FCE - min_FCE
+
+
+            line = "{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
+                single_result.ES[0],
+                single_result.ES[1],
+                single_result.ES[2],
+                single_result.ES[3],
+                single_result.ES[4],
+                single_result.ES[5],
+                single_result.ES[6],
+                single_result.ES[7],
+                single_result.ES[8],
+                single_result.ES[9],
+                single_result.ES[10],
+                fitness
+            )
+            f.write(line)
+
+
+def makeWekaReady():
+
+    os.chdir("/media/Data/Research Data/Evolving ES data")
+
+    print(os.getcwd())
+
+    for fid in functions:
+        for dim in dimensions:
+            tdat_name = raw_bfname.format(dim, fid)
+            arff_name = "arff_files/bruteforce_{}_f{}.arff".format(dim, fid)
+            datToArff(tdat_name, arff_name)
+
+
 if __name__ == '__main__':
 
     ### GA STUFF ###
@@ -675,7 +758,9 @@ if __name__ == '__main__':
     # printRelativeComparisonBestAndGivenBF()
     # printRelativeComparisonBestGAAndGivenBF()
 
-    printComparisonTable()
+    #printComparisonTable()
+
+    makeWekaReady()
 
     pass
 
