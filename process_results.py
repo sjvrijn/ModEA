@@ -629,7 +629,7 @@ def printComparisonTable(given=None):
         print('\\hline')
 
 
-def datToArff(input, output):
+def datToArff(input, output, dim):
 
     arff_header = """
 % 1. Title: Modular CMA-ES Framework - Fitness values per structure
@@ -666,7 +666,7 @@ def datToArff(input, output):
 
         f.write(arff_header)
 
-        max_ERT = max(ERTs) if len(ERTs) > 0 else None
+        max_ERT = 32 * 1000 * dim
         max_FCE = max(FCEs)
 
         for single_result in fitnesses:
@@ -677,7 +677,7 @@ def datToArff(input, output):
                 fitness = single_result.fitness.ERT / max_ERT
             # Normalize FCE (assumed log-linear) to [1, 2] if an ERT is not available
             else:
-                fitness = 1 + ((np.log(single_result.fitness.FCE)+8) / np.log(max_FCE))
+                fitness = 1 + ((np.log(single_result.fitness.FCE) + 8) / (np.log(max_FCE) + 8))
 
             line = "{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
                 single_result.ES[0],
@@ -706,7 +706,7 @@ def createArffFiles():
         for dim in dimensions:
             tdat_name = raw_bfname.format(dim, fid)
             arff_name = "arff/bruteforce_{}_f{}.arff".format(dim, fid)
-            datToArff(tdat_name, arff_name)
+            datToArff(tdat_name, arff_name, dim)
 
 
 if __name__ == '__main__':
