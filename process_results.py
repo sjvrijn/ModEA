@@ -632,7 +632,7 @@ def printComparisonTable(given=None):
 def datToArff(input, output):
 
     arff_header = """
-% 1. Title: Iris Plants Database
+% 1. Title: Modular CMA-ES Framework - Fitness values per structure
 %
 % 2. Sources:
 %      (a) Creator: S.J. van Rijn (s.j.van.rijn@liacs.leidenuniv.nl)
@@ -667,20 +667,17 @@ def datToArff(input, output):
         f.write(arff_header)
 
         max_ERT = max(ERTs) if len(ERTs) > 0 else None
-        min_FCE = min(FCEs)
-
-        print(max_ERT, min_FCE)
+        max_FCE = max(FCEs)
 
         for single_result in fitnesses:
 
-            fitness = single_result.fitness.ERT
-
-            if max_ERT is None:
-                fitness = single_result.fitness.FCE
-            elif fitness is None:
-                # A bit arbitrary, but should work for now???
-                fitness = max_ERT + single_result.fitness.FCE - min_FCE
-
+            # Normalize ERT (assumed linear) to [0, 1]
+            if single_result.fitness.ERT is not None\
+                             and max_ERT is not None:
+                fitness = single_result.fitness.ERT / max_ERT
+            # Normalize FCE (assumed log-linear) to [1, 2] if an ERT is not available
+            else:
+                fitness = 1 + ((np.log(single_result.fitness.FCE)+8) / np.log(max_FCE))
 
             line = "{},{},{},{},{},{},{},{},{},{},{},{}\n".format(
                 single_result.ES[0],
@@ -699,7 +696,7 @@ def datToArff(input, output):
             f.write(line)
 
 
-def makeWekaReady():
+def createArffFiles():
 
     os.chdir("/media/Data/Research Data/Evolving ES data")
 
@@ -708,7 +705,7 @@ def makeWekaReady():
     for fid in functions:
         for dim in dimensions:
             tdat_name = raw_bfname.format(dim, fid)
-            arff_name = "arff_files/bruteforce_{}_f{}.arff".format(dim, fid)
+            arff_name = "arff/bruteforce_{}_f{}.arff".format(dim, fid)
             datToArff(tdat_name, arff_name)
 
 
@@ -760,7 +757,7 @@ if __name__ == '__main__':
 
     #printComparisonTable()
 
-    makeWekaReady()
+    createArffFiles()
 
     pass
 
