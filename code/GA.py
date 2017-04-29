@@ -391,14 +391,14 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
     best_ES = None
     best_result = ESFitness()
 
-    progress_log = 'progress-f{}-{}dim.log'.format(fid, ndim)
+    progress_log = '{}_f{}.prog'.format(ndim, fid)
     progress_fname = "{}{}".format(non_bbob_datapath, progress_log)
     if progress_log not in os.listdir(non_bbob_datapath):
         start_at = 0
     else:
         with open(progress_fname) as progress_file:
             start_at = cPickle.load(progress_file)
-        if start_at == np.product(num_options):
+        if start_at >= np.product(num_options):
             return  # Done.
 
     if part == 1 and start_at >= num_combinations // 2:  # Been there, done that
