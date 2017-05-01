@@ -42,7 +42,7 @@ def run_tests():
     budget = 1000
     num_runs = 5
     fitnesses_to_test = ['sphere', 'elipsoid', 'rastrigin']  # ['sphere', 'elipsoid', 'rastrigin']
-    algorithms_to_test = ['CMA']  # ['1+1', 'CMA', 'CMSA', 'Cholesky', 'Active']
+    algorithms_to_test = ['CMSA']  # ['1+1', 'CMA', 'CMSA', 'Cholesky', 'Active']
 
     # 'Catch' results
     sigmas = {}

@@ -14,6 +14,7 @@ import random
 from numpy import add, bitwise_and, dot, exp, floor, mod, shape, zeros
 from numpy.linalg import norm
 from random import gauss
+from math import sqrt
 
 
 def _keepInBounds(x, l_bound, u_bound):
@@ -236,7 +237,78 @@ def mutateMixedInteger(individual, param, options, num_options):
         :param num_options: List :data:`~code.num_options` with the number of available modules per module position
                             that are available to choose from
     """
-
     adaptStepSize(individual)
+    # print(individual.stepSizeOffset)
     mutateIntList(individual, param, num_options)
     mutateFloatList(individual, param, options)
+
+def MIES_Mutate(individual, param, options, num_options):
+    print("n", individual.n)
+    print("num ints", individual.num_ints)
+    # print("num floats", individual.num_floats)
+    u = gauss(0.5, 1)
+    for x in range(len(individual.genotype)):
+        if individual.genotype[x] is not None:
+
+            print("stepSize", individual.stepSizeOffset)
+            if(x < individual.num_ints ):
+                #adjust step size for nominal variables
+                #
+                ub = param.u_bound[x];
+                lb = param.l_bound[x];
+                print("ub", ub)
+                tau = 1 / sqrt(2 * individual.n)
+                tau_prime = 1 / sqrt(2 * sqrt(individual.n))
+                #
+                # if (mode == STEP_SIZE_MODE: : SINGLE){
+                #     out = 1 / (1 + ((1 - val) / val) * exp((-tau) * u));
+                # lb = 1.0 / static_cast < double > (dim_d);
+                # if (lb > (1.0 / 3.0)) {lb = 1.0 / 3.0;}
+                # }
+                # else #// (mode == STEP_SIZE_MODE:: MULTI)
+                out = 1 / (1 + ((1 - individual.stepSizeOffset) / individual.stepSizeOffset) * exp((-tau) * u - tau_prime * gauss(0.5,1)));
+                #   lb = 1.0 / (3.0 * static_cast < double > (dim_d));
+                #
+                #
+                print("out",out)
+                # if (out < lb or out > ub):
+                #     print("out <lb or out > ub")
+                #     y = int(out)
+                #     print("y",y)
+                #     a = lb
+                #     b = ub
+                #     y = int((y - a) / (b - a))
+                #     if (abs(x) % 2 == 0):
+                #         y = abs( y - y)
+                #     else:
+                #         y = abs(1-abs(y - y))
+                individual.stepSizeOffset =out;
+                # individual.genotype[x] = int(individual.genotype[x] + gauss(0.5, 1) * individual.stepsize)
+                # individual.genotype[x]=int(out)
+
+
+            if(x >= individual.num_ints):
+                # adjust step size for floats
+                print("ind:", x, individual.genotype[x])
+
+                tau = 1 / sqrt(2 * individual.n)
+                tau_prime = 1 / sqrt(2 * sqrt(individual.n))
+                individual.stepSizeOffset = individual.stepSizeOffset * exp(u * tau + gauss(0.5, 1) * tau_prime)
+
+                # adjust genotype
+                individual.genotype[x]= individual.genotype[x] + gauss(0.5, 1) * individual.stepsize
+
+
+                #     if genotype[x] = integer
+                # u1 = np.random.random_integers(0,10000)/10000
+                # u2 = np.random.random_integers(0,10000)/10000
+                # psi = 1 - (individual.stepsize / individual.n) / (1 + sqrt(1 + pow(individual.stepsize / individual.n, 2)))
+                # G1 = int(floor(np.log(1 - u1) / np.log(1 - psi)))
+                # G2 = int(floor(np.log(1 - u2) / np.log(1 - psi)))
+                # new_gentype = individual.genotype[x] + G1 - G2
+                # print("u1,u2,psi,G1,G2:", u1, u2, psi, G1, G2)
+                # print("pref_gentype:", individual.genotype[x])
+                # print("new_gentype:",new_gentype)
+                #
+                # individual.genotype[x]=new_gentype
+    print("new gen type", individual.genotype)

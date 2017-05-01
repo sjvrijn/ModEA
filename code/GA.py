@@ -10,7 +10,7 @@ from copy import copy
 from datetime import datetime
 from functools import partial
 from multiprocessing import Pool
-from mpi4py import MPI
+# from mpi4py import MPI
 
 
 import code.Mutation as Mut
@@ -61,7 +61,8 @@ def GA(ndim, fid, budget=None):
     """
 
     # Where to store genotype-fitness information
-    storage_file = '{}GA_results_{}dim_f{}.tdat'.format(non_bbob_datapath, ndim, fid)
+    # storage_file = '{}GA_results_{}dim_f{}.tdat'.format(non_bbob_datapath, ndim, fid)
+    storage_file="results.tdat"
 
     # Fitness function to be passed on to the baseAlgorithm
     # fitnessFunction = partial(ALT_evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
@@ -76,23 +77,34 @@ def GA(ndim, fid, budget=None):
     parameters = Parameters(len(options) + 15, budget, mu=GA_mu, lambda_=GA_lambda)
     parameters.l_bound[len(options):] = np.array([  2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15,1)
     parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15,1)
+
+
     # Initialize the first individual in the population
-    population = [MixedIntIndividual(ndim, num_ints=len(num_options)+1)]
     int_part = [np.random.randint(len(x[1])) for x in options]
-    int_part.append(None)
+    int_part.append(None)  # This is instead of integer value 'mu'
     # TODO FIXME: dumb, brute force, hardcoded defaults for testing purposes
     float_part = [None, None, None, None, None, None, None, None, None, None, None, None, None, None]
     # float_part = [None, 2,    None, None, None, None, None, 0.2, 0.995, 0.5,  0,    0.3,  0.5,  2]
 
+    population = [MixedIntIndividual(len(int_part) + len(float_part), num_ints=len(num_options)+1)]
     population[0].genotype = np.array(int_part + float_part)
     population[0].fitness = ESFitness()
 
     while len(population) < GA_mu:
         population.append(copy(population[0]))
 
+
+
+
+
+
+
+
+
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
-    recombine = Rec.random
-    mutate = partial(Mut.mutateMixedInteger, options=options, num_options=num_options)
+    recombine = Rec.MIES_recombine
+    mutate = partial(Mut.MIES_Mutate, options=options, num_options=num_options)
+    # mutate = Mut.MIES_Mutate(population[0], parameters,  options, num_options)
     best = Sel.bestGA
     def select(pop, new_pop, _, params):
         return best(pop, new_pop, params)
@@ -105,7 +117,19 @@ def GA(ndim, fid, budget=None):
         'select': select,
         'mutateParameters': mutateParameters,
     }
+
+
+
+
+
+
+
+
+
+
+
     # TODO FIXME: parallel currently causes ValueError: I/O operation on closed file
+    print(parameters.lambda_, parameters.mu_int)
     _, results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters,
                                parallel=Config.GA_parallel, debug=Config.GA_debug)
     return results
@@ -217,7 +241,7 @@ def evaluate_ES(es_genotype, fid, ndim, budget=None, storage_file=None, opts=Non
         lambda_ = opts['lambda_'] if 'lambda_' in opts else None
         mu = opts['mu'] if 'mu' in opts else None
     else:
-        print(es_genotype[:num_ints+1], end=' ')
+        print(es_genotype[:num_ints+1], end='')
         opts = getOpts(es_genotype[:num_ints-1])
         lambda_ = es_genotype[num_ints-1]
         mu = es_genotype[num_ints]
@@ -505,11 +529,11 @@ def _runExperiments():
 
 
 def _run():
+    _runGA()
     # _testEachOption()
     # _problemCases()
     # _exampleRuns()
     # _bruteForce(ndim=10, fid=1)
-    _runGA()
     # _runExperiments()
     pass
 

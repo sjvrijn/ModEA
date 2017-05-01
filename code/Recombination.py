@@ -81,3 +81,40 @@ def weighted(pop, param):
         new_population.append(copy(new_ind))
 
     return new_population
+
+def MIES_recombine(pop, param):
+
+    print("genotype:", pop[0].genotype)
+    new_ind=copy(pop[0])
+    new_population = [new_ind]
+    reco =1
+    print("debugger 2")
+    for all in range(param.lambda_):
+        # Select random individual from the current parent population
+        c1 = np.random.random_integers(0, param.mu_int-1)
+        c2 = np.random.random_integers(0, param.mu_int-1)
+        # Optional: replace by copy(choice(pop))
+
+        # print("c1:", c1)
+        # print("c2:",c2)
+
+        if reco == 1:
+            new_population.append(copy(pop[c1]))
+        if reco == 0:
+            new_ind = copy(pop[c1])
+            new_ind.fitness = None  # This is a choice
+            new_ind.genotype += pop[c2].genotype
+            new_ind.genotype //= 2
+            new_population.append(new_ind)
+        if reco>1 :
+            x = (choice(range(1, 10000))/10000)
+            if x > 0.5:
+                print("c1 won")
+                new_population.append(copy(pop[c1]))
+            else:
+                print("c2 won")
+                new_population.append(copy(pop[c2]))
+    # for x in range (param.lambda_):
+    #     print("new pop",new_population[x])
+    return new_population
+

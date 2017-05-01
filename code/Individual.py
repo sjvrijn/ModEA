@@ -23,7 +23,7 @@ class FloatIndividual(object):
 
     def __init__(self, n):
         self.n = n
-        self.genotype = np.ones((n, 1))               # Column vector
+        self.genotype = np.ones((n, 1))         # Column vector
         self.fitness = np.inf                   # Default 'unset' value
 
         self.sigma = 1
@@ -64,7 +64,7 @@ class MixedIntIndividual(object):
         :param n:           Dimensionality of the problem to be solved, consisting of num_ints integers and
                             num_floats (= n - num_ints) floating point values
         :param num_ints:    Number of integer values in the genotype.
-        :param num_floats:  Number of floating point values in the genotype. Must be given is num_ints is omitted
+        :param num_floats:  Number of floating point values in the genotype. Must be given if num_ints is omitted
     """
 
     def __init__(self, n, num_ints=None, num_floats=None):
@@ -90,6 +90,11 @@ class MixedIntIndividual(object):
             self.baseStepSize = 0.175  # Random guess value, may need to be updated
         # The actual stepSize is the base + offset, so final starting stepSize = initStepSize
         self.stepSizeOffset = self.initStepSize - self.baseStepSize
+
+
+    @property
+    def stepsize(self):
+        return self.stepSizeOffset + self.baseStepSize
 
 
     def __copy__(self):
