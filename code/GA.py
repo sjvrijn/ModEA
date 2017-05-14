@@ -80,14 +80,15 @@ def GA(ndim, fid, budget=None):
 
 
     # Initialize the first individual in the population
-    int_part = [np.random.randint(len(x[1])) for x in options]
-    int_part.append(None)  # This is instead of integer value 'mu'
+    discrete_part = [np.random.randint(len(x[1])) for x in options]
+    discrete_part.append(None)  # This is instead of integer value 'lambda_'
     # TODO FIXME: dumb, brute force, hardcoded defaults for testing purposes
-    float_part = [None, None, None, None, None, None, None, None, None, None, None, None, None, None]
-    # float_part = [None, 2,    None, None, None, None, None, 0.2, 0.995, 0.5,  0,    0.3,  0.5,  2]
+    # float_part = [None, None, None, None, None, None, None, None, None, None, None, None, None, None]
+    float_part = [None, 2, 0.2, 0.995, 0.5, 0, 0.3,  0.5,  2]
+    # int_part =[None, None, None, None, None]
 
-    population = [MixedIntIndividual(len(int_part) + len(float_part), num_ints=len(num_options)+1)]
-    population[0].genotype = np.array(int_part + float_part)
+    population = [MixedIntIndividual(len(discrete_part) + len(float_part), num_discrete=len(num_options)+1)]
+    population[0].genotype = np.array(discrete_part + float_part)
     population[0].fitness = ESFitness()
 
     while len(population) < GA_mu:

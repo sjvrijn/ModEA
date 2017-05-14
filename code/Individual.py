@@ -63,23 +63,23 @@ class MixedIntIndividual(object):
 
         :param n:           Dimensionality of the problem to be solved, consisting of num_ints integers and
                             num_floats (= n - num_ints) floating point values
-        :param num_ints:    Number of integer values in the genotype.
+        :param num_discrete:Number of discrete values in the genotype.
         :param num_floats:  Number of floating point values in the genotype. Must be given if num_ints is omitted
     """
 
-    def __init__(self, n, num_ints=None, num_floats=None):
+    def __init__(self, n, num_discrete=None, num_floats=None):
 
         if n < 2:
             raise MixedIntIndividualError("Cannot define a mixed-integer representation in < 2 dimensions")
-        if num_floats is None and num_ints is None:
+        if num_floats is None and num_discrete is None:
             raise MixedIntIndividualError("Number of integer or floating point values not specified")
 
         self.n = n
-        self.num_ints = num_ints if num_ints is not None else n - num_floats  # num_ints + num_floats = n
+        self.num_discrete = num_discrete if num_discrete is not None else n - num_floats  # num_discrete + num_floats = n
         self.genotype = np.ones((n, 1))                                       # Column vector
         self.fitness = np.inf                                                 # Default 'unset' value
         self.sigma = 1
-
+        self.stepSizeOffsetMIES=np.ones(n)
         # Self-adaptive step size parameters
         self.maxStepSize = 0.5
         self.initStepSize = 0.2
@@ -91,11 +91,16 @@ class MixedIntIndividual(object):
         # The actual stepSize is the base + offset, so final starting stepSize = initStepSize
         self.stepSizeOffset = self.initStepSize - self.baseStepSize
 
+        for x in range(self.n):
+            self.stepSizeOffsetMIES[x] = self.initStepSize - self.baseStepSize
+
 
     @property
     def stepsize(self):
         return self.stepSizeOffset + self.baseStepSize
 
+    # def stepsizeMIES(self,x):
+    #     return self.stepSizeOffsetMIES[x] + self.baseStepSize
 
     def __copy__(self):
         """
@@ -105,7 +110,7 @@ class MixedIntIndividual(object):
 
             :returns:  Individual object with all attributes explicitly copied
         """
-        return_copy = MixedIntIndividual(self.n, self.num_ints)
+        return_copy = MixedIntIndividual(self.n, self.num_discrete)
         return_copy.genotype = copy(self.genotype)
         return_copy.fitness = self.fitness
         return_copy.sigma = self.sigma
@@ -114,5 +119,5 @@ class MixedIntIndividual(object):
         return_copy.baseStepSize = self.baseStepSize
         return_copy.initStepSize = self.initStepSize
         return_copy.stepSizeOffset = self.stepSizeOffset
-
+        return_copy.stepSizeOffsetMIES=copy(self.stepSizeOffsetMIES)
         return return_copy

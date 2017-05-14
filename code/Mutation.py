@@ -243,60 +243,31 @@ def mutateMixedInteger(individual, param, options, num_options):
     mutateFloatList(individual, param, options)
 
 def MIES_Mutate(individual, param, options, num_options):
-    print("n", individual.n)
-    print("num ints", individual.num_ints)
+    print("stepseize first", individual.stepSizeOffsetMIES)
+    # print("n", individual.n)
+    # print("num ints", individual.num_ints)
     # print("num floats", individual.num_floats)
+    # print("full genotype", individual.genotype)
     u = gauss(0.5, 1)
     for x in range(len(individual.genotype)):
         if individual.genotype[x] is not None:
 
-            print("stepSize", individual.stepSizeOffset)
-            if(x < individual.num_ints ):
-                #adjust step size for nominal variables
-                #
-                ub = param.u_bound[x];
-                lb = param.l_bound[x];
-                print("ub", ub)
-                tau = 1 / sqrt(2 * individual.n)
-                tau_prime = 1 / sqrt(2 * sqrt(individual.n))
-                #
-                # if (mode == STEP_SIZE_MODE: : SINGLE){
-                #     out = 1 / (1 + ((1 - val) / val) * exp((-tau) * u));
-                # lb = 1.0 / static_cast < double > (dim_d);
-                # if (lb > (1.0 / 3.0)) {lb = 1.0 / 3.0;}
-                # }
-                # else #// (mode == STEP_SIZE_MODE:: MULTI)
-                out = 1 / (1 + ((1 - individual.stepSizeOffset) / individual.stepSizeOffset) * exp((-tau) * u - tau_prime * gauss(0.5,1)));
-                #   lb = 1.0 / (3.0 * static_cast < double > (dim_d));
-                #
-                #
-                print("out",out)
-                # if (out < lb or out > ub):
-                #     print("out <lb or out > ub")
-                #     y = int(out)
-                #     print("y",y)
-                #     a = lb
-                #     b = ub
-                #     y = int((y - a) / (b - a))
-                #     if (abs(x) % 2 == 0):
-                #         y = abs( y - y)
-                #     else:
-                #         y = abs(1-abs(y - y))
-                individual.stepSizeOffset =out;
-                # individual.genotype[x] = int(individual.genotype[x] + gauss(0.5, 1) * individual.stepsize)
-                # individual.genotype[x]=int(out)
-
-
-            if(x >= individual.num_ints):
-                # adjust step size for floats
-                print("ind:", x, individual.genotype[x])
+            if(x < individual.num_discrete ):
 
                 tau = 1 / sqrt(2 * individual.n)
                 tau_prime = 1 / sqrt(2 * sqrt(individual.n))
-                individual.stepSizeOffset = individual.stepSizeOffset * exp(u * tau + gauss(0.5, 1) * tau_prime)
+                out = 1 / (1 + ((1 - individual.stepSizeOffsetMIES[x]) / individual.stepSizeOffsetMIES[x]) * exp((-tau) * u - tau_prime * gauss(0.5,1)));
+                individual.stepSizeOffsetMIES[x] = out;
 
+
+            if(x >= individual.num_discrete):
+
+                tau = 1 / sqrt(2 * individual.n)
+                tau_prime = 1 / sqrt(2 * sqrt(individual.n))
+
+                individual.stepSizeOffsetMIES[x] = individual.stepSizeOffsetMIES[x] * exp(u * tau + gauss(0.5, 1) * tau_prime)
                 # adjust genotype
-                individual.genotype[x]= individual.genotype[x] + gauss(0.5, 1) * individual.stepsize
+                # individual.genotype[x]= individual.genotype[x] + gauss(0.5, 1) * individual.stepsize
 
 
                 #     if genotype[x] = integer
@@ -311,4 +282,22 @@ def MIES_Mutate(individual, param, options, num_options):
                 # print("new_gentype:",new_gentype)
                 #
                 # individual.genotype[x]=new_gentype
+            threshold = np.random.random_integers(0, 10000) / 10000
+            # print("x",x)
+            # print("threshold", threshold)
+            if (x < individual.num_discrete):# discretes
+                if (threshold < individual.stepSizeOffsetMIES[x]+individual.baseStepSize):
+                    # print("stepzise2:",individual.stepSizeOffsetMIES[x]+individual.baseStepSize)
+                    temparray=[]
+                    # print("num_optinos[x]",num_options[x])
+                    for i in range(num_options[x]):
+                       temparray.append(i)
+                       # print("temparray",temparray)
+                    # print("ind.gentype[x]",individual.genotype[x])
+                    temparray.remove(individual.genotype[x])
+                    # print("temparray_final", temparray)
+                    individual.genotype[x] = random.choice(temparray)
+                    # print("individual.genotype[x]", individual.genotype[x])
+            else: # floats
+               individual.genotype[x] = (individual.genotype[x]+ individual.stepSizeOffsetMIES[x]+individual.baseStepSize)
     print("new gen type", individual.genotype)
