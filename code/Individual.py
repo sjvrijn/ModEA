@@ -92,15 +92,16 @@ class MixedIntIndividual(object):
         self.stepSizeOffset = self.initStepSize - self.baseStepSize
 
         for x in range(self.n):
+            # self.baseStepSizeMIES[x] = 1/(3 * num_options[x])
             self.stepSizeOffsetMIES[x] = self.initStepSize - self.baseStepSize
 
 
     @property
-    def stepsize(self):
+    def stepsizeMIES(self):
         return self.stepSizeOffset + self.baseStepSize
 
-    # def stepsizeMIES(self,x):
-    #     return self.stepSizeOffsetMIES[x] + self.baseStepSize
+    def stepsizeMIES(self,x):
+        return self.stepSizeOffsetMIES[x] + self.baseStepSizeMIES
 
     def __copy__(self):
         """

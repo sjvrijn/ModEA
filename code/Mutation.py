@@ -243,7 +243,7 @@ def mutateMixedInteger(individual, param, options, num_options):
     mutateFloatList(individual, param, options)
 
 def MIES_Mutate(individual, param, options, num_options):
-    print("stepseize first", individual.stepSizeOffsetMIES)
+    # print("stepseize first", individual.stepSizeOffsetMIES)
     # print("n", individual.n)
     # print("num ints", individual.num_ints)
     # print("num floats", individual.num_floats)
@@ -267,8 +267,6 @@ def MIES_Mutate(individual, param, options, num_options):
 
                 individual.stepSizeOffsetMIES[x] = individual.stepSizeOffsetMIES[x] * exp(u * tau + gauss(0.5, 1) * tau_prime)
                 # adjust genotype
-                # individual.genotype[x]= individual.genotype[x] + gauss(0.5, 1) * individual.stepsize
-
 
                 #     if genotype[x] = integer
                 # u1 = np.random.random_integers(0,10000)/10000
@@ -283,21 +281,20 @@ def MIES_Mutate(individual, param, options, num_options):
                 #
                 # individual.genotype[x]=new_gentype
             threshold = np.random.random_integers(0, 10000) / 10000
-            # print("x",x)
-            # print("threshold", threshold)
+
             if (x < individual.num_discrete):# discretes
-                if (threshold < individual.stepSizeOffsetMIES[x]+individual.baseStepSize):
-                    # print("stepzise2:",individual.stepSizeOffsetMIES[x]+individual.baseStepSize)
+                baseMIESstep= 1/(3 * num_options[x])# p'i = T[1/(3nd),0.5]
+                while (individual.stepSizeOffsetMIES[x]+baseMIESstep > 0.5):
+                    individual.stepSizeOffsetMIES[x] = individual.stepSizeOffsetMIES[x]*0.5
+
+                if (threshold < individual.stepSizeOffsetMIES[x]+baseMIESstep):
                     temparray=[]
-                    # print("num_optinos[x]",num_options[x])
                     for i in range(num_options[x]):
                        temparray.append(i)
-                       # print("temparray",temparray)
-                    # print("ind.gentype[x]",individual.genotype[x])
                     temparray.remove(individual.genotype[x])
-                    # print("temparray_final", temparray)
                     individual.genotype[x] = random.choice(temparray)
-                    # print("individual.genotype[x]", individual.genotype[x])
+
             else: # floats
                individual.genotype[x] = (individual.genotype[x]+ individual.stepSizeOffsetMIES[x]+individual.baseStepSize)
+    print("current stepsize", individual.stepSizeOffsetMIES)
     print("new gen type", individual.genotype)
