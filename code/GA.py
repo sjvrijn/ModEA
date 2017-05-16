@@ -484,7 +484,7 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
           "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
 
 
-def _runGA(ndim=5, fid=2):
+def _runGA(ndim=2, fid=12):
 
     x = datetime.now()
     gen_sizes, sigmas, fitness, best = GA(ndim=ndim, fid=fid)  # This line does all the work!

@@ -299,5 +299,5 @@ def MIES_Mutate(individual, param, options, num_options):
                 individual.stepSizeOffsetMIES[x] = individual.stepSizeOffsetMIES[x] * exp(u * tau + gauss(0.5, 1) * tau_prime)
                 # Keep the change within the bounds
                 individual.genotype[x] = _keepInBounds(individual.genotype[x]+individual.stepSizeOffsetMIES[x], param.l_bound[x], param.u_bound[x])
-    print("current stepsize", individual.stepSizeOffsetMIES)
-    print("new gen type", individual.genotype)
+    # print("current stepsize", individual.stepSizeOffsetMIES)
+    # print("new gen type", individual.genotype)

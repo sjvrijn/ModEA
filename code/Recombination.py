@@ -83,13 +83,13 @@ def weighted(pop, param):
     return new_population
 
 def MIES_recombine(pop, param):
-    print("upperbound", param.u_bound)
-    print("genotype:", pop[0].genotype)
-    print("lowerbound", param.l_bound)
+    # print("upperbound", param.u_bound)
+    # print("genotype:", pop[0].genotype)
+    # print("lowerbound", param.l_bound)
     new_ind=copy(pop[0])
     new_population = [new_ind]
     reco =1
-    print("debugger 2")
+    print("new recombination")
     for all in range(param.lambda_):
         # Select random individual from the current parent population
         c1 = np.random.random_integers(0, param.mu_int-1)
