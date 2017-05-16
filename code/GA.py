@@ -88,7 +88,7 @@ def GA(ndim, fid, budget=None):
     lamb = int(4 + floor(3 * log(parameters.n)))
     int_part =[lamb]
     # float_part = [None, 2, 0.2, 0.995, 0.5, 0, 0.3,  0.5,  2]
-    float_part = [None, 2,    None, None, None, None, None, 0.2, 0.995, 0.5,  0,    0.3,  0.5,  2]
+    float_part = [None, 2, None, None, None, None, None, 0.2, 0.995, 0.5,  0,    0.3,  0.5,  2]
     population = [MixedIntIndividual(len(discrete_part) + len(int_part)+ len(float_part), num_discrete=len(num_options), num_ints=len(int_part))]
     population[0].genotype = np.array(discrete_part + int_part + float_part)
     population[0].fitness = ESFitness()
@@ -484,7 +484,7 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
           "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
 
 
-def _runGA(ndim=2, fid=12):
+def _runGA(ndim=5, fid=12):
 
     x = datetime.now()
     gen_sizes, sigmas, fitness, best = GA(ndim=ndim, fid=fid)  # This line does all the work!
