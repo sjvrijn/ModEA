@@ -67,15 +67,17 @@ class MixedIntIndividual(object):
         :param num_floats:  Number of floating point values in the genotype. Must be given if num_ints is omitted
     """
 
-    def __init__(self, n, num_discrete=None, num_floats=None):
+    def __init__(self, n, num_discrete,num_ints , num_floats=None):
 
         if n < 2:
             raise MixedIntIndividualError("Cannot define a mixed-integer representation in < 2 dimensions")
-        if num_floats is None and num_discrete is None:
-            raise MixedIntIndividualError("Number of integer or floating point values not specified")
+        if num_floats is None and num_discrete is None and num_ints is None:
+            raise MixedIntIndividualError("Number of discrete, integer or floating point values not specified")
 
         self.n = n
-        self.num_discrete = num_discrete if num_discrete is not None else n - num_floats  # num_discrete + num_floats = n
+        self.num_discrete = num_discrete  #if num_discrete is not None else n - num_floats  # num_discrete + num_floats = n
+        self.num_ints = num_ints
+        self.num_floats = n - (num_discrete + num_ints)
         self.genotype = np.ones((n, 1))                                       # Column vector
         self.fitness = np.inf                                                 # Default 'unset' value
         self.sigma = 1
@@ -111,7 +113,7 @@ class MixedIntIndividual(object):
 
             :returns:  Individual object with all attributes explicitly copied
         """
-        return_copy = MixedIntIndividual(self.n, self.num_discrete)
+        return_copy = MixedIntIndividual(self.n, self.num_discrete, self.num_ints)
         return_copy.genotype = copy(self.genotype)
         return_copy.fitness = self.fitness
         return_copy.sigma = self.sigma

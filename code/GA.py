@@ -10,6 +10,7 @@ from copy import copy
 from datetime import datetime
 from functools import partial
 from multiprocessing import Pool
+from numpy import floor, log
 # from mpi4py import MPI
 
 
@@ -75,27 +76,25 @@ def GA(ndim, fid, budget=None):
         budget = Config.GA_budget
 
     parameters = Parameters(len(options) + 15, budget, mu=GA_mu, lambda_=GA_lambda)
-    parameters.l_bound[len(options):] = np.array([  2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15,1)
-    parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15,1)
+    parameters.l_bound[len(options):] = np.array([  2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15)
+    parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15)
 
 
     # Initialize the first individual in the population
     discrete_part = [np.random.randint(len(x[1])) for x in options]
-    discrete_part.append(None)  # This is instead of integer value 'lambda_'
+    # discrete_part.append(None)  # This is instead of integer value 'lambda_'
     # TODO FIXME: dumb, brute force, hardcoded defaults for testing purposes
     # float_part = [None, None, None, None, None, None, None, None, None, None, None, None, None, None]
-    float_part = [None, 2, 0.2, 0.995, 0.5, 0, 0.3,  0.5,  2]
-    # int_part =[None, None, None, None, None]
-
-    population = [MixedIntIndividual(len(discrete_part) + len(float_part), num_discrete=len(num_options)+1)]
-    population[0].genotype = np.array(discrete_part + float_part)
+    lamb = int(4 + floor(3 * log(parameters.n)))
+    int_part =[lamb]
+    # float_part = [None, 2, 0.2, 0.995, 0.5, 0, 0.3,  0.5,  2]
+    float_part = [None, 2,    None, None, None, None, None, 0.2, 0.995, 0.5,  0,    0.3,  0.5,  2]
+    population = [MixedIntIndividual(len(discrete_part) + len(int_part)+ len(float_part), num_discrete=len(num_options), num_ints=len(int_part))]
+    population[0].genotype = np.array(discrete_part + int_part + float_part)
     population[0].fitness = ESFitness()
 
     while len(population) < GA_mu:
         population.append(copy(population[0]))
-
-
-
 
 
 
@@ -118,12 +117,6 @@ def GA(ndim, fid, budget=None):
         'select': select,
         'mutateParameters': mutateParameters,
     }
-
-
-
-
-
-
 
 
 

@@ -80,9 +80,9 @@ class Parameters(BaseParameters):
             sigma = 1
 
         if l_bound is None or not isfinite(l_bound).all():
-            l_bound = ones((n, 1)) * -5
+            l_bound = ones((n)) * -5
         if u_bound is None or not isfinite(u_bound).all():
-            u_bound = ones((n, 1)) * 5
+            u_bound = ones((n)) * 5
 
         if seq_cutoff is None:
             seq_cutoff = mu * eff_lambda

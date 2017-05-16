@@ -26,7 +26,7 @@ ES_parallel = False
 
 ### GA Settings ###
 GA_mu = 1            # Assuming a dimensionality of 11
-GA_lambda = 4        # (9 boolean + 2 triples)
+GA_lambda = 12        # (9 boolean + 2 triples)
 GA_generations = 20
 GA_budget = GA_lambda * GA_generations
 GA_parallel = False

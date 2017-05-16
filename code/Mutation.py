@@ -243,58 +243,61 @@ def mutateMixedInteger(individual, param, options, num_options):
     mutateFloatList(individual, param, options)
 
 def MIES_Mutate(individual, param, options, num_options):
-    # print("stepseize first", individual.stepSizeOffsetMIES)
-    # print("n", individual.n)
-    # print("num ints", individual.num_ints)
-    # print("num floats", individual.num_floats)
-    # print("full genotype", individual.genotype)
+
+    """
+        Self-adaptive mixed-integer mutation of the structure of an ES
+
+        :param individual:  :class:`~code.Individual.MixedIntegerIndividual` whose integer-part will be mutated
+        :param param:       :class:`~code.Parameters.Parameters` object
+        :param options:     List of tuples :data:`~code.options` with the number of tunable parameters per module
+        :param num_options: List :data:`~code.num_options` with the number of available modules per module position
+                            that are available to choose from
+    """
+
     u = gauss(0.5, 1)
     for x in range(len(individual.genotype)):
         if individual.genotype[x] is not None:
-
+            # Change the discrete parameters
             if(x < individual.num_discrete ):
+                #set stepsize
+                tau = 1 / sqrt(2 * individual.num_discrete)
+                tau_prime = 1 / sqrt(2 * sqrt(individual.num_discrete))
+                individual.stepSizeOffsetMIES[x] = 1 / (1 + ((1 - individual.stepSizeOffsetMIES[x]) / individual.stepSizeOffsetMIES[x]) * exp((-tau) * u - tau_prime * gauss(0.5,1)))
+                # Keep stepsize within the bounds
+                baseMIESstep = 1 / (3 * num_options[x])  # p'_i = T[ 1 / (3n_d) , 0.5]
+                individual.stepSizeOffsetMIES[x] = _keepInBounds(individual.stepSizeOffsetMIES[x], baseMIESstep, 0.5)
 
-                tau = 1 / sqrt(2 * individual.n)
-                tau_prime = 1 / sqrt(2 * sqrt(individual.n))
-                out = 1 / (1 + ((1 - individual.stepSizeOffsetMIES[x]) / individual.stepSizeOffsetMIES[x]) * exp((-tau) * u - tau_prime * gauss(0.5,1)));
-                individual.stepSizeOffsetMIES[x] = out;
-
-
-            if(x >= individual.num_discrete):
-
-                tau = 1 / sqrt(2 * individual.n)
-                tau_prime = 1 / sqrt(2 * sqrt(individual.n))
-
-                individual.stepSizeOffsetMIES[x] = individual.stepSizeOffsetMIES[x] * exp(u * tau + gauss(0.5, 1) * tau_prime)
-                # adjust genotype
-
-                #     if genotype[x] = integer
-                # u1 = np.random.random_integers(0,10000)/10000
-                # u2 = np.random.random_integers(0,10000)/10000
-                # psi = 1 - (individual.stepsize / individual.n) / (1 + sqrt(1 + pow(individual.stepsize / individual.n, 2)))
-                # G1 = int(floor(np.log(1 - u1) / np.log(1 - psi)))
-                # G2 = int(floor(np.log(1 - u2) / np.log(1 - psi)))
-                # new_gentype = individual.genotype[x] + G1 - G2
-                # print("u1,u2,psi,G1,G2:", u1, u2, psi, G1, G2)
-                # print("pref_gentype:", individual.genotype[x])
-                # print("new_gentype:",new_gentype)
-                #
-                # individual.genotype[x]=new_gentype
-            threshold = np.random.random_integers(0, 10000) / 10000
-
-            if (x < individual.num_discrete):# discretes
-                baseMIESstep= 1/(3 * num_options[x])# p'i = T[1/(3nd),0.5]
-                while (individual.stepSizeOffsetMIES[x]+baseMIESstep > 0.5):
-                    individual.stepSizeOffsetMIES[x] = individual.stepSizeOffsetMIES[x]*0.5
-
-                if (threshold < individual.stepSizeOffsetMIES[x]+baseMIESstep):
-                    temparray=[]
+                threshold = np.random.random_integers(0, 10000) / 10000
+                #change discrete
+                if (threshold < individual.stepSizeOffsetMIES[x]):
+                    temparray = []
                     for i in range(num_options[x]):
-                       temparray.append(i)
+                        temparray.append(i)
                     temparray.remove(individual.genotype[x])
                     individual.genotype[x] = random.choice(temparray)
 
-            else: # floats
-               individual.genotype[x] = (individual.genotype[x]+ individual.stepSizeOffsetMIES[x]+individual.baseStepSize)
+            # Change the integer parameters
+            if x >= individual.num_discrete and x < (individual.num_discrete + individual.num_ints):
+                u1 = np.random.random_integers(0,10000)/10000
+                u2 = np.random.random_integers(0,10000)/10000
+                tau = 1 / sqrt(2 * individual.num_ints)
+                tau_prime = 1 / sqrt(2 * sqrt(individual.num_ints))
+                individual.stepSizeOffsetMIES[x] = max(1, individual.stepSizeOffsetMIES[x] * exp(tau*u + tau_prime*gauss(0.5,1)))
+                psi = 1 - (individual.stepSizeOffsetMIES[x] / individual.num_ints) / (1 + sqrt(1 + pow(individual.stepSizeOffsetMIES[x] / individual.num_ints, 2)))
+                G1 = int(floor(np.log(1 - u1) / np.log(1 - psi)))
+                G2 = int(floor(np.log(1 - u2) / np.log(1 - psi)))
+
+                individual.genotype[x] = individual.genotype[x] + G1 -G2
+                # Keep the change within the bounds
+                individual.genotype[x] = int(_keepInBounds(individual.genotype[x], param.l_bound[x], param.u_bound[x]))
+
+            # Change the float parameters
+            if(x >= individual.num_discrete + individual.num_ints):
+
+                tau = 1 / sqrt(2 * individual.num_floats)
+                tau_prime = 1 / sqrt(2 * sqrt(individual.num_floats))
+                individual.stepSizeOffsetMIES[x] = individual.stepSizeOffsetMIES[x] * exp(u * tau + gauss(0.5, 1) * tau_prime)
+                # Keep the change within the bounds
+                individual.genotype[x] = _keepInBounds(individual.genotype[x]+individual.stepSizeOffsetMIES[x], param.l_bound[x], param.u_bound[x])
     print("current stepsize", individual.stepSizeOffsetMIES)
     print("new gen type", individual.genotype)

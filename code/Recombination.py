@@ -83,8 +83,9 @@ def weighted(pop, param):
     return new_population
 
 def MIES_recombine(pop, param):
-
+    print("upperbound", param.u_bound)
     print("genotype:", pop[0].genotype)
+    print("lowerbound", param.l_bound)
     new_ind=copy(pop[0])
     new_population = [new_ind]
     reco =1
