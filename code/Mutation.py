@@ -278,8 +278,8 @@ def MIES_Mutate(individual, param, options, num_options):
 
             # Change the integer parameters
             if x >= individual.num_discrete and x < (individual.num_discrete + individual.num_ints):
-                u1 = np.random.random_integers(0,10000)/10000
-                u2 = np.random.random_integers(0,10000)/10000
+                u1 = np.random.random_integers(0,9999)/10000
+                u2 = np.random.random_integers(0,9999)/10000
                 tau = 1 / sqrt(2 * individual.num_ints)
                 tau_prime = 1 / sqrt(2 * sqrt(individual.num_ints))
                 individual.stepSizeOffsetMIES[x] = max(1, individual.stepSizeOffsetMIES[x] * exp(tau*u + tau_prime*gauss(0.5,1)))
