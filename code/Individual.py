@@ -79,6 +79,7 @@ class MixedIntIndividual(object):
         self.num_ints = num_ints
         self.num_floats = n - (num_discrete + num_ints)
         self.genotype = np.ones((n, 1))                                       # Column vector
+        # self.genotype_temp=[np.ones(num_floats)]
         self.fitness = np.inf                                                 # Default 'unset' value
         self.sigma = 1
         self.stepSizeOffsetMIES=np.ones(n)
@@ -115,6 +116,7 @@ class MixedIntIndividual(object):
         """
         return_copy = MixedIntIndividual(self.n, self.num_discrete, self.num_ints)
         return_copy.genotype = copy(self.genotype)
+        # return_copy.genotype_temp = copy(self.genotype_temp)
         return_copy.fitness = self.fitness
         return_copy.sigma = self.sigma
 

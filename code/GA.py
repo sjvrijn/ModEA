@@ -51,7 +51,7 @@ def _sysPrint(string):
     sys.stdout.flush()
 
 
-def GA(ndim, fid, budget=None):
+def GA(ndim, fid, run, budget=None):
     """
         Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function
 
@@ -62,7 +62,7 @@ def GA(ndim, fid, budget=None):
     """
 
     # Where to store genotype-fitness information
-    # storage_file = '{}GA_results_{}dim_f{}.tdat'.format(non_bbob_datapath, ndim, fid)
+    # storage_file = '{}GA_results_{}dim_f{}_run_{}.tdat'.format(non_bbob_datapath, ndim, fid,run)
     storage_file="results.tdat"
 
     # Fitness function to be passed on to the baseAlgorithm
@@ -87,19 +87,16 @@ def GA(ndim, fid, budget=None):
     # float_part = [None, None, None, None, None, None, None, None, None, None, None, None, None, None]
     lamb = int(4 + floor(3 * log(parameters.n)))
     int_part =[lamb]
-    # float_part = [None, 2, 0.2, 0.995, 0.5, 0, 0.3,  0.5,  2]
-    float_part = [None, 2, None, None, None, None, None, 0.2, 0.995, 0.5,  0,    0.3,  0.5,  2]
+    # float_part = [None, 2, 0.2, 0.995, 0.5, 0, 0.3,  0.5,  2]'damps', 'c_c', 'c_1', 'c_mu
+    float_part = [parameters.mu, parameters.c_sigma, parameters.damps, parameters.c_c, parameters.c_1, parameters.c_mu,None,  0.2, 0.995,  0.5,    0,  0.3,  0.5,    2]
     population = [MixedIntIndividual(len(discrete_part) + len(int_part)+ len(float_part), num_discrete=len(num_options), num_ints=len(int_part))]
     population[0].genotype = np.array(discrete_part + int_part + float_part)
     population[0].fitness = ESFitness()
+    population[0].genotype_temp=[None, None, None, None, None, None, None, None,  None, None, None, None, None]
+    # print("num floats",population[0].num_floats)
 
     while len(population) < GA_mu:
         population.append(copy(population[0]))
-
-
-
-
-
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.MIES_recombine
@@ -484,28 +481,29 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
           "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
 
 
-def _runGA(ndim=5, fid=12):
+def _runGA(ndim=5, fid=1, runs=2):
 
-    x = datetime.now()
-    gen_sizes, sigmas, fitness, best = GA(ndim=ndim, fid=fid)  # This line does all the work!
-    y = datetime.now()
-    print()
-    print("Best Individual:     {}\n"
-          "        Fitness:     {}\n"
-          "Fitnesses over time: {}".format(best.genotype, best.fitness, fitness))
-    z = y - x
-    days = z.days
-    hours = z.seconds//3600
-    minutes = (z.seconds % 3600) // 60
-    seconds = (z.seconds % 60)
-    print("Time at start:       {}\n"
-          "Time at end:         {}\n"
-          "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
+    for i in range(1,runs):
+        x = datetime.now()
+        gen_sizes, sigmas, fitness, best = GA(ndim=ndim, fid=fid, run=i)  # This line does all the work!
+        y = datetime.now()
+        print()
+        print("Best Individual:     {}\n"
+              "        Fitness:     {}\n"
+              "Fitnesses over time: {}".format(best.genotype, best.fitness, fitness))
+        z = y - x
+        days = z.days
+        hours = z.seconds//3600
+        minutes = (z.seconds % 3600) // 60
+        seconds = (z.seconds % 60)
+        print("Time at start:       {}\n"
+              "Time at end:         {}\n"
+              "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
 
-    if Config.write_output:
-        np.savez("{}final_GA_results_{}dim_f{}".format(non_bbob_datapath, ndim, fid),
-                 sigma=sigmas, best_fitness=fitness, best_result=best.genotype,
-                 generation_sizes=gen_sizes, time_spent=z)
+        if Config.write_output:
+            np.savez("{}final_GA_results_{}dim_f{}_run{}".format(non_bbob_datapath, ndim, fid,run),
+                     sigma=sigmas, best_fitness=fitness, best_result=best.genotype,
+                     generation_sizes=gen_sizes, time_spent=z)
 
 
 def _runExperiments():

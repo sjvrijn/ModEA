@@ -17,10 +17,10 @@ use_MPI = False
 MPI_num_host_threads = 16  # Number of available threads per host
 MPI_num_hosts = 12         # Number of available hosts
 MPI_num_total_threads = MPI_num_host_threads * MPI_num_hosts
-write_output = False
+write_output = True
 
 ### ES Settings ###
-ES_budget_factor = 1e3  # budget = ndim * ES_budget_factor
+ES_budget_factor = 1e2  # budget = ndim * ES_budget_factor
 ES_num_runs = 1
 ES_parallel = False
 

@@ -89,7 +89,7 @@ def MIES_recombine(pop, param):
     new_ind=copy(pop[0])
     new_population = [new_ind]
     reco =1
-    print("new recombination")
+    # print("new recombination")
     for all in range(param.lambda_):
         # Select random individual from the current parent population
         c1 = np.random.random_integers(0, param.mu_int-1)

@@ -242,9 +242,53 @@ def mutateMixedInteger(individual, param, options, num_options):
     mutateIntList(individual, param, num_options)
     mutateFloatList(individual, param, options)
 
-def MIES_MutateDiscrete(individual, begin, end, u, num_options):
+
+def swapFloatsOut(individual, value):
+    if individual.genotype[individual.num_discrete+ individual.num_ints + value] is not None:
+        individual.genotype_temp[value] = individual.genotype[individual.num_discrete + individual.num_ints + value]
+        individual.genotype[individual.num_discrete+ individual.num_ints + value] = None
+
+
+def swapFloatsIn(individual, value):
+    if individual.genotype[individual.num_discrete + individual.num_ints + value] is None:
+        individual.genotype[individual.num_discrete+individual.num_ints+value] = individual.genotype_temp[value]
+        individual.genotype_temp[value] = None
+
+
+def CheckParamsUsed(individual, options):
+    for x in range(individual.num_discrete):
+        if options[x][0] == "threshold":
+            if individual.genotype[x] == 0:
+                swapFloatsOut(individual, 7)
+                swapFloatsOut(individual, 8)
+            else:
+                swapFloatsIn(individual, 6)
+                swapFloatsIn(individual, 7)
+        if options[x][0] == "tpa":
+            if individual.genotype[x] == 0:
+                swapFloatsOut(individual, 9)
+                swapFloatsOut(individual, 10)
+                swapFloatsOut(individual, 11)
+                swapFloatsOut(individual, 12)
+            else:
+                swapFloatsIn(individual, 9)
+                swapFloatsIn(individual, 10)
+                swapFloatsIn(individual, 11)
+                swapFloatsIn(individual, 12)
+        if options[x][0] == "ipop":
+            if individual.genotype[x] == 0:
+                swapFloatsOut(individual, 13)
+            else:
+                swapFloatsIn(individual, 13)
+
+def MIES_MutateDiscrete(individual, begin, end, u, num_options, options):
+    # CheckParamsUsed(individual, options)
+    # cond_mask = [True, True, True, True, True, True, True] # standard CMA-ES values
+    # for i, val in enumerate(options):
+    #     cond_mask.extend([bool(individual.genotype[i] * 1)] * val[2])
     for x in range(begin, end):
         if individual.genotype[x] is not None:
+
             # set stepsize
 
             tau = 1 / sqrt(2 * individual.num_discrete)
@@ -307,7 +351,8 @@ def MIES_Mutate(individual, param, options, num_options):
 
     u = gauss(0.5, 1)
 
-    MIES_MutateDiscrete(individual, 0, individual.num_discrete,u, num_options )
+    MIES_MutateDiscrete(individual, 0, individual.num_discrete,u, num_options,options )
     MIES_MutateIntegers(individual, individual.num_discrete, individual.num_discrete+individual.num_ints, u, param)
     MIES_MutateFloats(individual,individual.num_discrete+individual.num_ints,individual.n, u,param )
-
+    # print("full genotype",individual.genotype)
+    # print("full temp floats", individual.genotype_temp)
