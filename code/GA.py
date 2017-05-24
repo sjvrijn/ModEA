@@ -11,7 +11,7 @@ from datetime import datetime
 from functools import partial
 from multiprocessing import Pool
 from numpy import floor, log
-# from mpi4py import MPI
+from mpi4py import MPI
 
 
 import code.Mutation as Mut
@@ -51,7 +51,11 @@ def _sysPrint(string):
     sys.stdout.flush()
 
 
+<<<<<<< Updated upstream
 def GA(ndim, fid, run, budget=None):
+=======
+def GA(ndim, fid, budget=None, run):
+>>>>>>> Stashed changes
     """
         Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function
 
@@ -62,12 +66,17 @@ def GA(ndim, fid, run, budget=None):
     """
 
     # Where to store genotype-fitness information
+<<<<<<< Updated upstream
     # storage_file = '{}GA_results_{}dim_f{}_run_{}.tdat'.format(non_bbob_datapath, ndim, fid,run)
     storage_file="results.tdat"
+=======
+    storage_file = '{}GA_results_{}dim_f{}run_{}.tdat'.format(non_bbob_datapath, ndim, fid)
+    # storage_file="results.tdat"
+>>>>>>> Stashed changes
 
     # Fitness function to be passed on to the baseAlgorithm
-    # fitnessFunction = partial(ALT_evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
-    fitnessFunction = partial(evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
+    fitnessFunction = partial(ALT_evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
+    # fitnessFunction = partial(evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
 
     # Assuming a dimensionality of 11 (8 boolean + 3 triples)
     GA_mu = Config.GA_mu
@@ -161,7 +170,7 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
         arguments = range(num_runs)
 
         # mpi4py
-        comm = MPI.COMM_SELF.Spawn(sys.executable, args=['code/MPI_slave.py'], maxprocs=num_runs)  # Init
+        comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=num_runs)  # Init
         comm.bcast(function, root=MPI.ROOT)     # Equal for all processes
         comm.scatter(arguments, root=MPI.ROOT)  # Different for each process
         comms.append(comm)
@@ -503,7 +512,6 @@ def _runGA(ndim=5, fid=1, runs=2):
         if Config.write_output:
             np.savez("{}final_GA_results_{}dim_f{}_run{}".format(non_bbob_datapath, ndim, fid,run),
                      sigma=sigmas, best_fitness=fitness, best_result=best.genotype,
-                     generation_sizes=gen_sizes, time_spent=z)
 
 
 def _runExperiments():
