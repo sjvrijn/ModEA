@@ -481,11 +481,11 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
           "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
 
 
-def _runGA(ndim=5, fid=1, runs=2):
+def _runGA(ndim=5, fid=2, runs=2):
 
-    for i in range(1,runs):
+    for run in range(1,runs):
         x = datetime.now()
-        gen_sizes, sigmas, fitness, best = GA(ndim=ndim, fid=fid, run=i)  # This line does all the work!
+        gen_sizes, sigmas, fitness, best = GA(ndim=ndim, fid=fid, run=run)  # This line does all the work!
         y = datetime.now()
         print()
         print("Best Individual:     {}\n"
@@ -546,8 +546,8 @@ if __name__ == '__main__':
     elif len(sys.argv) == 4:
         ndim = int(sys.argv[1])
         fid = int(sys.argv[2])
-        parallel = int(sys.argv[3])
-        _bruteForce(ndim, fid, parallel)
+        runs = int(sys.argv[3])
+        _runGA(ndim, fid, runs+1)
     elif len(sys.argv) == 5:
         ndim = int(sys.argv[1])
         fid = int(sys.argv[2])
