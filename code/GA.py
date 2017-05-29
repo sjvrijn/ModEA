@@ -51,11 +51,7 @@ def _sysPrint(string):
     sys.stdout.flush()
 
 
-<<<<<<< Updated upstream
 def GA(ndim, fid, run, budget=None):
-=======
-def GA(ndim, fid, budget=None, run):
->>>>>>> Stashed changes
     """
         Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function
 
@@ -66,13 +62,8 @@ def GA(ndim, fid, budget=None, run):
     """
 
     # Where to store genotype-fitness information
-<<<<<<< Updated upstream
-    # storage_file = '{}GA_results_{}dim_f{}_run_{}.tdat'.format(non_bbob_datapath, ndim, fid,run)
-    storage_file="results.tdat"
-=======
     storage_file = '{}GA_results_{}dim_f{}run_{}.tdat'.format(non_bbob_datapath, ndim, fid)
     # storage_file="results.tdat"
->>>>>>> Stashed changes
 
     # Fitness function to be passed on to the baseAlgorithm
     fitnessFunction = partial(ALT_evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
