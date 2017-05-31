@@ -11,7 +11,7 @@ from datetime import datetime
 from functools import partial
 from multiprocessing import Pool
 from numpy import floor, log
-from mpi4py import MPI
+# from mpi4py import MPI
 
 
 import code.Mutation as Mut
@@ -23,7 +23,6 @@ from code.Algorithms import customizedES, baseAlgorithm
 from code.Individual import MixedIntIndividual
 from code.Parameters import Parameters
 from code.Utils import ESFitness
-
 
 # BBOB parameters: Sets of noise-free and noisy benchmarks
 free_function_ids = bbobbenchmarks.nfreeIDs
@@ -45,11 +44,23 @@ def _cleanResults(fid):
     shutil.rmtree('{}data_f{}'.format(datapath, fid))
     os.remove("{}bbobexp_f{}.info".format(datapath, fid))
 
+
 def _sysPrint(string):
     """ Small function to take care of the 'overhead' of sys.stdout.write + flush """
     sys.stdout.write(string)
     sys.stdout.flush()
 
+def create_bounds(float_part, perc, parameters):
+    if perc <= 0 or perc >= 1:
+        print("error percentage bound is incorrect")
+        return
+    for x in range(0,len(float_part)):
+        if float_part[x] is not None:
+            print(float_part[x])
+            parameters.u_bound[x]= float_part[x] * (1+perc)
+            parameters.l_bound[x]= float_part[x] * (1-perc)
+            print(parameters.u_bound[x])
+            print(parameters.l_bound[x])
 
 def GA(ndim, fid, run, budget=None):
     """
@@ -62,12 +73,12 @@ def GA(ndim, fid, run, budget=None):
     """
 
     # Where to store genotype-fitness information
-    storage_file = '{}GA_results_{}dim_f{}run_{}.tdat'.format(non_bbob_datapath, ndim, fid,run)
+    storage_file = '{}GA_results_{}dim_f{}run_{}.tdat'.format(non_bbob_datapath, ndim, fid, run)
     # storage_file="results.tdat"
 
     # Fitness function to be passed on to the baseAlgorithm
-    fitnessFunction = partial(ALT_evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
-    # fitnessFunction = partial(evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
+    # fitnessFunction = partial(ALT_evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
+    fitnessFunction = partial(evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
 
     # Assuming a dimensionality of 11 (8 boolean + 3 triples)
     GA_mu = Config.GA_mu
@@ -76,9 +87,9 @@ def GA(ndim, fid, run, budget=None):
         budget = Config.GA_budget
 
     parameters = Parameters(len(options) + 15, budget, mu=GA_mu, lambda_=GA_lambda)
-    parameters.l_bound[len(options):] = np.array([  2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15)
+    #initialize the upper and lower bound, later to be changed by creat_bounds after the floats_part is set
+    parameters.l_bound[len(options):] = np.array([2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15)
     parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15)
-
 
     # Initialize the first individual in the population
     discrete_part = [np.random.randint(len(x[1])) for x in options]
@@ -86,13 +97,17 @@ def GA(ndim, fid, run, budget=None):
     # TODO FIXME: dumb, brute force, hardcoded defaults for testing purposes
     # float_part = [None, None, None, None, None, None, None, None, None, None, None, None, None, None]
     lamb = int(4 + floor(3 * log(parameters.n)))
-    int_part =[lamb]
+    int_part = [lamb]
     # float_part = [None, 2, 0.2, 0.995, 0.5, 0, 0.3,  0.5,  2]'damps', 'c_c', 'c_1', 'c_mu
-    float_part = [parameters.mu, parameters.c_sigma, parameters.damps, parameters.c_c, parameters.c_1, parameters.c_mu,None,  0.2, 0.995,  0.5,    0,  0.3,  0.5,    2]
-    population = [MixedIntIndividual(len(discrete_part) + len(int_part)+ len(float_part), num_discrete=len(num_options), num_ints=len(int_part))]
+    float_part = [parameters.mu, parameters.c_sigma, parameters.damps, parameters.c_c, parameters.c_1, parameters.c_mu,
+                  None, 0.2, 0.995, 0.5, 0, 0.3, 0.5, 2]
+    create_bounds(float_part,0.3,parameters)
+    population = [
+        MixedIntIndividual(len(discrete_part) + len(int_part) + len(float_part), num_discrete=len(num_options),
+                           num_ints=len(int_part))]
     population[0].genotype = np.array(discrete_part + int_part + float_part)
     population[0].fitness = ESFitness()
-    population[0].genotype_temp=[None, None, None, None, None, None, None, None,  None, None, None, None, None]
+    # population[0].genotype_temp = [None, None, None, None, None, None, None, None, None, None, None, None, None]
     # print("num floats",population[0].num_floats)
 
     while len(population) < GA_mu:
@@ -103,8 +118,10 @@ def GA(ndim, fid, run, budget=None):
     mutate = partial(Mut.MIES_Mutate, options=options, num_options=num_options)
     # mutate = Mut.MIES_Mutate(population[0], parameters,  options, num_options)
     best = Sel.bestGA
+
     def select(pop, new_pop, _, params):
         return best(pop, new_pop, params)
+
     def mutateParameters(t):
         pass  # The only actual parameter mutation is the self-adaptive step-size of each individual
 
@@ -114,10 +131,6 @@ def GA(ndim, fid, run, budget=None):
         'select': select,
         'mutateParameters': mutateParameters,
     }
-
-
-
-
 
     # TODO FIXME: parallel currently causes ValueError: I/O operation on closed file
     print(parameters.lambda_, parameters.mu_int)
@@ -162,7 +175,7 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
 
         # mpi4py
         comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=num_runs)  # Init
-        comm.bcast(function, root=MPI.ROOT)     # Equal for all processes
+        comm.bcast(function, root=MPI.ROOT)  # Equal for all processes
         comm.scatter(arguments, root=MPI.ROOT)  # Different for each process
         comms.append(comm)
 
@@ -170,7 +183,7 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
         comm.Barrier()  # Wait for everything to finish...
 
     for i, comm in enumerate(comms):
-        run_data = None                                  # Declaration of the variable to use for catching the data
+        run_data = None  # Declaration of the variable to use for catching the data
         run_data = comm.gather(run_data, root=MPI.ROOT)  # And gather everything up
         # run_data = comm.gather(root=MPI.ROOT)  # And gather everything up
         comm.Disconnect()
@@ -185,7 +198,7 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
             fitnesses = [x[:min_length] for x in fitnesses]
 
         # Subtract the target fitness value from all returned fitnesses to only get the absolute distance
-        fitnesses = np.subtract(np.array(fitnesses), np.array(targets).T[:,np.newaxis])
+        fitnesses = np.subtract(np.array(fitnesses), np.array(targets).T[:, np.newaxis])
         fitness = ESFitness(fitnesses)
         fitness_results.append(fitness)
 
@@ -220,7 +233,7 @@ def evaluate_ES(es_genotype, fid, ndim, budget=None, storage_file=None, opts=Non
     if budget is None:
         budget = Config.ES_budget_factor * ndim
     num_runs = Config.ES_num_runs
-    num_ints = len(num_options)+1
+    num_ints = len(num_options) + 1
 
     # Setup the bbob logger
     bbob_opts['algid'] = es_genotype  # Save the bitstring of the ES we are currently evaluating
@@ -232,11 +245,11 @@ def evaluate_ES(es_genotype, fid, ndim, budget=None, storage_file=None, opts=Non
         lambda_ = opts['lambda_'] if 'lambda_' in opts else None
         mu = opts['mu'] if 'mu' in opts else None
     else:
-        print(es_genotype[:num_ints+1], end='')
-        opts = getOpts(es_genotype[:num_ints-1])
-        lambda_ = es_genotype[num_ints-1]
+        print(es_genotype[:num_ints + 1], end='')
+        opts = getOpts(es_genotype[:num_ints - 1])
+        lambda_ = es_genotype[num_ints - 1]
         mu = es_genotype[num_ints]
-        values = getVals(es_genotype[num_ints+1:])
+        values = getVals(es_genotype[num_ints + 1:])
 
     # define local function of the algorithm to be used, fixing certain parameters
     algorithm = partial(customizedES, lambda_=lambda_, mu=mu, opts=opts, values=values)
@@ -250,6 +263,7 @@ def evaluate_ES(es_genotype, fid, ndim, budget=None, storage_file=None, opts=Non
             f.write(str("{}\n".format(repr(fitness))))
     print('\t', fitness)
     return [fitness]
+
 
 def _fetchResults(fid, instance, ndim, budget, opts, values=None):
     """ Small overhead-function to enable multi-processing """
@@ -288,9 +302,9 @@ def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, values=None, p
 
         # mpi4py
         comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=num_runs)  # Init
-        comm.bcast(function, root=MPI.ROOT)     # Equal for all processes
+        comm.bcast(function, root=MPI.ROOT)  # Equal for all processes
         comm.scatter(arguments, root=MPI.ROOT)  # Different for each process
-        comm.Barrier()                          # Wait for everything to finish...
+        comm.Barrier()  # Wait for everything to finish...
         run_data = comm.gather(run_data, root=MPI.ROOT)  # And gather everything up
         comm.Disconnect()
 
@@ -323,29 +337,30 @@ def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, values=None, p
         fitnesses = [x[:min_length] for x in fitnesses]
 
     # Subtract the target fitness value from all returned fitnesses to only get the absolute distance
-    fitnesses = np.subtract(np.array(fitnesses), np.array(targets).T[:,np.newaxis])
+    fitnesses = np.subtract(np.array(fitnesses), np.array(targets).T[:, np.newaxis])
 
     return sigmas, fitnesses
-
 
 
 '''-----------------------------------------------------------------------------
 #                                Run Functions                                 #
 -----------------------------------------------------------------------------'''
+
+
 def _testEachOption():
     # Test all individual options
     n = len(options)
-    dna = [0]*n
+    dna = [0] * n
     # lambda_mu = [None, None]
     lambda_mu = [2, 0.01]
     dna.extend(lambda_mu)
-    evaluate_ES(dna, fid=1, ndim=10,)
+    evaluate_ES(dna, fid=1, ndim=10, )
     for i in range(n):
         for j in range(1, num_options[i]):
-            dna = [0]*n
+            dna = [0] * n
             dna[i] = j
             dna.extend(lambda_mu)
-            evaluate_ES(dna, fid=1, ndim=10,)
+            evaluate_ES(dna, fid=1, ndim=10, )
 
     print("\n\n")
 
@@ -419,7 +434,7 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
     if part == 1 and start_at >= num_combinations // 2:  # Been there, done that
         return
     elif part == 2 and start_at < num_combinations // 2:  # THIS SHOULD NOT HAPPEN!!!
-        print("{}\nWeird Error!\nstart_at smaller than intended!\n{}".format('-'*32, '-'*32))
+        print("{}\nWeird Error!\nstart_at smaller than intended!\n{}".format('-' * 32, '-' * 32))
         return
 
     products = []
@@ -441,7 +456,7 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
     if part == 0:
         num_cases = len(all_combos)
     elif part == 1:
-        num_cases = len(all_combos)//2 - start_at
+        num_cases = len(all_combos) // 2 - start_at
     elif part == 2:
         num_cases = len(all_combos) - start_at
     else:
@@ -451,14 +466,14 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
     num_iters += 0 if num_cases % parallel == 0 else 1
 
     for i in range(num_iters):
-        bitstrings = all_combos[(start_at + i*parallel):(start_at + (i+1)*parallel)]
+        bitstrings = all_combos[(start_at + i * parallel):(start_at + (i + 1) * parallel)]
         if parallel == 1:
             result = evaluate_ES(bitstrings[0], fid=fid, ndim=ndim, storage_file=storage_file)
         else:
             result = ALT_evaluate_ES(bitstrings, fid=fid, ndim=ndim, storage_file=storage_file)
 
         with open(progress_fname, 'w') as progress_file:
-            cPickle.dump((start_at + (i+1)*parallel), progress_file)
+            cPickle.dump((start_at + (i + 1) * parallel), progress_file)
 
         for j, res in enumerate(result):
             if res < best_result:
@@ -467,12 +482,11 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
 
     y = datetime.now()
 
-
     print("Best ES found:       {}\n"
           "With fitness: {}\n".format(best_ES, best_result))
     z = y - x
     days = z.days
-    hours = z.seconds//3600
+    hours = z.seconds // 3600
     minutes = (z.seconds % 3600) // 60
     seconds = (z.seconds % 60)
 
@@ -482,27 +496,27 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
 
 
 def _runGA(ndim=5, fid=2, run=2):
+    x = datetime.now()
+    gen_sizes, sigmas, fitness, best = GA(ndim=ndim, fid=fid, run=run)  # This line does all the work!
+    y = datetime.now()
+    print()
+    print("Best Individual:     {}\n"
+          "        Fitness:     {}\n"
+          "Fitnesses over time: {}".format(best.genotype, best.fitness, fitness))
+    z = y - x
+    days = z.days
+    hours = z.seconds // 3600
+    minutes = (z.seconds % 3600) // 60
+    seconds = (z.seconds % 60)
+    print("Time at start:       {}\n"
+          "Time at end:         {}\n"
+          "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
 
-        x = datetime.now()
-        gen_sizes, sigmas, fitness, best = GA(ndim=ndim, fid=fid, run=run)  # This line does all the work!
-        y = datetime.now()
-        print()
-        print("Best Individual:     {}\n"
-              "        Fitness:     {}\n"
-              "Fitnesses over time: {}".format(best.genotype, best.fitness, fitness))
-        z = y - x
-        days = z.days
-        hours = z.seconds//3600
-        minutes = (z.seconds % 3600) // 60
-        seconds = (z.seconds % 60)
-        print("Time at start:       {}\n"
-              "Time at end:         {}\n"
-              "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
+    if Config.write_output:
+        np.savez("{}final_GA_results_{}dim_f{}_run{}".format(non_bbob_datapath, ndim, fid, run),
+                 sigma=sigmas, best_fitness=fitness, best_result=best.genotype,
+                 generation_sizes=gen_sizes, time_spent=z)
 
-        if Config.write_output:
-            np.savez("{}final_GA_results_{}dim_f{}_run{}".format(non_bbob_datapath, ndim, fid,run),
-                     sigma=sigmas, best_fitness=fitness, best_result=best.genotype,
-		     generation_sizes=gen_sizes, time_spent=z)
 
 def _runExperiments():
     for ndim in Config.experiment_dims:
