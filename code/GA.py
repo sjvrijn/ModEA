@@ -62,7 +62,7 @@ def GA(ndim, fid, run, budget=None):
     """
 
     # Where to store genotype-fitness information
-    storage_file = '{}GA_results_{}dim_f{}run_{}.tdat'.format(non_bbob_datapath, ndim, fid)
+    storage_file = '{}GA_results_{}dim_f{}run_{}.tdat'.format(non_bbob_datapath, ndim, fid,run)
     # storage_file="results.tdat"
 
     # Fitness function to be passed on to the baseAlgorithm
@@ -481,9 +481,8 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
           "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
 
 
-def _runGA(ndim=5, fid=2, runs=2):
+def _runGA(ndim=5, fid=2, run=2):
 
-    for run in range(1,runs):
         x = datetime.now()
         gen_sizes, sigmas, fitness, best = GA(ndim=ndim, fid=fid, run=run)  # This line does all the work!
         y = datetime.now()
@@ -503,7 +502,7 @@ def _runGA(ndim=5, fid=2, runs=2):
         if Config.write_output:
             np.savez("{}final_GA_results_{}dim_f{}_run{}".format(non_bbob_datapath, ndim, fid,run),
                      sigma=sigmas, best_fitness=fitness, best_result=best.genotype,
-
+		     generation_sizes=gen_sizes, time_spent=z)
 
 def _runExperiments():
     for ndim in Config.experiment_dims:
@@ -545,8 +544,8 @@ if __name__ == '__main__':
     elif len(sys.argv) == 4:
         ndim = int(sys.argv[1])
         fid = int(sys.argv[2])
-        runs = int(sys.argv[3])
-        _runGA(ndim, fid, runs+1)
+        run = int(sys.argv[3])
+        _runGA(ndim, fid, run)
     elif len(sys.argv) == 5:
         ndim = int(sys.argv[1])
         fid = int(sys.argv[2])
