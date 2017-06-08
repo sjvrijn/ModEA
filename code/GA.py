@@ -51,16 +51,18 @@ def _sysPrint(string):
     sys.stdout.flush()
 
 def create_bounds(float_part, perc, parameters):
+    print("upper", parameters.u_bound)
+    print("lower", parameters.l_bound)
+    print(len(options))
     if perc <= 0 or perc >= 1:
         print("error percentage bound is incorrect")
         return
-    for x in range(0,len(float_part)):
+    for x in range(0,len(float_part)-1):
         if float_part[x] is not None:
-            print(float_part[x])
-            parameters.u_bound[x]= float_part[x] * (1+perc)
-            parameters.l_bound[x]= float_part[x] * (1-perc)
-            print(parameters.u_bound[x])
-            print(parameters.l_bound[x])
+            parameters.u_bound[len(options)+x+2]= float_part[x] * (1+perc)
+            parameters.l_bound[len(options)+x+2]= float_part[x] * (1-perc)
+    print("upper", parameters.u_bound[len(options):])
+    print("lower", parameters.l_bound[len(options):])
 
 def GA(ndim, fid, run, budget=None):
     """
