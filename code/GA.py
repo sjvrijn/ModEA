@@ -11,7 +11,7 @@ from datetime import datetime
 from functools import partial
 from multiprocessing import Pool
 from numpy import floor, log
-# from mpi4py import MPI
+from mpi4py import MPI
 
 
 import code.Mutation as Mut
@@ -79,8 +79,8 @@ def GA(ndim, fid, run, budget=None):
     # storage_file="results.tdat"
 
     # Fitness function to be passed on to the baseAlgorithm
-    # fitnessFunction = partial(ALT_evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
-    fitnessFunction = partial(evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
+    fitnessFunction = partial(ALT_evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
+    # fitnessFunction = partial(evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
 
     # Assuming a dimensionality of 11 (8 boolean + 3 triples)
     GA_mu = Config.GA_mu

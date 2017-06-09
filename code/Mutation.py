@@ -330,15 +330,14 @@ def MIES_MutateIntegers(individual, begin, end, u,param):
             G2 = int(floor(np.log(1 - u2) / np.log(1 - psi)))
             individual.genotype[x] = individual.genotype[x] + G1 - G2
             # Keep the change within the bounds
-            print("upperbound/lowerbound",param.u_bound[x],param.l_bound[x])
             individual.genotype[x] = int(_keepInBounds(individual.genotype[x], param.l_bound[x], param.u_bound[x]))
-            print("noway",individual.genotype[x])
+            
 
 
 def MIES_MutateFloats(conditional_mask,individual, begin, end, u, param):
-    print(conditional_mask)
+    print("genotype:", individual.genotype[:individual.num_discrete])
+    print("conditional_mask:",conditional_mask)
     for x in range(begin, end):
-        print(individual.genotype[x], conditional_mask[x-(individual.num_discrete+individual.num_ints)])
         if individual.genotype[x] is not None and conditional_mask[x-(individual.num_discrete+individual.num_ints)]:
             tau = 1 / sqrt(2 * individual.num_floats)
             tau_prime = 1 / sqrt(2 * sqrt(individual.num_floats))
