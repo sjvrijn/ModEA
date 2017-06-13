@@ -75,7 +75,7 @@ def GA(ndim, fid, run, budget=None):
     """
 
     # Where to store genotype-fitness information
-    storage_file = '{}GA_results_{}dim_f{}run_{}.tdat'.format(non_bbob_datapath, ndim, fid, run)
+    storage_file = '{}GA_results2_{}dim_f{}run_{}.tdat'.format(non_bbob_datapath, ndim, fid, run)
     # storage_file="results.tdat"
 
     # Fitness function to be passed on to the baseAlgorithm
@@ -102,7 +102,7 @@ def GA(ndim, fid, run, budget=None):
     int_part = [lamb]
     # float_part = [None, 2, 0.2, 0.995, 0.5, 0, 0.3,  0.5,  2]'damps', 'c_c', 'c_1', 'c_mu
     float_part = [parameters.mu, parameters.c_sigma, parameters.damps, parameters.c_c, parameters.c_1, parameters.c_mu,
-                  None, 0.2, 0.995, 0.5, 0, 0.3, 0.5, 2]
+                  None, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2]
     create_bounds(float_part,0.3,parameters)
     population = [
         MixedIntIndividual(len(discrete_part) + len(int_part) + len(float_part), num_discrete=len(num_options),
