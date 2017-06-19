@@ -639,6 +639,15 @@ def datToArff(input, output, dim):
 %      (b) Donor: Sander van Rijn
 %      (c) Date: January, 2017
 %
+% 3. Remark:
+%      The 'class' value is the pre-computed q-score.
+%      This q-score is defined as follows:
+%
+%      q = ERT/max_ERT       if ERT exists
+%        = 1 + FCE/max_FCE   else
+%
+%      where for this dataset, max_ERT = {ERT} and max_FCE = {FCE}
+%
 @RELATION ESs
 
 @ATTRIBUTE active       NUMERIC
@@ -664,10 +673,10 @@ def datToArff(input, output, dim):
 
     with open(output, 'w') as f:
 
-        f.write(arff_header)
-
         max_ERT = 32 * 1000 * dim
         max_FCE = max(FCEs)
+
+        f.write(arff_header.format(ERT=max_ERT, FCE=max_FCE))
 
         for single_result in fitnesses:
 
