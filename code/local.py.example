@@ -1,0 +1,23 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, division, print_function, unicode_literals
+
+'''
+local.py: This file is to be used to store variables such as paths that are specific to the local machine.
+
+NOTE: This is an example file. Please create a copy named 'local.py'
+'''
+
+__author__ = 'Sander van Rijn'
+__email__ = 's.j.van.rijn@liacs.leidenuniv.nl'
+
+
+### Data Generation ###
+datapath = "test_results/"  # Where to store results
+non_bbob_datapath = "ga_results/"  # Where to store the results I personally generate
+
+### Postprocessing ###
+brute_location = '/scratch/Experiments/BF runs'
+ga_location = '/scratch/Experiments/GA runs'
+raw_bfname = 'data/bruteforce_{}_f{}.tdat'
+raw_ganame = 'data/GA_results_{}dim_f{}.tdat'
