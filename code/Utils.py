@@ -86,6 +86,15 @@ def intToRepr(integer):
 
 
 def create_bounds(float_part, percentage, parameters, options):
+    """
+        For a given set of floating point parameters, create an upper and a lower bound as a percentage of given values.
+
+        :param float_part:  The set of floating point values to base the upper and lower bound on.
+        :param percentage:  The percentage value to use, expected as a fraction in the range (0, 1).
+        :param parameters:  The parameters object that holds the bounds.
+        :param options:     Used for determining the index-offset in the bounds in the paramters object
+        :return:
+    """
     if percentage <= 0 or percentage >= 1:
         raise Exception("Argument 'percentage' is expected to be a float from the range (0, 1).")
     for x in range(0,len(float_part)-1):
