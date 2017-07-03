@@ -64,34 +64,25 @@ def create_bounds(float_part, perc, parameters):
     print("lower", parameters.l_bound[len(options):])
 
 
-def GA(ndim, fid, budget=None):
+def GA(n, fitnessFunction, budget):
     """
         Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function
 
-        :param ndim:    What dimensionality should the ES be evaluated in?
+        :param n:       What dimensionality should the ES be evaluated in?
         :param fid:     Which BBOB function should the ES be evaluated on?
         :param budget:  The budget for the GA (N.B., this is *not* the underlying ES-budget)
         :returns:       A tuple containing a bunch of optimization results
     """
 
-    # Where to store genotype-fitness information
-    storage_file = '{}GA_results_{}dim_f{}.tdat'.format(non_bbob_datapath, ndim, fid)
-
-    # Fitness function to be passed on to the baseAlgorithm
-    # fitnessFunction = partial(ALT_evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
-    fitnessFunction = partial(evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
-
     # Assuming a dimensionality of 11 (8 boolean + 3 triples)
     GA_mu = Config.GA_mu
     GA_lambda = Config.GA_lambda
-    if budget is None:
-        budget = Config.GA_budget
 
     parameters = Parameters(len(options) + 15, budget, mu=GA_mu, lambda_=GA_lambda)
     parameters.l_bound[len(options):] = np.array([  2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15,1)
     parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15,1)
     # Initialize the first individual in the population
-    population = [MixedIntIndividual(ndim, num_ints=len(num_options)+1)]
+    population = [MixedIntIndividual(n, num_discrete=len(num_options), num_ints=1)]
     int_part = [np.random.randint(len(x[1])) for x in options]
     int_part.append(None)
     # TODO FIXME: dumb, brute force, hardcoded defaults for testing purposes
@@ -125,7 +116,7 @@ def GA(ndim, fid, budget=None):
     return results
 
 
-def MIES(ndim, fid, run, budget=None):
+def MIES(n, fitnessFunction, budget):
     """
         Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function
 
@@ -135,19 +126,9 @@ def MIES(ndim, fid, run, budget=None):
         :returns:       A tuple containing a bunch of optimization results
     """
 
-    # Where to store genotype-fitness information
-    storage_file = '{}GA_results2_{}dim_f{}run_{}.tdat'.format(non_bbob_datapath, ndim, fid, run)
-    # storage_file="results.tdat"
-
-    # Fitness function to be passed on to the baseAlgorithm
-    fitnessFunction = partial(ALT_evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
-    # fitnessFunction = partial(evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
-
     # Assuming a dimensionality of 11 (8 boolean + 3 triples)
     GA_mu = Config.GA_mu
     GA_lambda = Config.GA_lambda
-    if budget is None:
-        budget = Config.GA_budget
 
     parameters = Parameters(len(options) + 15, budget, mu=GA_mu, lambda_=GA_lambda)
     #initialize the upper and lower bound, later to be changed by creat_bounds after the floats_part is set
@@ -560,7 +541,18 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
 
 def _runGA(ndim=5, fid=2, run=2):
     x = datetime.now()
-    gen_sizes, sigmas, fitness, best = MIES(ndim=ndim, fid=fid, run=run)  # This line does all the work!
+
+    # Where to store genotype-fitness information
+    # storage_file = '{}GA_results_{}dim_f{}.tdat'.format(non_bbob_datapath, ndim, fid)
+    storage_file = '{}MIES_results_{}dim_f{}run_{}.tdat'.format(non_bbob_datapath, ndim, fid, run)
+
+    # Fitness function to be passed on to the baseAlgorithm
+    # fitnessFunction = partial(ALT_evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
+    fitnessFunction = partial(evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
+
+    budget = Config.GA_budget
+
+    gen_sizes, sigmas, fitness, best = MIES(n=ndim, fitnessFunction=fitnessFunction, budget=budget)  # This line does all the work!
     y = datetime.now()
     print()
     print("Best Individual:     {}\n"
