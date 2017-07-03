@@ -64,7 +64,69 @@ def create_bounds(float_part, perc, parameters):
     print("upper", parameters.u_bound[len(options):])
     print("lower", parameters.l_bound[len(options):])
 
-def GA(ndim, fid, run, budget=None):
+
+def GA(ndim, fid, budget=None):
+    """
+        Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function
+
+        :param ndim:    What dimensionality should the ES be evaluated in?
+        :param fid:     Which BBOB function should the ES be evaluated on?
+        :param budget:  The budget for the GA (N.B., this is *not* the underlying ES-budget)
+        :returns:       A tuple containing a bunch of optimization results
+    """
+
+    # Where to store genotype-fitness information
+    storage_file = '{}GA_results_{}dim_f{}.tdat'.format(non_bbob_datapath, ndim, fid)
+
+    # Fitness function to be passed on to the baseAlgorithm
+    # fitnessFunction = partial(ALT_evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
+    fitnessFunction = partial(evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
+
+    # Assuming a dimensionality of 11 (8 boolean + 3 triples)
+    GA_mu = Config.GA_mu
+    GA_lambda = Config.GA_lambda
+    if budget is None:
+        budget = Config.GA_budget
+
+    parameters = Parameters(len(options) + 15, budget, mu=GA_mu, lambda_=GA_lambda)
+    parameters.l_bound[len(options):] = np.array([  2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15,1)
+    parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15,1)
+    # Initialize the first individual in the population
+    population = [MixedIntIndividual(ndim, num_ints=len(num_options)+1)]
+    int_part = [np.random.randint(len(x[1])) for x in options]
+    int_part.append(None)
+    # TODO FIXME: dumb, brute force, hardcoded defaults for testing purposes
+    float_part = [None, None, None, None, None, None, None, None, None, None, None, None, None, None]
+    # float_part = [None, 2,    None, None, None, None, None, 0.2, 0.995, 0.5,  0,    0.3,  0.5,  2]
+
+    population[0].genotype = np.array(int_part + float_part)
+    population[0].fitness = ESFitness()
+
+    while len(population) < GA_mu:
+        population.append(copy(population[0]))
+
+    # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
+    recombine = Rec.random
+    mutate = partial(Mut.mutateMixedInteger, options=options, num_options=num_options)
+    best = Sel.bestGA
+    def select(pop, new_pop, _, params):
+        return best(pop, new_pop, params)
+    def mutateParameters(t):
+        pass  # The only actual parameter mutation is the self-adaptive step-size of each individual
+
+    functions = {
+        'recombine': recombine,
+        'mutate': mutate,
+        'select': select,
+        'mutateParameters': mutateParameters,
+    }
+    # TODO FIXME: parallel currently causes ValueError: I/O operation on closed file
+    _, results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters,
+                               parallel=Config.GA_parallel, debug=Config.GA_debug)
+    return results
+
+
+def MIES(ndim, fid, run, budget=None):
     """
         Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function
 
@@ -499,7 +561,7 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
 
 def _runGA(ndim=5, fid=2, run=2):
     x = datetime.now()
-    gen_sizes, sigmas, fitness, best = GA(ndim=ndim, fid=fid, run=run)  # This line does all the work!
+    gen_sizes, sigmas, fitness, best = MIES(ndim=ndim, fid=fid, run=run)  # This line does all the work!
     y = datetime.now()
     print()
     print("Best Individual:     {}\n"
@@ -525,7 +587,7 @@ def _runExperiments():
         for fid in Config.experiment_funcs:
             print("Optimizing for function ID {} in {}-dimensional space:".format(fid, ndim))
             x = datetime.now()
-            gen_sizes, sigmas, fitness, best = GA(ndim=ndim, fid=fid)
+            gen_sizes, sigmas, fitness, best = MIES(ndim=ndim, fid=fid)
             y = datetime.now()
 
             z = y - x
