@@ -85,6 +85,14 @@ def intToRepr(integer):
     return representation
 
 
+def create_bounds(float_part, percentage, parameters, options):
+    if percentage <= 0 or percentage >= 1:
+        raise Exception("Argument 'percentage' is expected to be a float from the range (0, 1).")
+    for x in range(0,len(float_part)-1):
+        if float_part[x] is not None:
+            parameters.u_bound[len(options)+x+2] = float_part[x] * (1 + percentage)
+            parameters.l_bound[len(options)+x+2] = float_part[x] * (1 - percentage)
+
 
 @total_ordering
 class ESFitness(object):
