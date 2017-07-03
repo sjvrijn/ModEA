@@ -19,7 +19,7 @@ import code.Selection as Sel
 import code.Recombination as Rec
 from bbob import bbobbenchmarks, fgeneric
 from code import allow_parallel, getBitString, getOpts, getPrintName, getVals, options, num_options, num_threads, Config
-from code.Algorithms import customizedES, baseAlgorithm
+from code.Algorithms import GA, MIES, customizedES, baseAlgorithm
 from code.Individual import MixedIntIndividual
 from code.Parameters import Parameters
 from code.Utils import ESFitness
@@ -48,139 +48,6 @@ def _sysPrint(string):
     """ Small function to take care of the 'overhead' of sys.stdout.write + flush """
     sys.stdout.write(string)
     sys.stdout.flush()
-
-def create_bounds(float_part, perc, parameters):
-    print("upper", parameters.u_bound)
-    print("lower", parameters.l_bound)
-    print(len(options))
-    if perc <= 0 or perc >= 1:
-        print("error percentage bound is incorrect")
-        return
-    for x in range(0,len(float_part)-1):
-        if float_part[x] is not None:
-            parameters.u_bound[len(options)+x+2]= float_part[x] * (1+perc)
-            parameters.l_bound[len(options)+x+2]= float_part[x] * (1-perc)
-    print("upper", parameters.u_bound[len(options):])
-    print("lower", parameters.l_bound[len(options):])
-
-
-def GA(n, fitnessFunction, budget):
-    """
-        Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function
-
-        :param n:       What dimensionality should the ES be evaluated in?
-        :param fid:     Which BBOB function should the ES be evaluated on?
-        :param budget:  The budget for the GA (N.B., this is *not* the underlying ES-budget)
-        :returns:       A tuple containing a bunch of optimization results
-    """
-
-    # Assuming a dimensionality of 11 (8 boolean + 3 triples)
-    GA_mu = Config.GA_mu
-    GA_lambda = Config.GA_lambda
-
-    parameters = Parameters(len(options) + 15, budget, mu=GA_mu, lambda_=GA_lambda)
-    parameters.l_bound[len(options):] = np.array([  2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15,1)
-    parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15,1)
-    # Initialize the first individual in the population
-    population = [MixedIntIndividual(n, num_discrete=len(num_options), num_ints=1)]
-    int_part = [np.random.randint(len(x[1])) for x in options]
-    int_part.append(None)
-    # TODO FIXME: dumb, brute force, hardcoded defaults for testing purposes
-    float_part = [None, None, None, None, None, None, None, None, None, None, None, None, None, None]
-    # float_part = [None, 2,    None, None, None, None, None, 0.2, 0.995, 0.5,  0,    0.3,  0.5,  2]
-
-    population[0].genotype = np.array(int_part + float_part)
-    population[0].fitness = ESFitness()
-
-    while len(population) < GA_mu:
-        population.append(copy(population[0]))
-
-    # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
-    recombine = Rec.random
-    mutate = partial(Mut.mutateMixedInteger, options=options, num_options=num_options)
-    best = Sel.bestGA
-    def select(pop, new_pop, _, params):
-        return best(pop, new_pop, params)
-    def mutateParameters(t):
-        pass  # The only actual parameter mutation is the self-adaptive step-size of each individual
-
-    functions = {
-        'recombine': recombine,
-        'mutate': mutate,
-        'select': select,
-        'mutateParameters': mutateParameters,
-    }
-    # TODO FIXME: parallel currently causes ValueError: I/O operation on closed file
-    _, results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters,
-                               parallel=Config.GA_parallel, debug=Config.GA_debug)
-    return results
-
-
-def MIES(n, fitnessFunction, budget):
-    """
-        Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function
-
-        :param ndim:    What dimensionality should the ES be evaluated in?
-        :param fid:     Which BBOB function should the ES be evaluated on?
-        :param budget:  The budget for the GA (N.B., this is *not* the underlying ES-budget)
-        :returns:       A tuple containing a bunch of optimization results
-    """
-
-    # Assuming a dimensionality of 11 (8 boolean + 3 triples)
-    GA_mu = Config.GA_mu
-    GA_lambda = Config.GA_lambda
-
-    parameters = Parameters(len(options) + 15, budget, mu=GA_mu, lambda_=GA_lambda)
-    #initialize the upper and lower bound, later to be changed by creat_bounds after the floats_part is set
-    parameters.l_bound[len(options):] = np.array([2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15)
-    parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15)
-
-    # Initialize the first individual in the population
-    discrete_part = [np.random.randint(len(x[1])) for x in options]
-    # discrete_part.append(None)  # This is instead of integer value 'lambda_'
-    # TODO FIXME: dumb, brute force, hardcoded defaults for testing purposes
-    # float_part = [None, None, None, None, None, None, None, None, None, None, None, None, None, None]
-    lamb = int(4 + floor(3 * log(parameters.n)))
-    int_part = [lamb]
-    # float_part = [None, 2, 0.2, 0.995, 0.5, 0, 0.3,  0.5,  2]'damps', 'c_c', 'c_1', 'c_mu
-    float_part = [parameters.mu, parameters.c_sigma, parameters.damps, parameters.c_c, parameters.c_1, parameters.c_mu,
-                  None, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2]
-    create_bounds(float_part,0.3,parameters)
-    population = [
-        MixedIntIndividual(len(discrete_part) + len(int_part) + len(float_part), num_discrete=len(num_options),
-                           num_ints=len(int_part))]
-    population[0].genotype = np.array(discrete_part + int_part + float_part)
-    population[0].fitness = ESFitness()
-    # population[0].genotype_temp = [None, None, None, None, None, None, None, None, None, None, None, None, None]
-    # print("num floats",population[0].num_floats)
-
-    while len(population) < GA_mu:
-        population.append(copy(population[0]))
-
-    # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
-    recombine = Rec.MIES_recombine
-    mutate = partial(Mut.MIES_Mutate, options=options, num_options=num_options)
-    # mutate = Mut.MIES_Mutate(population[0], parameters,  options, num_options)
-    best = Sel.bestGA
-
-    def select(pop, new_pop, _, params):
-        return best(pop, new_pop, params)
-
-    def mutateParameters(t):
-        pass  # The only actual parameter mutation is the self-adaptive step-size of each individual
-
-    functions = {
-        'recombine': recombine,
-        'mutate': mutate,
-        'select': select,
-        'mutateParameters': mutateParameters,
-    }
-
-    # TODO FIXME: parallel currently causes ValueError: I/O operation on closed file
-    print(parameters.lambda_, parameters.mu_int)
-    _, results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters,
-                               parallel=Config.GA_parallel, debug=Config.GA_debug)
-    return results
 
 
 def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=None):
