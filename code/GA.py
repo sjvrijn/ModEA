@@ -23,12 +23,11 @@ from code.Algorithms import customizedES, baseAlgorithm
 from code.Individual import MixedIntIndividual
 from code.Parameters import Parameters
 from code.Utils import ESFitness
+from code.local import datapath, non_bbob_datapath
 
 # BBOB parameters: Sets of noise-free and noisy benchmarks
 free_function_ids = bbobbenchmarks.nfreeIDs
 noisy_function_ids = bbobbenchmarks.noisyIDs
-datapath = "test_results/"  # Where to store results
-non_bbob_datapath = "ga_results/"  # Where to store the results I personally generate
 # Options to be stored in the log file(s)
 bbob_opts = {'algid': None,
              'comments': '<comments>',
@@ -486,7 +485,7 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
     best_result = ESFitness()
 
     progress_log = '{}_f{}.prog'.format(ndim, fid)
-    progress_fname = "{}{}".format(non_bbob_datapath, progress_log)
+    progress_fname = non_bbob_datapath + progress_log
     if progress_log not in os.listdir(non_bbob_datapath):
         start_at = 0
     else:
