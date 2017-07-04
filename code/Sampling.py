@@ -138,7 +138,7 @@ class OrthogonalSampling(object):
             self.base_sampler = GaussianSampling(n, shape)
         else:
             self.base_sampler = base_sampler
-        self.num_samples = lambda_
+        self.num_samples = int(lambda_)
         self.current_sample = 0
         self.samples = None
 

@@ -77,7 +77,7 @@ def weighted(pop, param):
     new_ind = copy(pop[0])
     new_ind.genotype = param.wcm
     new_population = [new_ind]
-    for _ in range(param.lambda_-1):
+    for _ in range(int(param.lambda_-1)):
         new_population.append(copy(new_ind))
 
     return new_population
