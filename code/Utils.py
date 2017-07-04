@@ -85,22 +85,24 @@ def intToRepr(integer):
     return representation
 
 
-def create_bounds(float_part, percentage, parameters, options):
+def create_bounds(values, percentage):
     """
-        For a given set of floating point parameters, create an upper and a lower bound as a percentage of given values.
+        For a given set of floating point values, create an upper and lower bound.
+        Bound values are defined as a percentage above/below the given values.
 
-        :param float_part:  The set of floating point values to base the upper and lower bound on.
+        :param values:      List of floating point input values.
         :param percentage:  The percentage value to use, expected as a fraction in the range (0, 1).
-        :param parameters:  The parameters object that holds the bounds.
-        :param options:     Used for determining the index-offset in the bounds in the paramters object
-        :return:
+        :return:            Tuple (u_bound, l_bound), each a regular list.
     """
     if percentage <= 0 or percentage >= 1:
         raise Exception("Argument 'percentage' is expected to be a float from the range (0, 1).")
-    for x in range(0,len(float_part)-1):
-        if float_part[x] is not None:
-            parameters.u_bound[len(options)+x+2] = float_part[x] * (1 + percentage)
-            parameters.l_bound[len(options)+x+2] = float_part[x] * (1 - percentage)
+
+    u_perc = 1 + percentage
+    l_perc = 1 - percentage
+
+    bounds = [(val*u_perc, val*l_perc) for val in values]
+    u_bound, l_bound = zip(*bounds)
+    return list(u_bound), list(l_bound)
 
 
 @total_ordering

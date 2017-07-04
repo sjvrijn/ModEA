@@ -18,7 +18,7 @@ from numpy import ceil, floor, log, ones
 from .Individual import FloatIndividual, MixedIntIndividual
 from .Parameters import Parameters
 from code import allow_parallel, num_threads, Config, options, num_options
-from code.Utils import create_bounds, ESFitness
+from code.Utils import create_bounds, _create_bounds, ESFitness
 # Internal modules
 import code.Mutation as Mut
 import code.Recombination as Rec
@@ -865,9 +865,18 @@ def MIES(n, fitnessFunction, budget):
     discrete_part = [np.random.randint(len(x[1])) for x in options]
     lamb = int(4 + floor(3 * log(parameters.n)))
     int_part = [lamb]
-    float_part = [parameters.mu, parameters.c_sigma, parameters.damps, parameters.c_c, parameters.c_1, parameters.c_mu,
-                  None, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2]
-    create_bounds(float_part, 0.3, parameters, options)
+    float_part = [
+        parameters.mu,
+        parameters.alpha_mu, parameters.c_sigma, parameters.damps, parameters.c_c, parameters.c_1, parameters.c_mu,
+        0.2, 0.955,
+        0.5, 0, 0.3, 0.5,
+        2
+    ]
+
+    u_bound, l_bound = create_bounds(float_part, 0.3)
+    parameters.u_bound[len(options)+1:] = np.array(u_bound)
+    parameters.l_bound[len(options)+1:] = np.array(l_bound)
+
     population = [
         MixedIntIndividual(len(discrete_part) + len(int_part) + len(float_part), num_discrete=len(num_options),
                            num_ints=len(int_part))]
