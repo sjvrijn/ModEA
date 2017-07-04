@@ -9,7 +9,7 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 from code.GA import _fetchResults, evaluate_ES  # Required for the MPI calls for the GA
 
 import numpy as np
-from mpi4py import MPI
+from code import MPI
 comm = MPI.COMM_SELF.Get_parent()
 size = comm.Get_size()
 rank = comm.Get_rank()

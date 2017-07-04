@@ -11,14 +11,13 @@ from datetime import datetime
 from functools import partial
 from multiprocessing import Pool
 from numpy import floor, log
-from mpi4py import MPI
 
 
 import code.Mutation as Mut
 import code.Selection as Sel
 import code.Recombination as Rec
 from bbob import bbobbenchmarks, fgeneric
-from code import allow_parallel, getBitString, getOpts, getPrintName, getVals, options, num_options, num_threads, Config
+from code import allow_parallel, getBitString, getOpts, getPrintName, getVals, options, num_options, num_threads, Config, MPI
 from code.Algorithms import GA, MIES, customizedES, baseAlgorithm
 from code.Individual import MixedIntIndividual
 from code.Parameters import Parameters

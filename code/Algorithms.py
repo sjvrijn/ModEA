@@ -11,14 +11,13 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 import numpy as np
 from copy import copy
 from functools import partial
-from mpi4py import MPI
 from multiprocessing import Pool
 from numpy import ceil, floor, log, ones
 # Internal classes
 from .Individual import FloatIndividual, MixedIntIndividual
 from .Parameters import Parameters
-from code import allow_parallel, num_threads, Config, options, num_options
-from code.Utils import create_bounds, _create_bounds, ESFitness
+from code import allow_parallel, num_threads, Config, options, num_options, MPI
+from code.Utils import create_bounds, ESFitness
 # Internal modules
 import code.Mutation as Mut
 import code.Recombination as Rec
