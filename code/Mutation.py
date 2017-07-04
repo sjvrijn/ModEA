@@ -238,7 +238,6 @@ def mutateMixedInteger(individual, param, options, num_options):
                             that are available to choose from
     """
     adaptStepSize(individual)
-    # print(individual.stepSizeOffset)
     mutateIntList(individual, param, num_options)
     mutateFloatList(individual, param, options)
 
@@ -282,16 +281,11 @@ def CheckParamsUsed(individual, options):
                 swapFloatsIn(individual, 13)
 
 def MIES_MutateDiscrete(individual, begin, end, u, num_options, options):
-    # CheckParamsUsed(individual, options)
-    # cond_mask = [True, True, True, True, True, True, True] # standard CMA-ES values
-    # for i, val in enumerate(options):
-    #     cond_mask.extend([bool(individual.genotype[i] * 1)] * val[2])
-    conditional_mask=[True,True,True,True,True,True,True]
+    conditional_mask = [True,True,True,True,True,True,True]
     for x in range(begin, end):
         if individual.genotype[x] is not None:
 
             # set stepsize
-
             tau = 1 / sqrt(2 * individual.num_discrete)
             tau_prime = 1 / sqrt(2 * sqrt(individual.num_discrete))
             individual.stepSizeOffsetMIES[x] = 1 / (
@@ -303,7 +297,7 @@ def MIES_MutateDiscrete(individual, begin, end, u, num_options, options):
 
             threshold = np.random.random_integers(0, 10000) / 10000
             # change discrete
-            if (threshold < individual.stepSizeOffsetMIES[x]):
+            if threshold < individual.stepSizeOffsetMIES[x]:
                 temparray = []
                 for i in range(num_options[x]):
                     temparray.append(i)
@@ -312,7 +306,6 @@ def MIES_MutateDiscrete(individual, begin, end, u, num_options, options):
             for i in range (options[x][2]):
                 conditional_mask.append(individual.genotype[x])
 
-    # conditional_mask=[True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True]
     return conditional_mask
 
 def MIES_MutateIntegers(individual, begin, end, u,param):
@@ -335,8 +328,6 @@ def MIES_MutateIntegers(individual, begin, end, u,param):
 
 
 def MIES_MutateFloats(conditional_mask,individual, begin, end, u, param):
-    print("genotype:", individual.genotype[:individual.num_discrete])
-    print("conditional_mask:",conditional_mask)
     for x in range(begin, end):
         if individual.genotype[x] is not None and conditional_mask[x-(individual.num_discrete+individual.num_ints)]:
             tau = 1 / sqrt(2 * individual.num_floats)
@@ -345,6 +336,7 @@ def MIES_MutateFloats(conditional_mask,individual, begin, end, u, param):
             # Keep the change within the bounds
             individual.genotype[x] = _keepInBounds(individual.genotype[x] + individual.stepSizeOffsetMIES[x],
                                                    param.l_bound[x], param.u_bound[x])
+
 
 def MIES_Mutate(individual, param, options, num_options):
 
@@ -360,8 +352,6 @@ def MIES_Mutate(individual, param, options, num_options):
 
     u = gauss(0.5, 1)
 
-    conditional_mask = MIES_MutateDiscrete(individual, 0, individual.num_discrete,u, num_options,options )
+    conditional_mask = MIES_MutateDiscrete(individual, 0, individual.num_discrete,u, num_options,options)
     MIES_MutateIntegers(individual, individual.num_discrete, individual.num_discrete+individual.num_ints, u, param)
-    MIES_MutateFloats(conditional_mask,individual,individual.num_discrete+individual.num_ints,individual.n, u,param )
-    # print("full genotype",individual.genotype)
-    # print("full temp floats", individual.genotype_temp)
+    MIES_MutateFloats(conditional_mask,individual,individual.num_discrete+individual.num_ints,individual.n, u,param)
