@@ -100,7 +100,11 @@ def create_bounds(values, percentage):
     u_perc = 1 + percentage
     l_perc = 1 - percentage
 
-    bounds = [(val*u_perc, val*l_perc) for val in values]
+    bounds = []
+    for val in values:
+        bound = (val * u_perc, val * l_perc) if val != 0 else (0, 1)
+        bounds.append(bound)
+
     u_bound, l_bound = zip(*bounds)
     return list(u_bound), list(l_bound)
 
