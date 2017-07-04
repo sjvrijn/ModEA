@@ -66,6 +66,7 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
     if budget is None:
         budget = Config.ES_budget_factor * ndim
     num_runs = Config.ES_num_runs
+    num_ints = len(num_options) + 1
     parallel = Config.ES_parallel
     fitness_results = []
     comms = []
@@ -77,8 +78,9 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
 
         print(bitstring)
         opts = getOpts(bitstring)
+        values = getVals(bitstring[num_ints + 1:])
 
-        function = partial(_fetchResults, fid, ndim=ndim, budget=budget, opts=opts)
+        function = partial(_fetchResults, fid, ndim=ndim, budget=budget, opts=opts, values=values)
         arguments = range(num_runs)
 
         # mpi4py
