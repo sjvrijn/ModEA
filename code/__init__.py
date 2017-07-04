@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
-from multiprocessing import cpu_count
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 __version__ = '0.1.1'
+
+from multiprocessing import cpu_count
 
 num_threads = 1  # Default case, always true
 try:
@@ -15,6 +16,13 @@ try:
         allow_parallel = False
 except NotImplementedError:
     allow_parallel = False
+
+try:
+    from mpi4py import MPI
+    MPI_available = True
+except:
+    MPI = None
+    MPI_available = False
 
 
 # The following list contains all possible options from which the Evolving ES can choose.
@@ -65,7 +73,7 @@ def getOpts(bitstring):
         :return:            Dictionary with all option names and the chosen option
     """
 
-    opts = {option[0]: option[1][bitstring[i]] for i, option in enumerate(options)}
+    opts = {option[0]: option[1][int(bitstring[i])] for i, option in enumerate(options)}
     return opts
 
 def getBitString(opts):
