@@ -28,13 +28,11 @@ from code.local import datapath, non_bbob_datapath
 # BBOB parameters: Sets of noise-free and noisy benchmarks
 free_function_ids = bbobbenchmarks.nfreeIDs
 noisy_function_ids = bbobbenchmarks.noisyIDs
+
 # Options to be stored in the log file(s)
 bbob_opts = {'algid': None,
              'comments': '<comments>',
              'inputformat': 'col'}  # 'row' or 'col'
-# Shortcut dictionary to index benchmark functions by name
-fitness_functions = {'sphere': free_function_ids[0], 'elipsoid': free_function_ids[1],
-                     'rastrigin': free_function_ids[2], }
 
 
 def _cleanResults(fid):
