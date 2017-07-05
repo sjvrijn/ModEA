@@ -29,13 +29,6 @@ bbob_opts = {'algid': None,
              'inputformat': 'col'}  # 'row' or 'col'
 
 
-def _cleanResults(fid):
-    import os
-    import shutil
-    shutil.rmtree('{}data_f{}'.format(datapath, fid))
-    os.remove("{}bbobexp_f{}.info".format(datapath, fid))
-
-
 def _sysPrint(string):
     """ Small function to take care of the 'overhead' of sys.stdout.write + flush """
     sys.stdout.write(string)
