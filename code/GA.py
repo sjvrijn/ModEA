@@ -47,6 +47,13 @@ def _displayDuration(start, end):
           "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(start, end, days, hours, minutes, seconds))
 
 
+def _writeResultToFile(candidate, result, storage_file):
+    if storage_file:
+        with open(storage_file, 'a') as f:
+            f.write(str("{}\t{}\n".format(candidate, repr(result))))
+    print('\t', result)
+
+
 def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=None):
     """
         Single function to run all desired combinations of algorithms * fitness functions - MPI4PY VERSION
@@ -112,11 +119,7 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
 
         if not isinstance(bitstrings[i], list):
             bitstrings[i] = bitstrings[i].tolist()
-
-        if storage_file:
-            with open(storage_file, 'a') as f:
-                f.write(str("{}\t{}\n".format(bitstrings[i], repr(fitness))))
-        print('\t', fitness)
+        _writeResultToFile(bitstrings[i], fitness, storage_file)
 
     return fitness_results
 
@@ -164,12 +167,10 @@ def evaluate_ES(es_genotype, fid, ndim, budget=None, storage_file=None, opts=Non
 
     # Run the actual ES for <num_runs> times
     _, fitnesses = runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, parallel=Config.ES_parallel)
-
     fitness = ESFitness(fitnesses)
-    if storage_file:
-        with open(storage_file, 'a') as f:
-            f.write(str("{}\n".format(repr(fitness))))
-    print('\t', fitness)
+
+    _writeResultToFile(es_genotype, fitness, storage_file)
+
     return [fitness]
 
 
