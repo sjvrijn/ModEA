@@ -29,6 +29,11 @@ bbob_opts = {'algid': None,
              'inputformat': 'col'}  # 'row' or 'col'
 
 
+'''-----------------------------------------------------------------------------
+#                            Small Utility Functions                           #
+-----------------------------------------------------------------------------'''
+
+
 def _sysPrint(string):
     """ Small function to take care of the 'overhead' of sys.stdout.write + flush """
     sys.stdout.write(string)
@@ -61,6 +66,11 @@ def _trimFitnessHistoryByLength(fitnesses):
         fitnesses = [x[:min_length] for x in fitnesses]
 
     return fitnesses
+
+
+'''-----------------------------------------------------------------------------
+#                          Old ES-Evaluation Functions                         #
+-----------------------------------------------------------------------------'''
 
 
 def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=None):
@@ -243,6 +253,11 @@ def _fetchResults(fid, instance, ndim, budget, opts, values=None):
     # Run the ES defined by opts once with the given budget
     results = customizedES(ndim, f.evalfun, budget, opts=opts, values=values)
     return f_target, results
+
+
+'''-----------------------------------------------------------------------------
+#                          New ES-Evaluation Functions                         #
+-----------------------------------------------------------------------------'''
 
 
 def _runCustomizedES(representation, ndim, fid, iid, budget):
