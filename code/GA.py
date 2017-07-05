@@ -249,16 +249,27 @@ def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, values=None, p
 #                       Parallelization-style Functions                        #
 -----------------------------------------------------------------------------'''
 
-def runMPI():
-    pass
+def runMPI(function, experiments):
+    results = None
+
+    comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=len(experiments))  # Initialize
+    comm.bcast(function, root=MPI.ROOT)             # Equal for all processes
+    comm.scatter(experiments, root=MPI.ROOT)        # Different for each process
+    comm.Barrier()                                  # Wait for everything to finish...
+    results = comm.gather(results, root=MPI.ROOT)   # And gather everything up
+    comm.Disconnect()
+
+    return results
 
 
-def runPool():
-    pass
+def runPool(function, experiments):
+    p = Pool(min(num_threads, len(experiments)))
+    results = p.map(function, experiments)
+    return results
 
 
-def runSingleThreaded():
-    pass
+def runSingleThreaded(function, experiments):
+    return [function(exp) for exp in experiments]
 
 
 '''-----------------------------------------------------------------------------
