@@ -166,7 +166,7 @@ def evaluate_ES(es_genotype, fid, ndim, budget=None, storage_file=None, opts=Non
     algorithm = partial(customizedES, lambda_=lambda_, mu=mu, opts=opts, values=values)
 
     # Run the actual ES for <num_runs> times
-    _, fitnesses = runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, parallel=Config.ES_parallel)
+    fitnesses = runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, parallel=Config.ES_parallel)
     fitness = ESFitness(fitnesses)
 
     _writeResultToFile(es_genotype, fitness, storage_file)
@@ -232,8 +232,7 @@ def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, values=None, p
             results.append(algorithm(ndim, f.evalfun, budget))
 
     # Preprocess/unpack results
-    _, sigmas, fitnesses, best_individual = (list(x) for x in zip(*results))
-    sigmas = np.array(sigmas).T
+    _, _, fitnesses, _ = (list(x) for x in zip(*results))
 
     fit_lengths = set([len(x) for x in fitnesses])
     if len(fit_lengths) > 1:
@@ -243,7 +242,7 @@ def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, values=None, p
     # Subtract the target fitness value from all returned fitnesses to only get the absolute distance
     fitnesses = np.subtract(np.array(fitnesses), np.array(targets).T[:, np.newaxis])
 
-    return sigmas, fitnesses
+    return fitnesses
 
 
 '''-----------------------------------------------------------------------------
@@ -432,7 +431,7 @@ def _runExperiments():
                      generation_sizes=gen_sizes, time_spent=z)
 
 
-def _run():
+def runDefault():
     _runGA()
     # _testEachOption()
     # _problemCases()
@@ -442,14 +441,8 @@ def _run():
     pass
 
 
-if __name__ == '__main__':
+def main():
     np.set_printoptions(linewidth=1000)
-    # np.seterr(all='raise')
-    # np.random.seed(42)
-
-    # HARDCODED: JUST GIVE US THE EXACT TARGET IN THESE CASES TODO: does not work???
-    fgeneric.deltaftarget = 0
-    fgeneric.write_output = Config.write_output
 
     if len(sys.argv) == 3:
         ndim = int(sys.argv[1])
@@ -467,4 +460,8 @@ if __name__ == '__main__':
         part = int(sys.argv[4])
         _bruteForce(ndim, fid, parallel, part)
     else:
-        _run()
+        runDefault()
+
+
+if __name__ == '__main__':
+    main()
