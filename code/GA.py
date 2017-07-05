@@ -13,14 +13,9 @@ from multiprocessing import Pool
 from numpy import floor, log
 
 
-import code.Mutation as Mut
-import code.Selection as Sel
-import code.Recombination as Rec
 from bbob import bbobbenchmarks, fgeneric
 from code import allow_parallel, getBitString, getOpts, getPrintName, getVals, options, num_options, num_threads, Config, MPI
-from code.Algorithms import GA, MIES, customizedES, baseAlgorithm
-from code.Individual import MixedIntIndividual
-from code.Parameters import Parameters
+from code.Algorithms import GA, MIES, customizedES
 from code.Utils import ESFitness
 from code.local import datapath, non_bbob_datapath
 
@@ -47,6 +42,18 @@ def _sysPrint(string):
     sys.stdout.flush()
 
 
+def _displayDuration(start, end):
+    duration = end - start
+    days = duration.days
+    hours = duration.seconds // 3600
+    minutes = (duration.seconds % 3600) // 60
+    seconds = (duration.seconds % 60)
+
+    print("Time at start:       {}\n"
+          "Time at end:         {}\n"
+          "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(start, end, days, hours, minutes, seconds))
+
+
 def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=None):
     """
         Single function to run all desired combinations of algorithms * fitness functions - MPI4PY VERSION
@@ -67,7 +74,6 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
         budget = Config.ES_budget_factor * ndim
     num_runs = Config.ES_num_runs
     num_ints = len(num_options) + 1
-    parallel = Config.ES_parallel
     fitness_results = []
     comms = []
 
@@ -292,11 +298,9 @@ def _problemCases():
     evaluate_ES([0, 1, 1, 0, 1, 0, 1, 1, 0, 2, 2, None, None], fid=1, ndim=10)
     evaluate_ES([0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 27, 0.9383818903266666], fid=1, ndim=10)
 
-    dna = [0, 0, 1, 1, 0, 0, 1, 0, 1, 2, 2, 3, 0.923162952008686]
-    print(getPrintName(getOpts(dna[:-2])))
-    evaluate_ES(dna, fid=1, ndim=10)
-
-    print("None! Good job :D\n")
+    genotype = [0, 0, 1, 1, 0, 0, 1, 0, 1, 2, 2, 3, 0.923162952008686]
+    print(getPrintName(getOpts(genotype[:-2])))
+    evaluate_ES(genotype, fid=1, ndim=10)
 
 
 def _exampleRuns():
@@ -394,15 +398,8 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
 
     print("Best ES found:       {}\n"
           "With fitness: {}\n".format(best_ES, best_result))
-    z = y - x
-    days = z.days
-    hours = z.seconds // 3600
-    minutes = (z.seconds % 3600) // 60
-    seconds = (z.seconds % 60)
 
-    print("Time at start:       {}\n"
-          "Time at end:         {}\n"
-          "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
+    _displayDuration(x, y)
 
 
 def _runGA(ndim=5, fid=2, run=2):
@@ -424,14 +421,8 @@ def _runGA(ndim=5, fid=2, run=2):
     print("Best Individual:     {}\n"
           "        Fitness:     {}\n"
           "Fitnesses over time: {}".format(best.genotype, best.fitness, fitness))
-    z = y - x
-    days = z.days
-    hours = z.seconds // 3600
-    minutes = (z.seconds % 3600) // 60
-    seconds = (z.seconds % 60)
-    print("Time at start:       {}\n"
-          "Time at end:         {}\n"
-          "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(x, y, days, hours, minutes, seconds))
+
+    _displayDuration(x, y)
 
     if Config.write_output:
         np.savez("{}final_GA_results_{}dim_f{}_run{}".format(non_bbob_datapath, ndim, fid, run),
