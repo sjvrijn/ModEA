@@ -178,15 +178,6 @@ def evaluate_ES(es_genotype, fid, ndim, budget=None, storage_file=None, opts=Non
     return [fitness]
 
 
-def _fetchResults(fid, instance, ndim, budget, opts, values=None):
-    """ Small overhead-function to enable multi-processing """
-    f = fgeneric.LoggingFunction(datapath, **bbob_opts)
-    f_target = f.setfun(*bbobbenchmarks.instantiate(fid, iinstance=instance)).ftarget
-    # Run the ES defined by opts once with the given budget
-    results = customizedES(ndim, f.evalfun, budget, opts=opts, values=values)
-    return f_target, results
-
-
 def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, values=None, parallel=False):
     """
         Run the ES specified by ``opts`` and ``values`` on BBOB function ``fid`` in ``ndim``
@@ -243,6 +234,42 @@ def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, values=None, p
     fitnesses = np.subtract(np.array(fitnesses), np.array(targets).T[:, np.newaxis])
 
     return fitnesses
+
+
+def _fetchResults(fid, instance, ndim, budget, opts, values=None):
+    """ Small overhead-function to enable multi-processing """
+    f = fgeneric.LoggingFunction(datapath, **bbob_opts)
+    f_target = f.setfun(*bbobbenchmarks.instantiate(fid, iinstance=instance)).ftarget
+    # Run the ES defined by opts once with the given budget
+    results = customizedES(ndim, f.evalfun, budget, opts=opts, values=values)
+    return f_target, results
+
+
+def _runCustomizedES(representation, ndim, fid, iid, budget):
+    """
+        Small overhead-function to enable multi-processing
+
+        :param representation:  Representation of a customized ES (structure and parameter initialization)
+        :param ndim:            Dimensionality to run the ES in
+        :param fid:             BBOB function ID
+        :param iid:             Instance ID for the BBOB function
+        :param budget:          Evaluation budget for the ES
+        :return:                Tuple(target optimum value of the evaluated function, list of fitness-values over time)
+    """
+    # Setup BBOB function + logging
+    bbob_opts['algid'] = representation
+    f = fgeneric.LoggingFunction(datapath, **bbob_opts)
+    f_target = f.setfun(*bbobbenchmarks.instantiate(fid, iinstance=iid)).ftarget
+
+    # Interpret the representation into parameters for the ES
+    opts = getOpts(representation[:len(options)])
+    lambda_ = representation[len(options)]
+    mu = representation[len(options)+1]
+    values = getVals(representation[len(options)+2:])
+
+    # Run the ES defined by opts once with the given budget
+    results = customizedES(ndim, f.evalfun, budget, lambda_=lambda_, mu=mu, opts=opts, values=values)
+    return f_target, results
 
 
 '''-----------------------------------------------------------------------------
