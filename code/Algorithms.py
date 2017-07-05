@@ -838,7 +838,7 @@ def GA(n, fitnessFunction, budget):
     }
     # TODO FIXME: parallel currently causes ValueError: I/O operation on closed file
     _, results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters,
-                               parallel=Config.GA_parallel, debug=Config.GA_debug)
+                               parallel=Config.GA_evaluate_parallel, debug=Config.GA_debug)
     return results
 
 
@@ -903,10 +903,8 @@ def MIES(n, fitnessFunction, budget):
         'mutateParameters': mutateParameters,
     }
 
-    # TODO FIXME: parallel currently causes ValueError: I/O operation on closed file
-    print(parameters.lambda_, parameters.mu_int)
     _, results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters,
-                               parallel=Config.GA_parallel, debug=Config.GA_debug)
+                               parallel=Config.GA_evaluate_parallel, debug=Config.GA_debug)
     return results
 
 

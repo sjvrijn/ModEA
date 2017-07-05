@@ -166,7 +166,7 @@ def evaluate_ES(es_genotype, fid, ndim, budget=None, storage_file=None, opts=Non
     algorithm = partial(customizedES, lambda_=lambda_, mu=mu, opts=opts, values=values)
 
     # Run the actual ES for <num_runs> times
-    fitnesses = runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, parallel=Config.ES_parallel)
+    fitnesses = runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, parallel=Config.ES_evaluate_parallel)
     fitness = ESFitness(fitnesses)
 
     _writeResultToFile(es_genotype, fitness, storage_file)
