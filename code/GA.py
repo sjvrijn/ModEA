@@ -276,11 +276,11 @@ def _runCustomizedES(representation, ndim, fid, iid, budget):
 #                       Parallelization-style Functions                        #
 -----------------------------------------------------------------------------'''
 
-def runMPI(function, experiments):
+def runMPI(runFunction, experiments):
     results = None
 
     comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=len(experiments))  # Initialize
-    comm.bcast(function, root=MPI.ROOT)             # Equal for all processes
+    comm.bcast(runFunction, root=MPI.ROOT)             # Equal for all processes
     comm.scatter(experiments, root=MPI.ROOT)        # Different for each process
     comm.Barrier()                                  # Wait for everything to finish...
     results = comm.gather(results, root=MPI.ROOT)   # And gather everything up
@@ -289,14 +289,13 @@ def runMPI(function, experiments):
     return results
 
 
-def runPool(function, experiments):
+def runPool(runFunction, experiments):
     p = Pool(min(num_threads, len(experiments)))
-    results = p.map(function, experiments)
-    return results
+    return p.map(runFunction, experiments)
 
 
-def runSingleThreaded(function, experiments):
-    return [function(exp) for exp in experiments]
+def runSingleThreaded(runFunction, experiments):
+    return [runFunction(exp) for exp in experiments]
 
 
 '''-----------------------------------------------------------------------------
