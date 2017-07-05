@@ -94,7 +94,6 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
     for i, comm in enumerate(comms):
         run_data = None  # Declaration of the variable to use for catching the data
         run_data = comm.gather(run_data, root=MPI.ROOT)  # And gather everything up
-        # run_data = comm.gather(root=MPI.ROOT)  # And gather everything up
         comm.Disconnect()
 
         targets, results = zip(*run_data)
@@ -203,9 +202,10 @@ def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, values=None, p
         :return:            Tuple(list of sigma-values over time, list of fitness-values over time)
     """
 
+    function = partial(_fetchResults, fid, ndim=ndim, budget=budget, opts=opts, values=values)
+
     # Perform the actual run of the algorithm
     if parallel and Config.use_MPI:
-        function = partial(_fetchResults, fid, ndim=ndim, budget=budget, opts=opts, values=values)
         arguments = range(num_runs)
         run_data = None
 
@@ -219,19 +219,13 @@ def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, values=None, p
 
         targets, results = zip(*run_data)
     elif parallel and allow_parallel:  # Multi-core version
-        num_workers = min(num_threads, num_runs)
-        function = partial(_fetchResults, fid, ndim=ndim, budget=budget, opts=opts, values=values)
-
-        # multiprocessing
-        p = Pool(num_workers)
+        p = Pool(min(num_threads, num_runs))
         run_data = p.map(function, range(num_runs))
-
         targets, results = zip(*run_data)
     else:  # Single-core version
         results = []
         targets = []
         for j in range(num_runs):
-            # _sysPrint('    Run: {}\r'.format(j))  # I want the actual carriage return here! No output clutter
             f_target = f.setfun(*bbobbenchmarks.instantiate(fid, iinstance=j)).ftarget
             targets.append(f_target)
             results.append(algorithm(ndim, f.evalfun, budget))
