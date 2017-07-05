@@ -54,6 +54,15 @@ def _writeResultToFile(candidate, result, storage_file):
     print('\t', result)
 
 
+def _trimFitnessHistoryByLength(fitnesses):
+    fit_lengths = set([len(x) for x in fitnesses])
+    if len(fit_lengths) > 1:
+        min_length = min(fit_lengths)
+        fitnesses = [x[:min_length] for x in fitnesses]
+
+    return fitnesses
+
+
 def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=None):
     """
         Single function to run all desired combinations of algorithms * fitness functions - MPI4PY VERSION
@@ -80,7 +89,6 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
     for bitstring in bitstrings:
         # Setup the bbob logger
         bbob_opts['algid'] = bitstring  # Save the bitstring of the ES we are currently evaluating
-        f = fgeneric.LoggingFunction(datapath, **bbob_opts)  # TODO: Why is this here when it is done in _fetchResults?
 
         print(bitstring)
         opts = getOpts(bitstring)
@@ -89,7 +97,6 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
         function = partial(_fetchResults, fid, ndim=ndim, budget=budget, opts=opts, values=values)
         arguments = range(num_runs)
 
-        # mpi4py
         comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=num_runs)  # Init
         comm.bcast(function, root=MPI.ROOT)  # Equal for all processes
         comm.scatter(arguments, root=MPI.ROOT)  # Different for each process
@@ -106,11 +113,8 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
         targets, results = zip(*run_data)
 
         # Preprocess/unpack results
-        _, sigmas, fitnesses, best_individual = (list(x) for x in zip(*results))
-        fit_lengths = set([len(x) for x in fitnesses])
-        if len(fit_lengths) > 1:
-            min_length = min(fit_lengths)
-            fitnesses = [x[:min_length] for x in fitnesses]
+        _, _, fitnesses, _ = (list(x) for x in zip(*results))
+        fitnesses = _trimFitnessHistoryByLength(fitnesses)
 
         # Subtract the target fitness value from all returned fitnesses to only get the absolute distance
         fitnesses = np.subtract(np.array(fitnesses), np.array(targets).T[:, np.newaxis])
@@ -233,11 +237,7 @@ def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, values=None, p
 
     # Preprocess/unpack results
     _, _, fitnesses, _ = (list(x) for x in zip(*results))
-
-    fit_lengths = set([len(x) for x in fitnesses])
-    if len(fit_lengths) > 1:
-        min_length = min(fit_lengths)
-        fitnesses = [x[:min_length] for x in fitnesses]
+    fitnesses = _trimFitnessHistoryByLength(fitnesses)
 
     # Subtract the target fitness value from all returned fitnesses to only get the absolute distance
     fitnesses = np.subtract(np.array(fitnesses), np.array(targets).T[:, np.newaxis])
