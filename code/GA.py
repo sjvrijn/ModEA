@@ -43,6 +43,13 @@ def _sysPrint(string):
 
 
 def _displayDuration(start, end):
+    """
+        Display a human-readable time duration.
+
+        :param start:   Time at the start
+        :param end:     Time at the end
+        :return:        The duration ``end - start``
+    """
     duration = end - start
     days = duration.days
     hours = duration.seconds // 3600
@@ -56,23 +63,56 @@ def _displayDuration(start, end):
     return duration
 
 
-def _writeResultToFile(candidate, result, storage_file):
+def _writeResultToFile(representation, result, storage_file):
+    """
+        Log a representation and the result of its evaluation to a file.
+
+        :param representation:  The representation
+        :param result:          The evaluation result to be stored
+        :param storage_file:    The filename to store it in. If ``None``, nothing happens
+    """
     if storage_file:
         with open(storage_file, 'a') as f:
-            f.write(str("{}\t{}\n".format(candidate, repr(result))))
+            f.write(str("{}\t{}\n".format(representation, repr(result))))
     print('\t', result)
 
 
-def _trimFitnessHistoryByLength(fitnesses):
-    fit_lengths = set([len(x) for x in fitnesses])
+def _trimListOfListsByLength(lists):
+    """
+        Given a list of lists of varying sizes, trim them to make the overall shape rectangular:
+
+        >>> _trimListOfListsByLength([
+        ...     [1, 2, 3, 4, 5],
+        ...     [10, 20, 30],
+        ...     ['a', 'b', 'c', 'd']
+        ... ])
+        [[1, 2, 3], [10, 20, 30], ['a', 'b', 'c']]
+
+        :param lists:   The list of lists to trim
+        :return:        The same lists, but trimmed in length to match the length of the shortest list from ``lists``
+    """
+    fit_lengths = set([len(x) for x in lists])
     if len(fit_lengths) > 1:
         min_length = min(fit_lengths)
-        fitnesses = [x[:min_length] for x in fitnesses]
+        lists = [x[:min_length] for x in lists]
 
-    return fitnesses
+    return lists
 
 
 def _ensureListOfLists(iterable):
+    """
+        Given an iterable, make sure it is at least a 2D array (i.e. list of lists):
+
+        >>> _ensureListOfLists([[1, 2], [3, 4], [5, 6]])
+        [[1, 2], [3, 4], [5, 6]]
+        >>> _ensureListOfLists([1, 2])
+        [[1, 2]]
+        >>> _ensureListOfLists(1)
+        [[1]]
+
+        :param iterable:    The iterable of which to make sure it is 2D
+        :return:            A guaranteed 2D version of ``iterable``
+    """
     try:
         if len(iterable) > 0:
             try:
@@ -85,6 +125,13 @@ def _ensureListOfLists(iterable):
 
 
 def _displayRepresentation(representation):
+    """
+        Displays a representation of a customizedES instance in a more human-readable format:
+        >>> _displayRepresentation([0,0,0,0,0,0,0,0,0,0,0, 20, 0.25, 1, 1, 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2])
+        [0,0,0,0,0,0,0,0,0,0,0] (0.25, 20) with [1,1,1,1,1,1,0.2,0.955,0.5,0,0.3,0.5,2]
+
+        :param representation:  Representation of a customizedES instance to display
+    """
     disc_part = representation[:len(options)]
     lambda_ = representation[len(options)]
     mu = representation[len(options)+1]
@@ -149,7 +196,7 @@ def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=
 
         # Preprocess/unpack results
         _, _, fitnesses, _ = (list(x) for x in zip(*results))
-        fitnesses = _trimFitnessHistoryByLength(fitnesses)
+        fitnesses = _trimListOfListsByLength(fitnesses)
 
         # Subtract the target fitness value from all returned fitnesses to only get the absolute distance
         fitnesses = np.subtract(np.array(fitnesses), np.array(targets).T[:, np.newaxis])
@@ -263,7 +310,7 @@ def runAlgorithm(fid, algorithm, ndim, num_runs, f, budget, opts, values=None, p
 
     # Preprocess/unpack results
     _, _, fitnesses, _ = (list(x) for x in zip(*results))
-    fitnesses = _trimFitnessHistoryByLength(fitnesses)
+    fitnesses = _trimListOfListsByLength(fitnesses)
 
     # Subtract the target fitness value from all returned fitnesses to only get the absolute distance
     fitnesses = np.subtract(np.array(fitnesses), np.array(targets).T[:, np.newaxis])
@@ -327,7 +374,7 @@ def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, storage
 
         # Preprocess/unpack results
         _, _, fitnesses, _ = (list(x) for x in zip(*results[i*len(iids):(i+1)*len(iids)]))
-        fitnesses = _trimFitnessHistoryByLength(fitnesses)
+        fitnesses = _trimListOfListsByLength(fitnesses)
 
         # Subtract the target fitness value from all returned fitnesses to only get the absolute distance
         fitnesses = np.subtract(np.array(fitnesses), np.array(targets[i*len(iids):(i+1)*len(iids)]).T[:, np.newaxis])
