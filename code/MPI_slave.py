@@ -28,7 +28,7 @@ def runSlaveRun():
     function = comm.bcast(function, root=0)
     arguments = comm.scatter(options, root=0)
 
-    results = function(arguments)
+    results = function(*arguments)
 
     comm.Barrier()
     comm.gather(results, root=0)

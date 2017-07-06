@@ -315,7 +315,7 @@ def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, storage
         fitnesses = _trimFitnessHistoryByLength(fitnesses)
 
         # Subtract the target fitness value from all returned fitnesses to only get the absolute distance
-        fitnesses = np.subtract(np.array(fitnesses), np.array(targets).T[:, np.newaxis])
+        fitnesses = np.subtract(np.array(fitnesses), np.array(targets[i*len(iids):(i+1)*len(iids)]).T[:, np.newaxis])
         fitness = ESFitness(fitnesses)
         fitness_results.append(fitness)
 
@@ -363,7 +363,7 @@ def runMPI(runFunction, arguments):
 
     comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=len(arguments))  # Initialize
     comm.bcast(runFunction, root=MPI.ROOT)             # Equal for all processes
-    comm.scatter(arguments, root=MPI.ROOT)        # Different for each process
+    comm.scatter(arguments, root=MPI.ROOT)          # Different for each process
     comm.Barrier()                                  # Wait for everything to finish...
     results = comm.gather(results, root=MPI.ROOT)   # And gather everything up
     comm.Disconnect()
