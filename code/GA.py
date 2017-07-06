@@ -9,12 +9,14 @@ import sys
 from copy import copy
 from datetime import datetime
 from functools import partial
+from itertools import product
 from multiprocessing import Pool
 from numpy import floor, log
 
 
 from bbob import bbobbenchmarks, fgeneric
-from code import allow_parallel, getBitString, getOpts, getPrintName, getVals, options, num_options, num_threads, Config, MPI
+from code import getBitString, getOpts, getPrintName, getVals, options, num_options, num_threads, Config
+from code import allow_parallel, MPI_available, MPI
 from code.Algorithms import GA, MIES, customizedES
 from code.Utils import ESFitness
 from code.local import datapath, non_bbob_datapath
@@ -260,6 +262,38 @@ def _fetchResults(fid, instance, ndim, budget, opts, values=None):
 -----------------------------------------------------------------------------'''
 
 
+def evaluateCustomizedESs(representations, ndim, fid, iids, budget=None, storage_file=None):
+
+    budget = Config.ES_budget_factor * ndim if budget is None else budget
+    runFunction = partial(_runCustomizedES, ndim=ndim, fid=fid, budget=budget)
+    experiments = product(representations, iids)
+
+    if MPI_available and Config.use_MPI and Config.GA_evaluate_parallel:
+        run_data = runMPI(runFunction, experiments)
+    elif allow_parallel and Config.GA_evaluate_parallel:
+        run_data = runPool(runFunction, experiments)
+    else:
+        run_data = runSingleThreaded(runFunction, experiments)
+
+    targets, results = zip(*run_data)
+    fitness_results = []
+
+    for i, rep in enumerate(representations):
+
+        # Preprocess/unpack results
+        _, _, fitnesses, _ = (list(x) for x in zip(*results[i*len(iids):(i+1)*len(iids)]))
+        fitnesses = _trimFitnessHistoryByLength(fitnesses)
+
+        # Subtract the target fitness value from all returned fitnesses to only get the absolute distance
+        fitnesses = np.subtract(np.array(fitnesses), np.array(targets).T[:, np.newaxis])
+        fitness = ESFitness(fitnesses)
+        fitness_results.append(fitness)
+
+        if not isinstance(rep, list):
+            rep = rep.tolist()
+        _writeResultToFile(rep, fitness, storage_file)
+
+
 def _runCustomizedES(representation, ndim, fid, iid, budget):
     """
         Small overhead-function to enable multi-processing
@@ -290,6 +324,7 @@ def _runCustomizedES(representation, ndim, fid, iid, budget):
 '''-----------------------------------------------------------------------------
 #                       Parallelization-style Functions                        #
 -----------------------------------------------------------------------------'''
+
 
 def runMPI(runFunction, experiments):
     results = None
