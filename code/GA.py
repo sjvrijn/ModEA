@@ -88,7 +88,7 @@ def _displayRepresentation(representation):
     disc_part = representation[:len(options)]
     lambda_ = representation[len(options)]
     mu = representation[len(options)+1]
-    float_part = representation[len(options)+1:]
+    float_part = representation[len(options)+2:]
 
     print("{}({:.3f}, {}) with {}".format([int(x) for x in disc_part], mu, lambda_, float_part))
 
