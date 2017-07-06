@@ -359,10 +359,18 @@ def _runCustomizedES(representation, iid, ndim, fid, budget):
 
 
 def runMPI(runFunction, arguments):
-    results = None
+    """
+        Small overhead-function to handle multi-processing using MPI
 
-    comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=len(arguments))  # Initialize
-    comm.bcast(runFunction, root=MPI.ROOT)             # Equal for all processes
+        :param runFunction: The (``partial``) function to run in parallel, accepting ``arguments``
+        :param arguments:   The arguments to passed distributedly to ``runFunction``
+        :return:            List of any results produced by ``runFunction``
+    """
+    results = None  # Required pre-initialization of the variable that will receive the data from comm.gather()
+
+    comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'],
+                               maxprocs=(min(Config.MPI_num_total_threads, len(arguments))))  # Initialize
+    comm.bcast(runFunction, root=MPI.ROOT)          # Equal for all processes
     comm.scatter(arguments, root=MPI.ROOT)          # Different for each process
     comm.Barrier()                                  # Wait for everything to finish...
     results = comm.gather(results, root=MPI.ROOT)   # And gather everything up
@@ -372,12 +380,26 @@ def runMPI(runFunction, arguments):
 
 
 def runPool(runFunction, arguments):
+    """
+        Small overhead-function to handle multi-processing using Python's built-in multiprocessing.Pool
+
+        :param runFunction: The (``partial``) function to run in parallel, accepting ``arguments``
+        :param arguments:   The arguments to passed distributedly to ``runFunction``
+        :return:            List of any results produced by ``runFunction``
+    """
     p = Pool(min(num_threads, len(arguments)))
     results = p.map(runFunction, arguments)
     return results
 
 
 def runSingleThreaded(runFunction, arguments):
+    """
+        Small overhead-function to iteratively run a function with a pre-determined input arguments
+
+        :param runFunction: The (``partial``) function to run, accepting ``arguments``
+        :param arguments:   The arguments to passed to ``runFunction``, one run at a time
+        :return:            List of any results produced by ``runFunction``
+    """
     results = []
     for arg in arguments:
         results.append(runFunction(*arg))
