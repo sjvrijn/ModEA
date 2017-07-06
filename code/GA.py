@@ -53,6 +53,8 @@ def _displayDuration(start, end):
           "Time at end:         {}\n"
           "Elapsed time:        {} days, {} hours, {} minutes, {} seconds".format(start, end, days, hours, minutes, seconds))
 
+    return duration
+
 
 def _writeResultToFile(candidate, result, storage_file):
     if storage_file:
@@ -68,6 +70,27 @@ def _trimFitnessHistoryByLength(fitnesses):
         fitnesses = [x[:min_length] for x in fitnesses]
 
     return fitnesses
+
+
+def _ensureListOfLists(iterable):
+    try:
+        if len(iterable) > 0:
+            try:
+                if len(iterable[0]) > 0:
+                    return iterable
+            except TypeError:
+                return [iterable]
+    except TypeError:
+        return [[iterable]]
+
+
+def _displayRepresentation(representation):
+    disc_part = representation[:len(options)]
+    lambda_ = representation[len(options)]
+    mu = representation[len(options)+1]
+    float_part = representation[len(options)+1:]
+
+    print("{}({:.3f}, {}) with {}".format([int(x) for x in disc_part], mu, lambda_, float_part))
 
 
 '''-----------------------------------------------------------------------------
@@ -262,18 +285,25 @@ def _fetchResults(fid, instance, ndim, budget, opts, values=None):
 -----------------------------------------------------------------------------'''
 
 
-def evaluateCustomizedESs(representations, ndim, fid, iids, budget=None, storage_file=None):
+def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, storage_file=None):
+
+    representations = _ensureListOfLists(representations)
 
     budget = Config.ES_budget_factor * ndim if budget is None else budget
     runFunction = partial(_runCustomizedES, ndim=ndim, fid=fid, budget=budget)
-    experiments = product(representations, iids)
+    for rep in representations:
+        _displayRepresentation(rep)
+    arguments = product(representations, iids)
 
     if MPI_available and Config.use_MPI and Config.GA_evaluate_parallel:
-        run_data = runMPI(runFunction, experiments)
+        print("MPI run")
+        run_data = runMPI(runFunction, list(arguments))
     elif allow_parallel and Config.GA_evaluate_parallel:
-        run_data = runPool(runFunction, experiments)
+        print("Pool run")
+        run_data = runPool(runFunction, list(arguments))
     else:
-        run_data = runSingleThreaded(runFunction, experiments)
+        print("Single-Threaded run")
+        run_data = runSingleThreaded(runFunction, list(arguments))
 
     targets, results = zip(*run_data)
     fitness_results = []
@@ -293,8 +323,10 @@ def evaluateCustomizedESs(representations, ndim, fid, iids, budget=None, storage
             rep = rep.tolist()
         _writeResultToFile(rep, fitness, storage_file)
 
+    return fitness_results
 
-def _runCustomizedES(representation, ndim, fid, iid, budget):
+
+def _runCustomizedES(representation, iid, ndim, fid, budget):
     """
         Small overhead-function to enable multi-processing
 
@@ -326,12 +358,12 @@ def _runCustomizedES(representation, ndim, fid, iid, budget):
 -----------------------------------------------------------------------------'''
 
 
-def runMPI(runFunction, experiments):
+def runMPI(runFunction, arguments):
     results = None
 
-    comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=len(experiments))  # Initialize
+    comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=len(arguments))  # Initialize
     comm.bcast(runFunction, root=MPI.ROOT)             # Equal for all processes
-    comm.scatter(experiments, root=MPI.ROOT)        # Different for each process
+    comm.scatter(arguments, root=MPI.ROOT)        # Different for each process
     comm.Barrier()                                  # Wait for everything to finish...
     results = comm.gather(results, root=MPI.ROOT)   # And gather everything up
     comm.Disconnect()
@@ -339,13 +371,17 @@ def runMPI(runFunction, experiments):
     return results
 
 
-def runPool(runFunction, experiments):
-    p = Pool(min(num_threads, len(experiments)))
-    return p.map(runFunction, experiments)
+def runPool(runFunction, arguments):
+    p = Pool(min(num_threads, len(arguments)))
+    results = p.map(runFunction, arguments)
+    return results
 
 
-def runSingleThreaded(runFunction, experiments):
-    return [runFunction(exp) for exp in experiments]
+def runSingleThreaded(runFunction, arguments):
+    results = []
+    for arg in arguments:
+        results.append(runFunction(*arg))
+    return results
 
 
 '''-----------------------------------------------------------------------------
@@ -492,7 +528,7 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
     _displayDuration(x, y)
 
 
-def _runGA(ndim=5, fid=2, run=2):
+def _runGA(ndim=5, fid=1, run=1):
     x = datetime.now()
 
     # Where to store genotype-fitness information
@@ -501,7 +537,9 @@ def _runGA(ndim=5, fid=2, run=2):
 
     # Fitness function to be passed on to the baseAlgorithm
     # fitnessFunction = partial(ALT_evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
-    fitnessFunction = partial(evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
+    # fitnessFunction = partial(evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
+
+    fitnessFunction = partial(evaluateCustomizedESs, fid=fid, ndim=ndim, iids=range(Config.ES_num_runs), storage_file=storage_file)
 
     budget = Config.GA_budget
 
@@ -512,7 +550,7 @@ def _runGA(ndim=5, fid=2, run=2):
           "        Fitness:     {}\n"
           "Fitnesses over time: {}".format(best.genotype, best.fitness, fitness))
 
-    _displayDuration(x, y)
+    z = _displayDuration(x, y)
 
     if Config.write_output:
         np.savez("{}final_GA_results_{}dim_f{}_run{}".format(non_bbob_datapath, ndim, fid, run),
@@ -545,7 +583,7 @@ def runDefault():
 
 
 def main():
-    np.set_printoptions(linewidth=1000)
+    np.set_printoptions(linewidth=1000, precision=3)
 
     if len(sys.argv) == 3:
         ndim = int(sys.argv[1])
