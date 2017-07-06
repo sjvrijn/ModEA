@@ -286,11 +286,26 @@ def _fetchResults(fid, instance, ndim, budget, opts, values=None):
 
 
 def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, storage_file=None):
+    """
+        Function to evaluate customizedES instances using the BBOB framework. Can be passed one or more representations
+        at once, will run them in parallel as much as possible if instructed to do so in Config.
+
+        :param representations: The genotype to be translated into customizedES-ready options. Must manually be set to
+                                None if options are given as opts
+        :param iids:            The BBOB instance ID's to run the representation on (for statistical significance)
+        :param ndim:            The dimensionality to test the BBOB function with
+        :param fid:             The BBOB function ID to use in the evaluation
+        :param budget:          The allowed number of BBOB function evaluations
+        :param storage_file:    Filename to use when storing fitness information
+        :returns:               A list containing one instance of ESFitness representing the fitness of the defined ES
+    """
+
+    # TODO: Expand this function to include number of repetitions per (ndim, fid, iid) combination?
 
     representations = _ensureListOfLists(representations)
 
     budget = Config.ES_budget_factor * ndim if budget is None else budget
-    runFunction = partial(_runCustomizedES, ndim=ndim, fid=fid, budget=budget)
+    runFunction = partial(runCustomizedES, ndim=ndim, fid=fid, budget=budget)
     for rep in representations:
         _displayRepresentation(rep)
     arguments = product(representations, iids)
@@ -326,14 +341,16 @@ def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, storage
     return fitness_results
 
 
-def _runCustomizedES(representation, iid, ndim, fid, budget):
+def runCustomizedES(representation, iid, ndim, fid, budget):
     """
-        Small overhead-function to enable multi-processing
+        Runs a customized ES on a particular instance of a BBOB function in some dimensionality with given budget.
+        This function takes care of the BBOB setup and the translation of the representation to input arguments for
+        the customizedES.
 
         :param representation:  Representation of a customized ES (structure and parameter initialization)
+        :param iid:             Instance ID for the BBOB function
         :param ndim:            Dimensionality to run the ES in
         :param fid:             BBOB function ID
-        :param iid:             Instance ID for the BBOB function
         :param budget:          Evaluation budget for the ES
         :return:                Tuple(target optimum value of the evaluated function, list of fitness-values over time)
     """
