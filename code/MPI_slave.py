@@ -17,6 +17,20 @@ rank = comm.Get_rank()
 
 
 def runSlaveRun():
+    """
+        This function has the sole purpose of performing the distributed computations in an MPI-setting, by running the
+        broadcast function on the scattered arguments.
+
+        N.B.: The broadcast function must be imported in this file for this method to work!
+
+        To use this function, call as follows:
+        >>> comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=num_procs)
+        >>> comm.bcast(runFunction, root=MPI.ROOT)
+        >>> comm.scatter(arguments, root=MPI.ROOT)
+        >>> comm.Barrier()
+        >>> results = comm.gather(results, root=MPI.ROOT)
+        >>> comm.Disconnect()
+    """
 
 
     np.set_printoptions(linewidth=1000)
