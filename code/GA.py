@@ -13,7 +13,7 @@ from multiprocessing import Pool
 
 
 from bbob import bbobbenchmarks, fgeneric
-from code import getBitString, getOpts, getPrintName, getVals, options, initializable_parameters, num_options, num_threads
+from code import getBitString, getOpts, getPrintName, getVals, options, initializable_parameters, num_options_per_module, num_threads
 from code import Config
 from code import allow_parallel, MPI_available, MPI
 from code.Algorithms import GA, MIES, customizedES
@@ -312,7 +312,7 @@ def _testEachOption():
     _ensureFullLengthRepresentation(representation)
     evaluateCustomizedESs(representation, fid=fid, ndim=ndim, iids=range(Config.ES_num_runs))
     for i in range(n):
-        for j in range(1, num_options[i]):
+        for j in range(1, num_options_per_module[i]):
             representation = [0] * n
             representation[i] = j
             representation.extend(lambda_mu)
@@ -389,7 +389,7 @@ def _exampleRuns():
 def _bruteForce(ndim, fid, parallel=1, part=0):
     # Exhaustive/brute-force search over *all* possible combinations
     # NB: THIS ASSUMES OPTIONS ARE SORTED ASCENDING BY NUMBER OF VALUES
-    num_combinations = np.product(num_options)
+    num_combinations = np.product(num_options_per_module)
     print("F{} in {} dimensions:".format(fid, ndim))
     print("Brute-force exhaustive search of *all* available ES-combinations.")
     print("Number of possible ES-combinations currently available: {}".format(num_combinations))
@@ -409,7 +409,7 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
     else:
         with open(progress_fname) as progress_file:
             start_at = cPickle.load(progress_file)
-        if start_at >= np.product(num_options):
+        if start_at >= np.product(num_options_per_module):
             return  # Done.
 
     if part == 1 and start_at >= num_combinations // 2:  # Been there, done that
@@ -420,7 +420,7 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
 
     products = []
     # count how often there is a choice of x options
-    counts = Counter(num_options)
+    counts = Counter(num_options_per_module)
     for num, count in sorted(counts.items(), key=lambda x: x[0]):
         products.append(product(range(num), repeat=count))
 

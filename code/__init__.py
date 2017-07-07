@@ -51,8 +51,7 @@ initializable_parameters = (
 )
 
 
-# TODO: Rename, this is not a single number!
-num_options = [len(opt[1]) for opt in options]
+num_options_per_module = [len(opt[1]) for opt in options]
 
 def getVals(init_values):
     """

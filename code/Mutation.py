@@ -17,6 +17,11 @@ from random import gauss
 from math import sqrt
 
 
+'''-----------------------------------------------------------------------------
+#                          Mutation Helper Functions                           #
+-----------------------------------------------------------------------------'''
+
+
 def _keepInBounds(x, l_bound, u_bound):
     """
         This function transforms x to t w.r.t. the low and high
@@ -57,53 +62,6 @@ def adaptStepSize(individual):
     offset = 1 + ((1 - offset) / offset)
     offset = 1 / (offset * exp(gamma * gauss(0, 1)))
     individual.stepSizeOffset = min(offset, (individual.maxStepSize - individual.baseStepSize))
-
-
-def addRandomOffset(individual, param, sampler):
-    """
-        Mutation 1: x = x + sigma*N(0,I)
-
-        :param individual:  :class:`~code.Individual.FloatIndividual` to be mutated
-        :param param:       :class:`~code.Parameters.Parameters` object to store settings
-        :param sampler:     :mod:`~code.Sampling` module from which the random values should be drawn
-    """
-    individual.genotype += param.sigma * sampler.next()
-
-
-def CMAMutation(individual, param, sampler, threshold_convergence=False):
-    """
-        CMA mutation: x = x + (sigma * B*D*N(0,I))
-
-        :param individual:              :class:`~code.Individual.FloatIndividual` to be mutated
-        :param param:                   :class:`~code.Parameters.Parameters` object to store settings
-        :param sampler:                 :mod:`~code.Sampling` module from which the random values should be drawn
-        :param threshold_convergence:   Boolean: Should threshold convergence be applied. Default: False
-    """
-
-    individual.last_z = sampler.next()
-
-    if threshold_convergence:
-        individual.last_z = _scaleWithThreshold(individual.last_z, param.threshold)
-
-    individual.mutation_vector = dot(param.B, (param.D * individual.last_z))  # y_k in cmatutorial.pdf)
-    mutation_vector = individual.mutation_vector * param.sigma
-
-    individual.genotype = _keepInBounds(add(individual.genotype, mutation_vector), param.l_bound, param.u_bound)
-
-
-def choleskyCMAMutation(individual, param, sampler):
-    """
-        Cholesky CMA based mutation
-
-        :param individual:  :class:`~code.Individual.FloatIndividual` to be mutated
-        :param param:       :class:`~code.Parameters.Parameters` object to store settings
-        :param sampler:     :mod:`~code.Sampling` module from which the random values should be drawn
-    """
-
-    param.last_z = sampler.next()
-    mutation_vector = np.dot(param.A, param.last_z.T)
-
-    individual.genotype += param.sigma * mutation_vector
 
 
 def _scaleWithThreshold(mutation_vector, threshold):
@@ -154,10 +112,66 @@ def _getXi():
         return 7/5
 
 
-### GA MUTATIONS ###
+'''-----------------------------------------------------------------------------
+#                                ES Mutations                                  #
+-----------------------------------------------------------------------------'''
+
+
+def addRandomOffset(individual, param, sampler):
+    """
+        Mutation 1: x = x + sigma*N(0,I)
+
+        :param individual:  :class:`~code.Individual.FloatIndividual` to be mutated
+        :param param:       :class:`~code.Parameters.Parameters` object to store settings
+        :param sampler:     :mod:`~code.Sampling` module from which the random values should be drawn
+    """
+    individual.genotype += param.sigma * sampler.next()
+
+
+def CMAMutation(individual, param, sampler, threshold_convergence=False):
+    """
+        CMA mutation: x = x + (sigma * B*D*N(0,I))
+
+        :param individual:              :class:`~code.Individual.FloatIndividual` to be mutated
+        :param param:                   :class:`~code.Parameters.Parameters` object to store settings
+        :param sampler:                 :mod:`~code.Sampling` module from which the random values should be drawn
+        :param threshold_convergence:   Boolean: Should threshold convergence be applied. Default: False
+    """
+
+    individual.last_z = sampler.next()
+
+    if threshold_convergence:
+        individual.last_z = _scaleWithThreshold(individual.last_z, param.threshold)
+
+    individual.mutation_vector = dot(param.B, (param.D * individual.last_z))  # y_k in cmatutorial.pdf)
+    mutation_vector = individual.mutation_vector * param.sigma
+
+    individual.genotype = _keepInBounds(add(individual.genotype, mutation_vector), param.l_bound, param.u_bound)
+
+
+def choleskyCMAMutation(individual, param, sampler):
+    """
+        Cholesky CMA based mutation
+
+        :param individual:  :class:`~code.Individual.FloatIndividual` to be mutated
+        :param param:       :class:`~code.Parameters.Parameters` object to store settings
+        :param sampler:     :mod:`~code.Sampling` module from which the random values should be drawn
+    """
+
+    param.last_z = sampler.next()
+    mutation_vector = np.dot(param.A, param.last_z.T)
+
+    individual.genotype += param.sigma * mutation_vector
+
+
+'''-----------------------------------------------------------------------------
+#                                GA Mutations                                  #
+-----------------------------------------------------------------------------'''
+
+
 def mutateBitstring(individual):
     """
-        Extremely simple 1/n bit-flip mutation
+        Simple 1/n bit-flip mutation
 
         :param individual:  :mod:`~code.Individual` with a bit-string as genotype to undergo p=1/n mutation
     """
@@ -169,21 +183,21 @@ def mutateBitstring(individual):
             bitstring[i] = 1-bitstring[i]
 
 
-def mutateIntList(individual, param, num_options):
+def mutateIntList(individual, param, num_options_per_module):
     """
         Self-adaptive random integer mutation to mutate the structure of an ES
 
-        :param individual:  :class:`~code.Individual.MixedIntegerIndividual` whose integer-part will be mutated
-        :param param:       :class:`~code.Parameters.Parameters` object
-        :param num_options: List :data:`~code.num_options` with the number of available modules per module position
-                            that are available to choose from
+        :param individual:              :class:`~code.Individual.MixedIntegerIndividual` whose integer-part will be mutated
+        :param param:                   :class:`~code.Parameters.Parameters` object
+        :param num_options_per_module:  List :data:`~code.num_options` with the number of available modules per module
+                                        position that are available to choose from
     """
 
     p = individual.baseStepSize + individual.stepSizeOffset
     num_ints = individual.num_ints
 
     int_list = individual.genotype[:num_ints-1]  # Get the relevant slice
-    for i, val in enumerate(num_options):
+    for i, val in enumerate(num_options_per_module):
         if np.random.random() < p:
             # -1 as random_integers is [1, val], -1 to simulate leaving out the current value
             new_int = np.random.random_integers(val-1)-1
@@ -199,7 +213,7 @@ def mutateIntList(individual, param, num_options):
 
 def mutateFloatList(individual, param, options):
     """
-        Self-adaptive, uniformly random real mutation to mutate the tunable parameters for the structure of an ES
+        Self-adaptive, uniformly random floating point mutation on the tunable parameters of an ES
 
         :param individual:  :class:`~code.Individual.MixedIntegerIndividual` whose integer-part will be mutated
         :param param:       :class:`~code.Parameters.Parameters` object
@@ -227,18 +241,18 @@ def mutateFloatList(individual, param, options):
     float_part[combined_mask] = (random_values[1][combined_mask] * search_space[combined_mask]) + l_bound[combined_mask]
 
 
-def mutateMixedInteger(individual, param, options, num_options):
+def mutateMixedInteger(individual, param, options, num_options_per_module):
     """
         Self-adaptive mixed-integer mutation of the structure of an ES
 
-        :param individual:  :class:`~code.Individual.MixedIntegerIndividual` whose integer-part will be mutated
-        :param param:       :class:`~code.Parameters.Parameters` object
-        :param options:     List of tuples :data:`~code.options` with the number of tunable parameters per module
-        :param num_options: List :data:`~code.num_options` with the number of available modules per module position
-                            that are available to choose from
+        :param individual:              :class:`~code.Individual.MixedIntegerIndividual` whose integer-part will be mutated
+        :param param:                   :class:`~code.Parameters.Parameters` object
+        :param options:                 List of tuples :data:`~code.options` with the number of tunable parameters per module
+        :param num_options_per_module:  List :data:`~code.num_options` with the number of available modules per module position
+                                        that are available to choose from
     """
     adaptStepSize(individual)
-    mutateIntList(individual, param, num_options)
+    mutateIntList(individual, param, num_options_per_module)
     mutateFloatList(individual, param, options)
 
 

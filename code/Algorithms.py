@@ -16,7 +16,7 @@ from numpy import ceil, floor, log, ones
 # Internal classes
 from .Individual import FloatIndividual, MixedIntIndividual
 from .Parameters import Parameters
-from code import allow_parallel, num_threads, Config, options, num_options, MPI
+from code import allow_parallel, num_threads, Config, options, num_options_per_module, MPI
 from code.Utils import create_bounds, ESFitness
 # Internal modules
 import code.Mutation as Mut
@@ -810,7 +810,7 @@ def GA(n, fitnessFunction, budget):
     parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15,1)
 
     # Initialize the first individual in the population
-    population = [MixedIntIndividual(n, num_discrete=len(num_options), num_ints=1)]
+    population = [MixedIntIndividual(n, num_discrete=len(num_options_per_module), num_ints=1)]
     int_part = [np.random.randint(len(x[1])) for x in options]
     int_part.append(None)
     float_part = [None, None, None, None, None, None, None, None, None, None, None, None, None, None]
@@ -823,7 +823,7 @@ def GA(n, fitnessFunction, budget):
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.random
-    mutate = partial(Mut.mutateMixedInteger, options=options, num_options=num_options)
+    mutate = partial(Mut.mutateMixedInteger, options=options, num_options_per_module=num_options_per_module)
     best = Sel.bestGA
     def select(pop, new_pop, _, params):
         return best(pop, new_pop, params)
@@ -877,7 +877,7 @@ def MIES(n, fitnessFunction, budget):
     parameters.l_bound[len(options)+1:] = np.array(l_bound)
 
     population = [
-        MixedIntIndividual(len(discrete_part) + len(int_part) + len(float_part), num_discrete=len(num_options),
+        MixedIntIndividual(len(discrete_part) + len(int_part) + len(float_part), num_discrete=len(num_options_per_module),
                            num_ints=len(int_part))]
     population[0].genotype = np.array(discrete_part + int_part + float_part)
     population[0].fitness = ESFitness()
@@ -887,7 +887,7 @@ def MIES(n, fitnessFunction, budget):
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.MIES_recombine
-    mutate = partial(Mut.MIES_Mutate, options=options, num_options=num_options)
+    mutate = partial(Mut.MIES_Mutate, options=options, num_options=num_options_per_module)
     best = Sel.bestGA
 
     def select(pop, new_pop, _, params):
