@@ -256,16 +256,33 @@ def mutateMixedInteger(individual, param, options, num_options_per_module):
     mutateFloatList(individual, param, options)
 
 
-def swapFloatsOut(individual, value):
-    if individual.genotype[individual.num_discrete+ individual.num_ints + value] is not None:
-        individual.genotype_temp[value] = individual.genotype[individual.num_discrete + individual.num_ints + value]
-        individual.genotype[individual.num_discrete+ individual.num_ints + value] = None
+'''-----------------------------------------------------------------------------
+#                               MIES Mutations                                 #
+-----------------------------------------------------------------------------'''
 
 
-def swapFloatsIn(individual, value):
-    if individual.genotype[individual.num_discrete + individual.num_ints + value] is None:
-        individual.genotype[individual.num_discrete+individual.num_ints+value] = individual.genotype_temp[value]
-        individual.genotype_temp[value] = None
+def swapFloatsOut(individual, index):
+    """
+        Store the float value of ``individual`` at ``index`` in a backup and replace it with ``None``
+
+        :param individual:  The :class:`~code.Individual.MixedIntegerIndividual` to apply this to
+        :param index:       The index of the value to swap out to the backup
+    """
+    if individual.genotype[individual.num_discrete + individual.num_ints + index] is not None:
+        individual.genotype_temp[index] = individual.genotype[individual.num_discrete + individual.num_ints + index]
+        individual.genotype[individual.num_discrete + individual.num_ints + index] = None
+
+
+def swapFloatsIn(individual, index):
+    """
+        Retrieve the float value of ``individual`` at ``index`` from backup and reset the backup to ``None``
+
+        :param individual:  The :class:`~code.Individual.MixedIntegerIndividual` to apply this to
+        :param index:       The index of the value to swap out of the backup
+    """
+    if individual.genotype[individual.num_discrete + individual.num_ints + index] is None:
+        individual.genotype[individual.num_discrete + individual.num_ints + index] = individual.genotype_temp[index]
+        individual.genotype_temp[index] = None
 
 
 def CheckParamsUsed(individual, options):
