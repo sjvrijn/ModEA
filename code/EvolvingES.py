@@ -123,10 +123,10 @@ def _ensureListOfLists(iterable):
         return [[iterable]]
 
 
-def _displayRepresentation(representation):
+def displayRepresentation(representation):
     """
         Displays a representation of a customizedES instance in a more human-readable format:
-        >>> _displayRepresentation([0,0,0,0,0,0,0,0,0,0,0, 20, 0.25, 1, 1, 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2])
+        >>> displayRepresentation([0,0,0,0,0,0,0,0,0,0,0, 20, 0.25, 1, 1, 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2])
         [0,0,0,0,0,0,0,0,0,0,0] (0.25, 20) with [1,1,1,1,1,1,0.2,0.955,0.5,0,0.3,0.5,2]
 
         :param representation:  Representation of a customizedES instance to display
@@ -139,12 +139,12 @@ def _displayRepresentation(representation):
     print("{}({:.3f}, {}) with {}".format([int(x) for x in disc_part], mu, lambda_, float_part))
 
 
-def _ensureFullLengthRepresentation(representation):
+def ensureFullLengthRepresentation(representation):
     """
         Given a (partial) representation, ensure that it is padded to become a full length customizedES representation,
         consisting of the required number of structure, population and parameter values.
 
-        >>> _ensureFullLengthRepresentation([])
+        >>> ensureFullLengthRepresentation([])
         [0,0,0,0,0,0,0,0,0,0,0, None,None, None,None,None,None,None,None,None,None,None,None,None,None,None]
 
         :param representation:  List representation of a customizedES instance to check and pad if needed
@@ -183,7 +183,7 @@ def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, storage
     budget = Config.ES_budget_factor * ndim if budget is None else budget
     runFunction = partial(runCustomizedES, ndim=ndim, fid=fid, budget=budget)
     for rep in representations:
-        _displayRepresentation(rep)
+        displayRepresentation(rep)
     arguments = product(representations, iids)
 
     if MPI_available and Config.use_MPI and Config.GA_evaluate_parallel:
@@ -294,253 +294,3 @@ def runSingleThreaded(runFunction, arguments):
     for arg in arguments:
         results.append(runFunction(*arg))
     return results
-
-
-'''-----------------------------------------------------------------------------
-#                                Run Functions                                 #
------------------------------------------------------------------------------'''
-
-
-def _testEachOption():
-    # Test all individual options
-    n = len(options)
-    fid = 1
-    ndim = 10
-    representation = [0] * n
-    lambda_mu = [2, 0.01]
-    representation.extend(lambda_mu)
-    _ensureFullLengthRepresentation(representation)
-    evaluateCustomizedESs(representation, fid=fid, ndim=ndim, iids=range(Config.ES_num_runs))
-    for i in range(n):
-        for j in range(1, num_options_per_module[i]):
-            representation = [0] * n
-            representation[i] = j
-            representation.extend(lambda_mu)
-            _ensureFullLengthRepresentation(representation)
-            evaluateCustomizedESs(representation, fid=fid, ndim=ndim, iids=range(Config.ES_num_runs))
-
-    print("\n\n")
-
-
-def _problemCases():
-    fid = 1
-    ndim = 10
-    iids = range(Config.ES_num_runs)
-
-    # Known problems
-    print("Combinations known to cause problems:")
-
-    rep = _ensureFullLengthRepresentation(getBitString({'sequential': True}))
-    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
-    rep = _ensureFullLengthRepresentation(getBitString({'tpa': True}))
-    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
-    rep = _ensureFullLengthRepresentation(getBitString({'selection': 'pairwise'}))
-    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
-    rep = _ensureFullLengthRepresentation(getBitString({'tpa': True, 'selection': 'pairwise'}))
-    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
-    # these are the actual failures
-    rep = _ensureFullLengthRepresentation(getBitString({'sequential': True, 'selection': 'pairwise'}))
-    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
-    rep = _ensureFullLengthRepresentation(getBitString({'sequential': True, 'tpa': True, 'selection': 'pairwise'}))
-    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
-
-    rep = _ensureFullLengthRepresentation([0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 113, 0.18770573922911427])
-    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
-    rep = _ensureFullLengthRepresentation([0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 107, 0.37768142336353183])
-    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
-    rep = _ensureFullLengthRepresentation([0, 1, 1, 0, 1, 0, 1, 1, 0, 2, 2, None, None])
-    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
-    rep = _ensureFullLengthRepresentation([0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 27, 0.9383818903266666])
-    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
-
-    rep = _ensureFullLengthRepresentation([0, 0, 1, 1, 0, 0, 1, 0, 1, 2, 2, 3, 0.923162952008686])
-    print(getPrintName(getOpts(rep[:-2])))
-    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
-
-
-def _exampleRuns():
-    fid = 1
-    ndim = 10
-    iids = range(Config.ES_num_runs)
-
-    print("Mirrored vs Mirrored-pairwise")
-    rep = _ensureFullLengthRepresentation(getBitString({'mirrored': True}))
-    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
-    rep = _ensureFullLengthRepresentation(getBitString({'mirrored': True, 'selection': 'pairwise'}))
-    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
-
-    print("Regular vs Active")
-    rep = _ensureFullLengthRepresentation(getBitString({'active': False}))
-    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
-    rep = _ensureFullLengthRepresentation(getBitString({'active': True}))
-    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
-
-    print("No restart vs local restart")
-    rep = _ensureFullLengthRepresentation(getBitString({'ipop': None}))
-    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
-    rep = _ensureFullLengthRepresentation(getBitString({'ipop': True}))
-    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
-    rep = _ensureFullLengthRepresentation(getBitString({'ipop': 'IPOP'}))
-    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
-    rep = _ensureFullLengthRepresentation(getBitString({'ipop': 'BIPOP'}))
-    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
-
-
-def _bruteForce(ndim, fid, parallel=1, part=0):
-    # Exhaustive/brute-force search over *all* possible combinations
-    # NB: THIS ASSUMES OPTIONS ARE SORTED ASCENDING BY NUMBER OF VALUES
-    num_combinations = np.product(num_options_per_module)
-    print("F{} in {} dimensions:".format(fid, ndim))
-    print("Brute-force exhaustive search of *all* available ES-combinations.")
-    print("Number of possible ES-combinations currently available: {}".format(num_combinations))
-    from collections import Counter
-    from itertools import product
-    from datetime import datetime
-    import cPickle
-    import os
-
-    best_ES = None
-    best_result = ESFitness()
-
-    progress_log = '{}_f{}.prog'.format(ndim, fid)
-    progress_fname = non_bbob_datapath + progress_log
-    if progress_log not in os.listdir(non_bbob_datapath):
-        start_at = 0
-    else:
-        with open(progress_fname) as progress_file:
-            start_at = cPickle.load(progress_file)
-        if start_at >= np.product(num_options_per_module):
-            return  # Done.
-
-    if part == 1 and start_at >= num_combinations // 2:  # Been there, done that
-        return
-    elif part == 2 and start_at < num_combinations // 2:  # THIS SHOULD NOT HAPPEN!!!
-        print("{}\nWeird Error!\nstart_at smaller than intended!\n{}".format('-' * 32, '-' * 32))
-        return
-
-    products = []
-    # count how often there is a choice of x options
-    counts = Counter(num_options_per_module)
-    for num, count in sorted(counts.items(), key=lambda x: x[0]):
-        products.append(product(range(num), repeat=count))
-
-    if Config.write_output:
-        storage_file = '{}bruteforce_{}_f{}.tdat'.format(non_bbob_datapath, ndim, fid)
-    else:
-        storage_file = None
-    x = datetime.now()
-
-    all_combos = []
-    for combo in list(product(*products)):
-        all_combos.append(list(sum(combo, ())))
-
-    if part == 0:
-        num_cases = len(all_combos)
-    elif part == 1:
-        num_cases = len(all_combos) // 2 - start_at
-    elif part == 2:
-        num_cases = len(all_combos) - start_at
-    else:
-        return  # invalid 'part' value
-
-    num_iters = num_cases // parallel
-    num_iters += 0 if num_cases % parallel == 0 else 1
-
-    for i in range(num_iters):
-        bitstrings = all_combos[(start_at + i * parallel):(start_at + (i + 1) * parallel)]
-        bitstrings = [_ensureFullLengthRepresentation(bitstring) for bitstring in bitstrings]
-        result = evaluateCustomizedESs(bitstrings, fid=fid, ndim=ndim,
-                                       iids=range(Config.ES_num_runs), storage_file=storage_file)
-
-        with open(progress_fname, 'w') as progress_file:
-            cPickle.dump((start_at + (i + 1) * parallel), progress_file)
-
-        for j, res in enumerate(result):
-            if res < best_result:
-                best_result = res
-                best_ES = bitstrings[j]
-
-    y = datetime.now()
-
-    print("Best ES found:       {}\n"
-          "With fitness: {}\n".format(best_ES, best_result))
-
-    _displayDuration(x, y)
-
-
-def _runGA(ndim=5, fid=1, run=1):
-    x = datetime.now()
-
-    # Where to store genotype-fitness information
-    # storage_file = '{}GA_results_{}dim_f{}.tdat'.format(non_bbob_datapath, ndim, fid)
-    storage_file = '{}MIES_results_{}dim_f{}run_{}.tdat'.format(non_bbob_datapath, ndim, fid, run)
-
-    # Fitness function to be passed on to the baseAlgorithm
-    fitnessFunction = partial(evaluateCustomizedESs, fid=fid, ndim=ndim,
-                              iids=range(Config.ES_num_runs), storage_file=storage_file)
-
-    budget = Config.GA_budget
-
-    gen_sizes, sigmas, fitness, best = MIES(n=ndim, fitnessFunction=fitnessFunction, budget=budget)  # This line does all the work!
-    y = datetime.now()
-    print()
-    print("Best Individual:     {}\n"
-          "        Fitness:     {}\n"
-          "Fitnesses over time: {}".format(best.genotype, best.fitness, fitness))
-
-    z = _displayDuration(x, y)
-
-    if Config.write_output:
-        np.savez("{}final_GA_results_{}dim_f{}_run{}".format(non_bbob_datapath, ndim, fid, run),
-                 sigma=sigmas, best_fitness=fitness, best_result=best.genotype,
-                 generation_sizes=gen_sizes, time_spent=z)
-
-
-def _runExperiments():
-    for ndim in Config.experiment_dims:
-        for fid in Config.experiment_funcs:
-            print("Optimizing for function ID {} in {}-dimensional space:".format(fid, ndim))
-            x = datetime.now()
-            gen_sizes, sigmas, fitness, best = MIES(ndim=ndim, fid=fid)
-            y = datetime.now()
-
-            z = y - x
-            np.savez("{}final_GA_results_{}dim_f{}".format(non_bbob_datapath, ndim, fid),
-                     sigma=sigmas, best_fitness=fitness, best_result=best.genotype,
-                     generation_sizes=gen_sizes, time_spent=z)
-
-
-def runDefault():
-    _runGA()
-    # _testEachOption()
-    # _problemCases()
-    # _exampleRuns()
-    # _bruteForce(ndim=10, fid=1)
-    # _runExperiments()
-    pass
-
-
-def main():
-    np.set_printoptions(linewidth=1000, precision=3)
-
-    if len(sys.argv) == 3:
-        ndim = int(sys.argv[1])
-        fid = int(sys.argv[2])
-        _runGA(ndim, fid)
-    elif len(sys.argv) == 4:
-        ndim = int(sys.argv[1])
-        fid = int(sys.argv[2])
-        run = int(sys.argv[3])
-        _runGA(ndim, fid, run)
-    elif len(sys.argv) == 5:
-        ndim = int(sys.argv[1])
-        fid = int(sys.argv[2])
-        parallel = int(sys.argv[3])
-        part = int(sys.argv[4])
-        _bruteForce(ndim, fid, parallel, part)
-    else:
-        runDefault()
-
-
-if __name__ == '__main__':
-    main()
