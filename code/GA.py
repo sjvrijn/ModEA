@@ -15,7 +15,8 @@ from numpy import floor, log
 
 
 from bbob import bbobbenchmarks, fgeneric
-from code import getBitString, getOpts, getPrintName, getVals, options, num_options, num_threads, Config
+from code import getBitString, getOpts, getPrintName, getVals, options, initializable_parameters, num_options, num_threads
+from code import Config
 from code import allow_parallel, MPI_available, MPI
 from code.Algorithms import GA, MIES, customizedES
 from code.Utils import ESFitness
@@ -138,6 +139,23 @@ def _displayRepresentation(representation):
     float_part = representation[len(options)+2:]
 
     print("{}({:.3f}, {}) with {}".format([int(x) for x in disc_part], mu, lambda_, float_part))
+
+
+def _ensureFullLengthRepresentation(representation):
+    """
+        Given a (partial) representation, ensure that it is padded to become a full length customizedES representation,
+        consisting of the required number of structure, population and parameter values.
+
+        >>> _ensureFullLengthRepresentation([])
+        [0,0,0,0,0,0,0,0,0,0,0, None,None, None,None,None,None,None,None,None,None,None,None,None,None,None]
+
+        :param representation:  List representation of a customizedES instance to check and pad if needed
+        :return:                Guaranteed full-length version of the representation
+    """
+    default_rep = [0]*len(options) + [None, None] + [None]*len(initializable_parameters)
+    if len(representation) < len(default_rep):
+        representation.extend(default_rep[len(representation):])
+    return representation
 
 
 '''-----------------------------------------------------------------------------
