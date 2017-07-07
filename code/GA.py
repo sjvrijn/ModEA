@@ -472,19 +472,31 @@ def _problemCases():
 
 
 def _exampleRuns():
+    fid = 1
+    ndim = 10
+    iids = range(Config.ES_num_runs)
+
     print("Mirrored vs Mirrored-pairwise")
-    evaluate_ES(None, fid=1, ndim=10, opts={'mirrored': True})
-    evaluate_ES(None, fid=1, ndim=10, opts={'mirrored': True, 'selection': 'pairwise'})
+    rep = _ensureFullLengthRepresentation(getBitString({'mirrored': True}))
+    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
+    rep = _ensureFullLengthRepresentation(getBitString({'mirrored': True, 'selection': 'pairwise'}))
+    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
 
     print("Regular vs Active")
-    evaluate_ES(None, fid=1, ndim=10, opts={'active': False})
-    evaluate_ES(None, fid=1, ndim=10, opts={'active': True})
+    rep = _ensureFullLengthRepresentation(getBitString({'active': False}))
+    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
+    rep = _ensureFullLengthRepresentation(getBitString({'active': True}))
+    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
 
     print("No restart vs local restart")
-    evaluate_ES(None, fid=1, ndim=10, opts={'ipop': None})
-    evaluate_ES(None, fid=1, ndim=10, opts={'ipop': True})
-    evaluate_ES(None, fid=1, ndim=10, opts={'ipop': 'IPOP'})
-    evaluate_ES(None, fid=1, ndim=10, opts={'ipop': 'BIPOP'})
+    rep = _ensureFullLengthRepresentation(getBitString({'ipop': None}))
+    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
+    rep = _ensureFullLengthRepresentation(getBitString({'ipop': True}))
+    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
+    rep = _ensureFullLengthRepresentation(getBitString({'ipop': 'IPOP'}))
+    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
+    rep = _ensureFullLengthRepresentation(getBitString({'ipop': 'BIPOP'}))
+    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
 
 
 def _bruteForce(ndim, fid, parallel=1, part=0):
