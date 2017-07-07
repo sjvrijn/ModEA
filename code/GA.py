@@ -50,19 +50,37 @@ def _sysPrint(string):
     sys.stdout.write(string)
     sys.stdout.flush()
 
-def create_bounds(float_part, perc, parameters):
-    print("upper", parameters.u_bound)
-    print("lower", parameters.l_bound)
-    print(len(options))
-    if perc <= 0 or perc >= 1:
-        print("error percentage bound is incorrect")
-        return
-    for x in range(0,len(float_part)-1):
-        if float_part[x] is not None:
-            parameters.u_bound[len(options)+x+2]= float_part[x] * (1+perc)
-            parameters.l_bound[len(options)+x+2]= float_part[x] * (1-perc)
-    print("upper", parameters.u_bound[len(options):])
-    print("lower", parameters.l_bound[len(options):])
+# def create_bounds(float_part, perc, parameters):
+#     print("upper", parameters.u_bound)
+#     print("lower", parameters.l_bound)
+#     print(len(options))
+#     if perc <= 0 or perc >= 1:
+#         print("error percentage bound is incorrect")
+#         return
+#     for x in range(0,len(float_part)-1):
+#         if float_part[x] is not None:
+#             parameters.u_bound[len(options)+x+2]= float_part[x] * (1+perc)
+#             parameters.l_bound[len(options)+x+2]= float_part[x] * (1-perc)
+#     print("upper", parameters.u_bound[len(options):])
+#     print("lower", parameters.l_bound[len(options):])
+
+def _create_bounds(values, percentage):
+    """
+        For a given set of floating point parameters, create an upper and a lower bound as a percentage of given values.
+
+        :param values:      The set of floating point input values.
+        :param percentage:  The percentage value to use, expected as a fraction in the range (0, 1).
+        :return:            A tuple (u_bound, l_bound), each a regular list.
+    """
+    if percentage <= 0 or percentage >= 1:
+        raise Exception("Argument 'percentage' is expected to be a float from the range (0, 1).")
+
+    u_perc = 1 + percentage
+    l_perc = 1 - percentage
+
+    bounds = [(val*u_perc, val*l_perc) for val in values]
+    u_bound, l_bound = zip(*bounds)
+    return list(u_bound), list(l_bound)
 
 def GA(ndim, fid, run, budget=None):
     """
@@ -101,9 +119,12 @@ def GA(ndim, fid, run, budget=None):
     lamb = int(4 + floor(3 * log(parameters.n)))
     int_part = [lamb]
     # float_part = [None, 2, 0.2, 0.995, 0.5, 0, 0.3,  0.5,  2]'damps', 'c_c', 'c_1', 'c_mu
-    float_part = [parameters.mu, parameters.c_sigma, parameters.damps, parameters.c_c, parameters.c_1, parameters.c_mu,
-                  None, 0.2, 0.995, 0.5, 0, 0.3, 0.5, 2]
-    create_bounds(float_part,0.3,parameters)
+    float_part = [parameters.mu,parameters.alpha_mu, parameters.c_sigma, parameters.damps, parameters.c_c, parameters.c_1, parameters.c_mu,
+                  0.2, 0.995, 0.5, 0, 0.3, 0.5, 2]
+    # create_bounds(float_part,0.3,parameters)
+    u_bound, l_bound = _create_bounds(float_part, 0.3)
+    parameters.u_bound[len(options) + 1:] = np.array(u_bound)
+    parameters.l_bound[len(options) + 1:] = np.array(l_bound)
     population = [
         MixedIntIndividual(len(discrete_part) + len(int_part) + len(float_part), num_discrete=len(num_options),
                            num_ints=len(int_part))]

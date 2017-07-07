@@ -11,7 +11,7 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 import numpy as np
 from copy import copy
 from functools import partial
-from mpi4py import MPI
+#from mpi4py import MPI
 from multiprocessing import Pool
 from numpy import ceil, floor, log, ones
 # Internal classes
