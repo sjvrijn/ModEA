@@ -6,12 +6,10 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
 import sys
-from copy import copy
 from datetime import datetime
 from functools import partial
 from itertools import product
 from multiprocessing import Pool
-from numpy import floor, log
 
 
 from bbob import bbobbenchmarks, fgeneric
@@ -189,13 +187,10 @@ def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, storage
     arguments = product(representations, iids)
 
     if MPI_available and Config.use_MPI and Config.GA_evaluate_parallel:
-        print("MPI run")
         run_data = runMPI(runFunction, list(arguments))
     elif allow_parallel and Config.GA_evaluate_parallel:
-        print("Pool run")
         run_data = runPool(runFunction, list(arguments))
     else:
-        print("Single-Threaded run")
         run_data = runSingleThreaded(runFunction, list(arguments))
 
     targets, results = zip(*run_data)
