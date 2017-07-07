@@ -71,7 +71,6 @@ def getOpts(bitstring):
         :param bitstring:   List/array of integers that serve as index for the options tuple
         :return:            Dictionary with all option names and the chosen option
     """
-    print("bs",bitstring)
 
     opts = {option[0]: option[1][int(bitstring[i])] for i, option in enumerate(options)}
     return opts
