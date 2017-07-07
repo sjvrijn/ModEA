@@ -1246,7 +1246,6 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
 
     # Single recombination outside the eval loop to create the new population
     new_population = recombine(population, parameters)
-    mutEval = partial(_mutateAndEvaluate, mutate=mutate, fitFunc=fitnessFunction)
 
     # The main evaluation loop
     while used_budget < budget:
@@ -1255,36 +1254,16 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
             new_population = new_population[:-2]
 
         if parallel:
-            if Config.use_MPI:
-                fitnesses = []
-                for i in range(int(ceil(len(new_population) / Config.GA_num_parallel))):
-                    # In this case, it is hardcoded that the parallelization takes place one level further!!!!!!!!!
-                    genes = []
-                    for ind in new_population[i*Config.GA_num_parallel:(i+1)*Config.GA_num_parallel]:
-                        mutate(ind, parameters)
-                        genes.append(ind.genotype)
 
-                    fitnesses.extend(fitnessFunction(genes))
+            for ind in new_population:
+                mutate(ind, parameters)
+            fitnesses = fitnessFunction([ind.genotype for ind in new_population])  # Assumption: fitnessFunction is parallelized
+            for j, ind in enumerate(new_population):
+                ind.fitness = fitnesses[j]
 
-                for j, ind in enumerate(new_population):
-                    ind.fitness = fitnesses[j]
+            used_budget += parameters.lambda_
+            i = parameters.lambda_
 
-            else:
-                new_population = p.map(mutEval, new_population)
-
-            if sequential_evaluation:
-                for i, individual in enumerate(new_population):
-                    used_budget += 1
-                    if individual.fitness < best_individual.fitness:
-                        improvement_found = True  # Is the latest individual better?
-                    if i >= parameters.seq_cutoff and improvement_found:
-                        improvement_found = False  # Have we evaluated at least mu mutated individuals?
-                        break
-                    if used_budget == budget:
-                        break
-            else:
-                used_budget += parameters.lambda_
-                i = parameters.lambda_
         else:  # Sequential
             for i, individual in enumerate(new_population):
                 mutate(individual, parameters)  # Mutation
