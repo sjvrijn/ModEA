@@ -1225,7 +1225,6 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
     generation_size = []
     best_individual = population[0]
 
-    improvement_found = False  # Has a better individual has been found? Used for sequential evaluation
     seq_cutoff = parameters.mu_int * parameters.seq_cutoff
 
     # Initialization
@@ -1265,6 +1264,7 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
             i = parameters.lambda_
 
         else:  # Sequential
+            improvement_found = False
             for i, individual in enumerate(new_population):
                 mutate(individual, parameters)  # Mutation
                 # Evaluation
@@ -1274,9 +1274,8 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
                 # Sequential Evaluation
                 if sequential_evaluation:  # Sequential evaluation: we interrupt once a better individual has been found
                     if individual.fitness < best_individual.fitness:
-                        improvement_found = True  # Is the latest individual better?
+                        improvement_found = True
                     if i >= seq_cutoff and improvement_found:
-                        improvement_found = False  # Have we evaluated at least mu mutated individuals?
                         break
                     if used_budget == budget:
                         break
