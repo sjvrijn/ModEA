@@ -450,25 +450,39 @@ def _testEachOption():
 
 
 def _problemCases():
+    fid = 1
+    ndim = 10
+    iids = range(Config.ES_num_runs)
+
     # Known problems
     print("Combinations known to cause problems:")
 
-    evaluate_ES(None, fid=1, ndim=10, opts={'sequential': True})
-    evaluate_ES(None, fid=1, ndim=10, opts={'tpa': True})
-    evaluate_ES(None, fid=1, ndim=10, opts={'selection': 'pairwise'})
-    evaluate_ES(None, fid=1, ndim=10, opts={'tpa': True, 'selection': 'pairwise'})
+    rep = _ensureFullLengthRepresentation(getBitString({'sequential': True}))
+    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
+    rep = _ensureFullLengthRepresentation(getBitString({'tpa': True}))
+    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
+    rep = _ensureFullLengthRepresentation(getBitString({'selection': 'pairwise'}))
+    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
+    rep = _ensureFullLengthRepresentation(getBitString({'tpa': True, 'selection': 'pairwise'}))
+    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
     # these are the actual failures
-    evaluate_ES(None, fid=1, ndim=10, opts={'sequential': True, 'selection': 'pairwise'})
-    evaluate_ES(None, fid=1, ndim=10, opts={'sequential': True, 'tpa': True, 'selection': 'pairwise'})
+    rep = _ensureFullLengthRepresentation(getBitString({'sequential': True, 'selection': 'pairwise'}))
+    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
+    rep = _ensureFullLengthRepresentation(getBitString({'sequential': True, 'tpa': True, 'selection': 'pairwise'}))
+    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
 
-    evaluate_ES([0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 113, 0.18770573922911427], fid=1, ndim=10)
-    evaluate_ES([0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 107, 0.37768142336353183], fid=1, ndim=10)
-    evaluate_ES([0, 1, 1, 0, 1, 0, 1, 1, 0, 2, 2, None, None], fid=1, ndim=10)
-    evaluate_ES([0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 27, 0.9383818903266666], fid=1, ndim=10)
+    rep = _ensureFullLengthRepresentation([0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 113, 0.18770573922911427])
+    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
+    rep = _ensureFullLengthRepresentation([0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 107, 0.37768142336353183])
+    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
+    rep = _ensureFullLengthRepresentation([0, 1, 1, 0, 1, 0, 1, 1, 0, 2, 2, None, None])
+    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
+    rep = _ensureFullLengthRepresentation([0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 27, 0.9383818903266666])
+    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
 
-    genotype = [0, 0, 1, 1, 0, 0, 1, 0, 1, 2, 2, 3, 0.923162952008686]
-    print(getPrintName(getOpts(genotype[:-2])))
-    evaluate_ES(genotype, fid=1, ndim=10)
+    rep = _ensureFullLengthRepresentation([0, 0, 1, 1, 0, 0, 1, 0, 1, 2, 2, 3, 0.923162952008686])
+    print(getPrintName(getOpts(rep[:-2])))
+    evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
 
 
 def _exampleRuns():
@@ -589,10 +603,8 @@ def _runGA(ndim=5, fid=1, run=1):
     storage_file = '{}MIES_results_{}dim_f{}run_{}.tdat'.format(non_bbob_datapath, ndim, fid, run)
 
     # Fitness function to be passed on to the baseAlgorithm
-    # fitnessFunction = partial(ALT_evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
-    # fitnessFunction = partial(evaluate_ES, fid=fid, ndim=ndim, storage_file=storage_file)
-
-    fitnessFunction = partial(evaluateCustomizedESs, fid=fid, ndim=ndim, iids=range(Config.ES_num_runs), storage_file=storage_file)
+    fitnessFunction = partial(evaluateCustomizedESs, fid=fid, ndim=ndim,
+                              iids=range(Config.ES_num_runs), storage_file=storage_file)
 
     budget = Config.GA_budget
 
