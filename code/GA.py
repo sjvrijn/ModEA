@@ -431,17 +431,20 @@ def runSingleThreaded(runFunction, arguments):
 def _testEachOption():
     # Test all individual options
     n = len(options)
-    dna = [0] * n
-    # lambda_mu = [None, None]
+    fid = 1
+    ndim = 10
+    representation = [0] * n
     lambda_mu = [2, 0.01]
-    dna.extend(lambda_mu)
-    evaluate_ES(dna, fid=1, ndim=10, )
+    representation.extend(lambda_mu)
+    _ensureFullLengthRepresentation(representation)
+    evaluateCustomizedESs(representation, fid=fid, ndim=ndim, iids=range(Config.ES_num_runs))
     for i in range(n):
         for j in range(1, num_options[i]):
-            dna = [0] * n
-            dna[i] = j
-            dna.extend(lambda_mu)
-            evaluate_ES(dna, fid=1, ndim=10, )
+            representation = [0] * n
+            representation[i] = j
+            representation.extend(lambda_mu)
+            _ensureFullLengthRepresentation(representation)
+            evaluateCustomizedESs(representation, fid=fid, ndim=ndim, iids=range(Config.ES_num_runs))
 
     print("\n\n")
 
