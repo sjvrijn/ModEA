@@ -163,71 +163,6 @@ def _ensureFullLengthRepresentation(representation):
 -----------------------------------------------------------------------------'''
 
 
-def ALT_evaluate_ES(bitstrings, fid, ndim, budget=None, storage_file=None, opts=None):
-    """
-        Single function to run all desired combinations of algorithms * fitness functions - MPI4PY VERSION
-
-        :param bitstrings:      The genotype to be translated into customizedES-ready options. Must manually be set to
-                                None if options are given as opts
-        :param fid:             The BBOB function ID to use in the evaluation
-        :param ndim:            The dimensionality to test the BBOB function with
-        :param budget:          The allowed number of BBOB function evaluations
-        :param storage_file:    Filename to use when storing fitness information
-        :param opts:            Dictionary of options for customizedES. If omitted, the bitstring will be translated
-                                into this options automatically
-        :returns:               A list containing one instance of ESFitness representing the fitness of the defined ES
-    """
-
-    # Set parameters
-    if budget is None:
-        budget = Config.ES_budget_factor * ndim
-    num_runs = Config.ES_num_runs
-    num_ints = len(num_options) + 1
-    fitness_results = []
-    comms = []
-
-    for bitstring in bitstrings:
-        # Setup the bbob logger
-        bbob_opts['algid'] = bitstring  # Save the bitstring of the ES we are currently evaluating
-
-        print(bitstring)
-        opts = getOpts(bitstring)
-        values = getVals(bitstring[num_ints + 1:])
-
-        function = partial(_fetchResults, fid, ndim=ndim, budget=budget, opts=opts, values=values)
-        arguments = range(num_runs)
-
-        comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=num_runs)  # Init
-        comm.bcast(function, root=MPI.ROOT)  # Equal for all processes
-        comm.scatter(arguments, root=MPI.ROOT)  # Different for each process
-        comms.append(comm)
-
-    for comm in comms:
-        comm.Barrier()  # Wait for everything to finish...
-
-    for i, comm in enumerate(comms):
-        run_data = None  # Declaration of the variable to use for catching the data
-        run_data = comm.gather(run_data, root=MPI.ROOT)  # And gather everything up
-        comm.Disconnect()
-
-        targets, results = zip(*run_data)
-
-        # Preprocess/unpack results
-        _, _, fitnesses, _ = (list(x) for x in zip(*results))
-        fitnesses = _trimListOfListsByLength(fitnesses)
-
-        # Subtract the target fitness value from all returned fitnesses to only get the absolute distance
-        fitnesses = np.subtract(np.array(fitnesses), np.array(targets).T[:, np.newaxis])
-        fitness = ESFitness(fitnesses)
-        fitness_results.append(fitness)
-
-        if not isinstance(bitstrings[i], list):
-            bitstrings[i] = bitstrings[i].tolist()
-        _writeResultToFile(bitstrings[i], fitness, storage_file)
-
-    return fitness_results
-
-
 def evaluate_ES(es_genotype, fid, ndim, budget=None, storage_file=None, opts=None, values=None):
     """
         Single function to run all desired combinations of algorithms * fitness functions
@@ -614,7 +549,9 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
         if parallel == 1:
             result = evaluate_ES(bitstrings[0], fid=fid, ndim=ndim, storage_file=storage_file)
         else:
-            result = ALT_evaluate_ES(bitstrings, fid=fid, ndim=ndim, storage_file=storage_file)
+            bitstrings = [_ensureFullLengthRepresentation(bitstring) for bitstring in bitstrings]
+            result = evaluateCustomizedESs(bitstrings, fid=fid, ndim=ndim,
+                                           iids=range(Config.ES_num_runs), storage_file=storage_file)
 
         with open(progress_fname, 'w') as progress_file:
             cPickle.dump((start_at + (i + 1) * parallel), progress_file)
