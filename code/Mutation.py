@@ -286,6 +286,13 @@ def swapFloatsIn(individual, index):
 
 
 def CheckParamsUsed(individual, options):
+    """
+        Swaps the neccesary parameters in or out for a given individual depending on whether the corresponding
+        structure module is active.
+
+        :param individual:  Individual of which to swap parameters
+        :param options:     Options list to use for determining which index is which structure module
+    """
     for x in range(individual.num_discrete):
         if options[x][0] == "threshold":
             if individual.genotype[x] == 0:
@@ -311,6 +318,7 @@ def CheckParamsUsed(individual, options):
             else:
                 swapFloatsIn(individual, 13)
 
+
 def MIES_MutateDiscrete(individual, begin, end, u, num_options, options):
     conditional_mask = [True,True,True,True,True,True,True]
     for x in range(begin, end):
@@ -326,7 +334,7 @@ def MIES_MutateDiscrete(individual, begin, end, u, num_options, options):
             baseMIESstep = 1 / (3 * num_options[x])  # p'_i = T[ 1 / (3n_d) , 0.5]
             individual.stepSizeOffsetMIES[x] = _keepInBounds(individual.stepSizeOffsetMIES[x], baseMIESstep, 0.5)
 
-            threshold = np.random.random_integers(0, 10000) / 10000
+            threshold = np.random.random_sample()
             # change discrete
             if threshold < individual.stepSizeOffsetMIES[x]:
                 temparray = []
@@ -339,23 +347,23 @@ def MIES_MutateDiscrete(individual, begin, end, u, num_options, options):
 
     return conditional_mask
 
-def MIES_MutateIntegers(individual, begin, end, u,param):
+
+def MIES_MutateIntegers(individual, begin, end, u, param):
     for x in range(begin, end):
         if individual.genotype[x] is not None:
-            u1 = np.random.random_integers(0, 9999) / 10000
-            u2 = np.random.random_integers(0, 9999) / 10000
+            u1 = np.random.random_sample()
+            u2 = np.random.random_sample()
             tau = 1 / sqrt(2 * individual.num_ints)
             tau_prime = 1 / sqrt(2 * sqrt(individual.num_ints))
             individual.stepSizeOffsetMIES[x] = max(1,
                                                    individual.stepSizeOffsetMIES[x] * exp(tau * u + tau_prime * gauss(0.5, 1)))
             psi = 1 - (individual.stepSizeOffsetMIES[x] / individual.num_ints) / (
-            1 + sqrt(1 + pow(individual.stepSizeOffsetMIES[x] / individual.num_ints, 2)))
+                1 + sqrt(1 + pow(individual.stepSizeOffsetMIES[x] / individual.num_ints, 2)))
             G1 = int(floor(np.log(1 - u1) / np.log(1 - psi)))
             G2 = int(floor(np.log(1 - u2) / np.log(1 - psi)))
             individual.genotype[x] = individual.genotype[x] + G1 - G2
             # Keep the change within the bounds
             individual.genotype[x] = int(_keepInBounds(individual.genotype[x], param.l_bound[x], param.u_bound[x]))
-            
 
 
 def MIES_MutateFloats(conditional_mask,individual, begin, end, u, param):
@@ -370,7 +378,6 @@ def MIES_MutateFloats(conditional_mask,individual, begin, end, u, param):
 
 
 def MIES_Mutate(individual, param, options, num_options):
-
     """
         Self-adaptive mixed-integer mutation of the structure of an ES
 
