@@ -320,6 +320,19 @@ def CheckParamsUsed(individual, options):
 
 
 def MIES_MutateDiscrete(individual, begin, end, u, num_options, options):
+    """
+        Mutate the discrete part of a Mixed-Integer representation
+
+        :param individual:      The individual to mutate
+        :param begin:           Start index of the discrete part of the individual's representation
+        :param end:             End index of the discrete part of the individual's representation
+        :param u:               A pre-determined random value from a Gaussian distribution
+        :param num_options:     List :data:`~code.num_options` with the number of available modules per module position
+                                that are available to choose from
+        :param options:         List of tuples :data:`~code.options` with the number of tunable parameters per module
+        :return:                A boolean mask array to be used for further conditional mutations based on which modules
+                                are active
+    """
     conditional_mask = [True,True,True,True,True,True,True]
     for x in range(begin, end):
         if individual.genotype[x] is not None:
@@ -328,8 +341,8 @@ def MIES_MutateDiscrete(individual, begin, end, u, num_options, options):
             tau = 1 / sqrt(2 * individual.num_discrete)
             tau_prime = 1 / sqrt(2 * sqrt(individual.num_discrete))
             individual.stepSizeOffsetMIES[x] = 1 / (
-            1 + ((1 - individual.stepSizeOffsetMIES[x]) / individual.stepSizeOffsetMIES[x]) * exp(
-                (-tau) * u - tau_prime * gauss(0.5, 1)))
+                1 + ((1 - individual.stepSizeOffsetMIES[x]) / individual.stepSizeOffsetMIES[x]) * exp(
+                    (-tau) * u - tau_prime * gauss(0.5, 1)))
             # Keep stepsize within the bounds
             baseMIESstep = 1 / (3 * num_options[x])  # p'_i = T[ 1 / (3n_d) , 0.5]
             individual.stepSizeOffsetMIES[x] = _keepInBounds(individual.stepSizeOffsetMIES[x], baseMIESstep, 0.5)
@@ -342,13 +355,22 @@ def MIES_MutateDiscrete(individual, begin, end, u, num_options, options):
                     temparray.append(i)
                 temparray.remove(individual.genotype[x])
                 individual.genotype[x] = random.choice(temparray)
-            for i in range (options[x][2]):
+            for i in range(options[x][2]):
                 conditional_mask.append(individual.genotype[x])
 
     return conditional_mask
 
 
 def MIES_MutateIntegers(individual, begin, end, u, param):
+    """
+        Mutate the integer part of a Mixed-Integer representation
+
+        :param individual:      The individual to mutate
+        :param begin:           Start index of the integer part of the individual's representation
+        :param end:             End index of the integer part of the individual's representation
+        :param u:               A pre-determined random value from a Gaussian distribution
+        :param param:           :class:`~code.Parameters.Parameters` object
+    """
     for x in range(begin, end):
         if individual.genotype[x] is not None:
             u1 = np.random.random_sample()
@@ -367,6 +389,16 @@ def MIES_MutateIntegers(individual, begin, end, u, param):
 
 
 def MIES_MutateFloats(conditional_mask,individual, begin, end, u, param):
+    """
+        Mutate the floating point part of a Mixed-Integer representation
+
+        :param conditional_mask:    Conditional mask that determines which floating point values are allowed to mutate
+        :param individual:          The individual to mutate
+        :param begin:               Start index of the integer part of the individual's representation
+        :param end:                 End index of the integer part of the individual's representation
+        :param u:                   A pre-determined random value from a Gaussian distribution
+        :param param:               :class:`~code.Parameters.Parameters` object
+    """
     for x in range(begin, end):
         if individual.genotype[x] is not None and conditional_mask[x-(individual.num_discrete+individual.num_ints)]:
             tau = 1 / sqrt(2 * individual.num_floats)
@@ -390,6 +422,6 @@ def MIES_Mutate(individual, param, options, num_options):
 
     u = gauss(0.5, 1)
 
-    conditional_mask = MIES_MutateDiscrete(individual, 0, individual.num_discrete,u, num_options,options)
+    conditional_mask = MIES_MutateDiscrete(individual, 0, individual.num_discrete, u, num_options, options)
     MIES_MutateIntegers(individual, individual.num_discrete, individual.num_discrete+individual.num_ints, u, param)
-    MIES_MutateFloats(conditional_mask,individual,individual.num_discrete+individual.num_ints,individual.n, u,param)
+    MIES_MutateFloats(conditional_mask, individual, individual.num_discrete+individual.num_ints, individual.n, u, param)
