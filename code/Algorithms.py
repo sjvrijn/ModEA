@@ -11,13 +11,13 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 import numpy as np
 from copy import copy
 from functools import partial
-#from mpi4py import MPI
 from multiprocessing import Pool
 from numpy import ceil, floor, log, ones
 # Internal classes
-from .Individual import FloatIndividual
+from .Individual import FloatIndividual, MixedIntIndividual
 from .Parameters import Parameters
-from code import allow_parallel, num_threads, Config
+from code import allow_parallel, num_threads, Config, options, num_options_per_module, MPI
+from code.Utils import create_bounds, ESFitness
 # Internal modules
 import code.Mutation as Mut
 import code.Recombination as Rec
@@ -178,7 +178,7 @@ def CMA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
     parameters = Parameters(n, budget, mu, lambda_, elitist=elitist)
     population = [FloatIndividual(n) for _ in range(mu)]
 
-    # Artificial init: in hopes of fixing CMA-ES
+    # Artificial init
     wcm = parameters.wcm
     for individual in population:
         individual.genotype = wcm
@@ -390,7 +390,7 @@ class _CMSA_ES(object):
         def select(pop, new_pop, _, params):
             return Sel.best(pop, new_pop, params)
         self.select = select
-        def mutateParameters(t):
+        def mutateParameters(_):
             return self.parameters.selfAdaptCovarianceMatrix()
         self.mutateParameters = mutateParameters
 
@@ -442,7 +442,7 @@ def CMSA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
     mutate = partial(Mut.CMAMutation, sampler=Sam.GaussianSampling(n))
     def select(pop, new_pop, _, params):
         return Sel.best(pop, new_pop, params)
-    def mutateParameters(t):
+    def mutateParameters(_):
         return parameters.selfAdaptCovarianceMatrix()
 
     functions = {
@@ -792,6 +792,120 @@ class _BaseOptimizer(object):
         pass
 
 
+def GA(n, fitnessFunction, budget):
+    """
+        Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function
+
+        :param n:               Dimensionality of the search-space for the GA
+        :param fitnessFunction: Fitness function the GA should use to evaluate candidate solutions
+        :param budget:          The budget for the GA
+        :returns:               A tuple containing a bunch of optimization results
+    """
+
+    GA_mu = Config.GA_mu
+    GA_lambda = Config.GA_lambda
+
+    parameters = Parameters(len(options) + 15, budget, mu=GA_mu, lambda_=GA_lambda)
+    parameters.l_bound[len(options):] = np.array([  2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15,1)
+    parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15,1)
+
+    # Initialize the first individual in the population
+    population = [MixedIntIndividual(n, num_discrete=len(num_options_per_module), num_ints=1)]
+    int_part = [np.random.randint(len(x[1])) for x in options]
+    int_part.append(None)
+    float_part = [None, None, None, None, None, None, None, None, None, None, None, None, None, None]
+
+    population[0].genotype = np.array(int_part + float_part)
+    population[0].fitness = ESFitness()
+
+    while len(population) < GA_mu:
+        population.append(copy(population[0]))
+
+    # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
+    recombine = Rec.random
+    mutate = partial(Mut.mutateMixedInteger, options=options, num_options_per_module=num_options_per_module)
+    best = Sel.bestGA
+    def select(pop, new_pop, _, params):
+        return best(pop, new_pop, params)
+    def mutateParameters(_):
+        pass  # The only actual parameter mutation is the self-adaptive step-size of each individual
+
+    functions = {
+        'recombine': recombine,
+        'mutate': mutate,
+        'select': select,
+        'mutateParameters': mutateParameters,
+    }
+    # TODO FIXME: parallel currently causes ValueError: I/O operation on closed file
+    _, results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters,
+                               parallel=Config.GA_evaluate_parallel, debug=Config.GA_debug)
+    return results
+
+
+def MIES(n, fitnessFunction, budget):
+    """
+        Defines a Mixed-Integer Evolution Strategy (MIES) that evolves an Evolution Strategy (ES) for a given fitness function
+
+        :param n:               Dimensionality of the search-space for the MIES
+        :param fitnessFunction: Fitness function the MIES should use to evaluate candidate solutions
+        :param budget:          The budget for the MIES
+        :returns:               A tuple containing a bunch of optimization results
+    """
+
+    GA_mu = Config.GA_mu
+    GA_lambda = Config.GA_lambda
+
+    parameters = Parameters(len(options) + 15, budget, mu=GA_mu, lambda_=GA_lambda)
+    # initialize the upper and lower bound, later to be changed by creat_bounds after the floats_part is set
+    parameters.l_bound[len(options):] = np.array([2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15)
+    parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15)
+
+    # Initialize the first individual in the population
+    discrete_part = [np.random.randint(len(x[1])) for x in options]
+    lamb = int(4 + floor(3 * log(parameters.n)))
+    int_part = [lamb]
+    float_part = [
+        parameters.mu,
+        parameters.alpha_mu, parameters.c_sigma, parameters.damps, parameters.c_c, parameters.c_1, parameters.c_mu,
+        0.2, 0.955,
+        0.5, 0, 0.3, 0.5,
+        2
+    ]
+
+    u_bound, l_bound = create_bounds(float_part, 0.3)
+    parameters.u_bound[len(options)+1:] = np.array(u_bound)
+    parameters.l_bound[len(options)+1:] = np.array(l_bound)
+
+    population = [
+        MixedIntIndividual(len(discrete_part) + len(int_part) + len(float_part), num_discrete=len(num_options_per_module),
+                           num_ints=len(int_part))]
+    population[0].genotype = np.array(discrete_part + int_part + float_part)
+    population[0].fitness = ESFitness()
+
+    while len(population) < GA_mu:
+        population.append(copy(population[0]))
+
+    # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
+    recombine = Rec.MIES_recombine
+    mutate = partial(Mut.MIES_Mutate, options=options, num_options=num_options_per_module)
+    best = Sel.bestGA
+
+    def select(pop, new_pop, _, params):
+        return best(pop, new_pop, params)
+
+    def mutateParameters(_):
+        pass  # The only actual parameter mutation is the self-adaptive step-size of each individual
+
+    functions = {
+        'recombine': recombine,
+        'mutate': mutate,
+        'select': select,
+        'mutateParameters': mutateParameters,
+    }
+
+    _, results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters,
+                               parallel=Config.GA_evaluate_parallel, debug=Config.GA_debug)
+    return results
 
 
 def localRestartAlgorithm(fitnessFunction, budget, functions, parameter_opts, parallel=False, debug=False):
@@ -1111,7 +1225,6 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
     generation_size = []
     best_individual = population[0]
 
-    improvement_found = False  # Has a better individual has been found? Used for sequential evaluation
     seq_cutoff = parameters.mu_int * parameters.seq_cutoff
 
     # Initialization
@@ -1132,7 +1245,6 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
 
     # Single recombination outside the eval loop to create the new population
     new_population = recombine(population, parameters)
-    mutEval = partial(_mutateAndEvaluate, mutate=mutate, fitFunc=fitnessFunction)
 
     # The main evaluation loop
     while used_budget < budget:
@@ -1141,37 +1253,18 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
             new_population = new_population[:-2]
 
         if parallel:
-            if Config.use_MPI:
-                fitnesses = []
-                for i in range(int(ceil(len(new_population) / Config.GA_num_parallel))):
-                    # In this case, it is hardcoded that the parallelization takes place one level further!!!!!!!!!
-                    genes = []
-                    for ind in new_population[i*Config.GA_num_parallel:(i+1)*Config.GA_num_parallel]:
-                        mutate(ind, parameters)
-                        genes.append(ind.genotype)
 
-                    fitnesses.extend(fitnessFunction(genes))
+            for ind in new_population:
+                mutate(ind, parameters)
+            fitnesses = fitnessFunction([ind.genotype for ind in new_population])  # Assumption: fitnessFunction is parallelized
+            for j, ind in enumerate(new_population):
+                ind.fitness = fitnesses[j]
 
-                for j, ind in enumerate(new_population):
-                    ind.fitness = fitnesses[j]
+            used_budget += parameters.lambda_
+            i = parameters.lambda_
 
-            else:
-                new_population = p.map(mutEval, new_population)
-
-            if sequential_evaluation:
-                for i, individual in enumerate(new_population):
-                    used_budget += 1
-                    if individual.fitness < best_individual.fitness:
-                        improvement_found = True  # Is the latest individual better?
-                    if i >= parameters.seq_cutoff and improvement_found:
-                        improvement_found = False  # Have we evaluated at least mu mutated individuals?
-                        break
-                    if used_budget == budget:
-                        break
-            else:
-                used_budget += parameters.lambda_
-                i = parameters.lambda_
         else:  # Sequential
+            improvement_found = False
             for i, individual in enumerate(new_population):
                 mutate(individual, parameters)  # Mutation
                 # Evaluation
@@ -1181,9 +1274,8 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
                 # Sequential Evaluation
                 if sequential_evaluation:  # Sequential evaluation: we interrupt once a better individual has been found
                     if individual.fitness < best_individual.fitness:
-                        improvement_found = True  # Is the latest individual better?
+                        improvement_found = True
                     if i >= seq_cutoff and improvement_found:
-                        improvement_found = False  # Have we evaluated at least mu mutated individuals?
                         break
                     if used_budget == budget:
                         break

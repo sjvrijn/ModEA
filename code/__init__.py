@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
-from multiprocessing import cpu_count
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 __version__ = '0.1.1'
+
+from multiprocessing import cpu_count
 
 num_threads = 1  # Default case, always true
 try:
@@ -15,6 +16,13 @@ try:
         allow_parallel = False
 except NotImplementedError:
     allow_parallel = False
+
+try:
+    from mpi4py import MPI
+    MPI_available = True
+except:
+    MPI = None
+    MPI_available = False
 
 
 # The following list contains all possible options from which the Evolving ES can choose.
@@ -43,8 +51,7 @@ initializable_parameters = (
 )
 
 
-# TODO: Rename, this is not a single number!
-num_options = [len(opt[1]) for opt in options]
+num_options_per_module = [len(opt[1]) for opt in options]
 
 def getVals(init_values):
     """

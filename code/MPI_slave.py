@@ -6,10 +6,10 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 ### NOTE: Do not remove these 'unused' imports! ###
 # The following are imports that are required by the functions that are passed to this MPI slave in order to run
-from code.GA import _fetchResults, evaluate_ES  # Required for the MPI calls for the GA
+from code.EvolvingES import runCustomizedES  # Required for the MPI calls for the GA
 
 import numpy as np
-from mpi4py import MPI
+from code import MPI
 comm = MPI.COMM_SELF.Get_parent()
 size = comm.Get_size()
 rank = comm.Get_rank()
@@ -17,6 +17,20 @@ rank = comm.Get_rank()
 
 
 def runSlaveRun():
+    """
+        This function has the sole purpose of performing the distributed computations in an MPI-setting, by running the
+        broadcast function on the scattered arguments.
+
+        N.B.: The broadcast function must be imported in this file for this method to work!
+
+        To use this function, call as follows:
+        >>> comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=num_procs)
+        >>> comm.bcast(runFunction, root=MPI.ROOT)
+        >>> comm.scatter(arguments, root=MPI.ROOT)
+        >>> comm.Barrier()
+        >>> results = comm.gather(results, root=MPI.ROOT)
+        >>> comm.Disconnect()
+    """
 
 
     np.set_printoptions(linewidth=1000)
@@ -28,7 +42,7 @@ def runSlaveRun():
     function = comm.bcast(function, root=0)
     arguments = comm.scatter(options, root=0)
 
-    results = function(arguments)
+    results = function(*arguments)
 
     comm.Barrier()
     comm.gather(results, root=0)

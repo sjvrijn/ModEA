@@ -80,9 +80,9 @@ class Parameters(BaseParameters):
             sigma = 1
 
         if l_bound is None or not isfinite(l_bound).all():
-            l_bound = ones((n)) * -5
+            l_bound = ones((n,)) * -5
         if u_bound is None or not isfinite(u_bound).all():
-            u_bound = ones((n)) * 5
+            u_bound = ones((n,)) * 5
 
         if seq_cutoff is None:
             seq_cutoff = mu * eff_lambda
@@ -168,7 +168,7 @@ class Parameters(BaseParameters):
         self.lambda_orig = self.lambda_large = self.lambda_small = self.lambda_
         self.pop_inc_factor = 2
         self.flat_fitness_index = int(min([ceil(0.1+self.lambda_/4.0), self.mu_int-1]))
-        self.nbin = 10 + ceil(30*n/lambda_)
+        self.nbin = 10 + int(ceil(30*n/lambda_))
         self.histfunevals = zeros(self.nbin)
 
         self.recent_best_fitnesses = []  # Contains the most recent best fitnesses of the 20 most recent generations
@@ -578,8 +578,8 @@ class Parameters(BaseParameters):
         restart_required = False
         diagC = diag(self.C).reshape(-1, 1)
         tmp = append(abs(self.p_c), sqrt(diagC), axis=1)
-        a = mod(evalcount/self.lambda_-1, self.n)
-        self.histfunevals[mod(evalcount/self.lambda_-1, self.nbin)] = fitnesses[0]
+        a = int(mod(evalcount/self.lambda_-1, self.n))
+        self.histfunevals[int(mod(evalcount/self.lambda_-1, self.nbin))] = fitnesses[0]
 
         self.recent_best_fitnesses.append(fitnesses[0])
         self.recent_best_fitnesses = self.recent_best_fitnesses[-20:]

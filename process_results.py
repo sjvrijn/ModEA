@@ -15,14 +15,9 @@ from collections import Counter, namedtuple
 from datetime import timedelta
 from code import getPrintName, getOpts
 from code.Utils import ESFitness, intToRepr, reprToInt, reprToString
+from code.local import brute_location, ga_location, raw_bfname, raw_ganame
 
 np.set_printoptions(linewidth=156)
-brute_location = 'C:\\Users\\Sander\\Dropbox\\Liacs\\DAS4\\Experiments\\BF runs'
-raw_bfname = 'data/bruteforce_{}_f{}.tdat'
-
-ga_location = 'C:\\Users\\Sander\\Dropbox\\Liacs\\DAS4\\Experiments\\GA runs'  # laptop
-# ga_location = '/home/sander/Dropbox/Liacs/Semester12/Thesis/test_results'  # desktop
-raw_ganame = 'data\\GA_results_{}dim_f{}.tdat'
 
 dimensions = [2, 3, 5, 10, 20]
 functions = range(1, 25)
@@ -639,6 +634,15 @@ def datToArff(input, output, dim):
 %      (b) Donor: Sander van Rijn
 %      (c) Date: January, 2017
 %
+% 3. Remark:
+%      The 'class' value is the pre-computed q-score.
+%      This q-score is defined as follows:
+%
+%      q = ERT/max_ERT       if ERT exists
+%        = 1 + FCE/max_FCE   else
+%
+%      where for this dataset, max_ERT = {ERT} and max_FCE = {FCE}
+%
 @RELATION ESs
 
 @ATTRIBUTE active       NUMERIC
@@ -664,10 +668,10 @@ def datToArff(input, output, dim):
 
     with open(output, 'w') as f:
 
-        f.write(arff_header)
-
         max_ERT = 32 * 1000 * dim
         max_FCE = max(FCEs)
+
+        f.write(arff_header.format(ERT=max_ERT, FCE=max_FCE))
 
         for single_result in fitnesses:
 

@@ -85,6 +85,29 @@ def intToRepr(integer):
     return representation
 
 
+def create_bounds(values, percentage):
+    """
+        For a given set of floating point values, create an upper and lower bound.
+        Bound values are defined as a percentage above/below the given values.
+
+        :param values:      List of floating point input values.
+        :param percentage:  The percentage value to use, expected as a fraction in the range (0, 1).
+        :return:            Tuple (u_bound, l_bound), each a regular list.
+    """
+    if percentage <= 0 or percentage >= 1:
+        raise Exception("Argument 'percentage' is expected to be a float from the range (0, 1).")
+
+    u_perc = 1 + percentage
+    l_perc = 1 - percentage
+
+    bounds = []
+    for val in values:
+        bound = (val * u_perc, val * l_perc) if val != 0 else (0, 1)
+        bounds.append(bound)
+
+    u_bound, l_bound = zip(*bounds)
+    return list(u_bound), list(l_bound)
+
 
 @total_ordering
 class ESFitness(object):

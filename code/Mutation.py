@@ -17,6 +17,11 @@ from random import gauss
 from math import sqrt
 
 
+'''-----------------------------------------------------------------------------
+#                          Mutation Helper Functions                           #
+-----------------------------------------------------------------------------'''
+
+
 def _keepInBounds(x, l_bound, u_bound):
     """
         This function transforms x to t w.r.t. the low and high
@@ -57,53 +62,6 @@ def adaptStepSize(individual):
     offset = 1 + ((1 - offset) / offset)
     offset = 1 / (offset * exp(gamma * gauss(0, 1)))
     individual.stepSizeOffset = min(offset, (individual.maxStepSize - individual.baseStepSize))
-
-
-def addRandomOffset(individual, param, sampler):
-    """
-        Mutation 1: x = x + sigma*N(0,I)
-
-        :param individual:  :class:`~code.Individual.FloatIndividual` to be mutated
-        :param param:       :class:`~code.Parameters.Parameters` object to store settings
-        :param sampler:     :mod:`~code.Sampling` module from which the random values should be drawn
-    """
-    individual.genotype += param.sigma * sampler.next()
-
-
-def CMAMutation(individual, param, sampler, threshold_convergence=False):
-    """
-        CMA mutation: x = x + (sigma * B*D*N(0,I))
-
-        :param individual:              :class:`~code.Individual.FloatIndividual` to be mutated
-        :param param:                   :class:`~code.Parameters.Parameters` object to store settings
-        :param sampler:                 :mod:`~code.Sampling` module from which the random values should be drawn
-        :param threshold_convergence:   Boolean: Should threshold convergence be applied. Default: False
-    """
-
-    individual.last_z = sampler.next()
-
-    if threshold_convergence:
-        individual.last_z = _scaleWithThreshold(individual.last_z, param.threshold)
-
-    individual.mutation_vector = dot(param.B, (param.D * individual.last_z))  # y_k in cmatutorial.pdf)
-    mutation_vector = individual.mutation_vector * param.sigma
-
-    individual.genotype = _keepInBounds(add(individual.genotype, mutation_vector), param.l_bound, param.u_bound)
-
-
-def choleskyCMAMutation(individual, param, sampler):
-    """
-        Cholesky CMA based mutation
-
-        :param individual:  :class:`~code.Individual.FloatIndividual` to be mutated
-        :param param:       :class:`~code.Parameters.Parameters` object to store settings
-        :param sampler:     :mod:`~code.Sampling` module from which the random values should be drawn
-    """
-
-    param.last_z = sampler.next()
-    mutation_vector = np.dot(param.A, param.last_z.T)
-
-    individual.genotype += param.sigma * mutation_vector
 
 
 def _scaleWithThreshold(mutation_vector, threshold):
@@ -154,10 +112,66 @@ def _getXi():
         return 7/5
 
 
-### GA MUTATIONS ###
+'''-----------------------------------------------------------------------------
+#                                ES Mutations                                  #
+-----------------------------------------------------------------------------'''
+
+
+def addRandomOffset(individual, param, sampler):
+    """
+        Mutation 1: x = x + sigma*N(0,I)
+
+        :param individual:  :class:`~code.Individual.FloatIndividual` to be mutated
+        :param param:       :class:`~code.Parameters.Parameters` object to store settings
+        :param sampler:     :mod:`~code.Sampling` module from which the random values should be drawn
+    """
+    individual.genotype += param.sigma * sampler.next()
+
+
+def CMAMutation(individual, param, sampler, threshold_convergence=False):
+    """
+        CMA mutation: x = x + (sigma * B*D*N(0,I))
+
+        :param individual:              :class:`~code.Individual.FloatIndividual` to be mutated
+        :param param:                   :class:`~code.Parameters.Parameters` object to store settings
+        :param sampler:                 :mod:`~code.Sampling` module from which the random values should be drawn
+        :param threshold_convergence:   Boolean: Should threshold convergence be applied. Default: False
+    """
+
+    individual.last_z = sampler.next()
+
+    if threshold_convergence:
+        individual.last_z = _scaleWithThreshold(individual.last_z, param.threshold)
+
+    individual.mutation_vector = dot(param.B, (param.D * individual.last_z))  # y_k in cmatutorial.pdf)
+    mutation_vector = individual.mutation_vector * param.sigma
+
+    individual.genotype = _keepInBounds(add(individual.genotype, mutation_vector), param.l_bound, param.u_bound)
+
+
+def choleskyCMAMutation(individual, param, sampler):
+    """
+        Cholesky CMA based mutation
+
+        :param individual:  :class:`~code.Individual.FloatIndividual` to be mutated
+        :param param:       :class:`~code.Parameters.Parameters` object to store settings
+        :param sampler:     :mod:`~code.Sampling` module from which the random values should be drawn
+    """
+
+    param.last_z = sampler.next()
+    mutation_vector = np.dot(param.A, param.last_z.T)
+
+    individual.genotype += param.sigma * mutation_vector
+
+
+'''-----------------------------------------------------------------------------
+#                                GA Mutations                                  #
+-----------------------------------------------------------------------------'''
+
+
 def mutateBitstring(individual):
     """
-        Extremely simple 1/n bit-flip mutation
+        Simple 1/n bit-flip mutation
 
         :param individual:  :mod:`~code.Individual` with a bit-string as genotype to undergo p=1/n mutation
     """
@@ -169,21 +183,21 @@ def mutateBitstring(individual):
             bitstring[i] = 1-bitstring[i]
 
 
-def mutateIntList(individual, param, num_options):
+def mutateIntList(individual, param, num_options_per_module):
     """
         Self-adaptive random integer mutation to mutate the structure of an ES
 
-        :param individual:  :class:`~code.Individual.MixedIntegerIndividual` whose integer-part will be mutated
-        :param param:       :class:`~code.Parameters.Parameters` object
-        :param num_options: List :data:`~code.num_options` with the number of available modules per module position
-                            that are available to choose from
+        :param individual:              :class:`~code.Individual.MixedIntegerIndividual` whose integer-part will be mutated
+        :param param:                   :class:`~code.Parameters.Parameters` object
+        :param num_options_per_module:  List :data:`~code.num_options` with the number of available modules per module
+                                        position that are available to choose from
     """
 
     p = individual.baseStepSize + individual.stepSizeOffset
     num_ints = individual.num_ints
 
     int_list = individual.genotype[:num_ints-1]  # Get the relevant slice
-    for i, val in enumerate(num_options):
+    for i, val in enumerate(num_options_per_module):
         if np.random.random() < p:
             # -1 as random_integers is [1, val], -1 to simulate leaving out the current value
             new_int = np.random.random_integers(val-1)-1
@@ -199,7 +213,7 @@ def mutateIntList(individual, param, num_options):
 
 def mutateFloatList(individual, param, options):
     """
-        Self-adaptive, uniformly random real mutation to mutate the tunable parameters for the structure of an ES
+        Self-adaptive, uniformly random floating point mutation on the tunable parameters of an ES
 
         :param individual:  :class:`~code.Individual.MixedIntegerIndividual` whose integer-part will be mutated
         :param param:       :class:`~code.Parameters.Parameters` object
@@ -227,118 +241,107 @@ def mutateFloatList(individual, param, options):
     float_part[combined_mask] = (random_values[1][combined_mask] * search_space[combined_mask]) + l_bound[combined_mask]
 
 
-def mutateMixedInteger(individual, param, options, num_options):
+def mutateMixedInteger(individual, param, options, num_options_per_module):
     """
         Self-adaptive mixed-integer mutation of the structure of an ES
 
-        :param individual:  :class:`~code.Individual.MixedIntegerIndividual` whose integer-part will be mutated
-        :param param:       :class:`~code.Parameters.Parameters` object
-        :param options:     List of tuples :data:`~code.options` with the number of tunable parameters per module
-        :param num_options: List :data:`~code.num_options` with the number of available modules per module position
-                            that are available to choose from
+        :param individual:              :class:`~code.Individual.MixedIntegerIndividual` whose integer-part will be mutated
+        :param param:                   :class:`~code.Parameters.Parameters` object
+        :param options:                 List of tuples :data:`~code.options` with the number of tunable parameters per module
+        :param num_options_per_module:  List :data:`~code.num_options` with the number of available modules per module position
+                                        that are available to choose from
     """
     adaptStepSize(individual)
-    # print(individual.stepSizeOffset)
-    mutateIntList(individual, param, num_options)
+    mutateIntList(individual, param, num_options_per_module)
     mutateFloatList(individual, param, options)
 
 
-def swapFloatsOut(individual, value):
-    if individual.genotype[individual.num_discrete+ individual.num_ints + value] is not None:
-        individual.genotype_temp[value] = individual.genotype[individual.num_discrete + individual.num_ints + value]
-        individual.genotype[individual.num_discrete+ individual.num_ints + value] = None
+'''-----------------------------------------------------------------------------
+#                               MIES Mutations                                 #
+-----------------------------------------------------------------------------'''
 
-
-def swapFloatsIn(individual, value):
-    if individual.genotype[individual.num_discrete + individual.num_ints + value] is None:
-        individual.genotype[individual.num_discrete+individual.num_ints+value] = individual.genotype_temp[value]
-        individual.genotype_temp[value] = None
-
-
-def CheckParamsUsed(individual, options):
-    for x in range(individual.num_discrete):
-        if options[x][0] == "threshold":
-            if individual.genotype[x] == 0:
-                swapFloatsOut(individual, 7)
-                swapFloatsOut(individual, 8)
-            else:
-                swapFloatsIn(individual, 6)
-                swapFloatsIn(individual, 7)
-        if options[x][0] == "tpa":
-            if individual.genotype[x] == 0:
-                swapFloatsOut(individual, 9)
-                swapFloatsOut(individual, 10)
-                swapFloatsOut(individual, 11)
-                swapFloatsOut(individual, 12)
-            else:
-                swapFloatsIn(individual, 9)
-                swapFloatsIn(individual, 10)
-                swapFloatsIn(individual, 11)
-                swapFloatsIn(individual, 12)
-        if options[x][0] == "ipop":
-            if individual.genotype[x] == 0:
-                swapFloatsOut(individual, 13)
-            else:
-                swapFloatsIn(individual, 13)
 
 def MIES_MutateDiscrete(individual, begin, end, u, num_options, options):
-    # CheckParamsUsed(individual, options)
-    # cond_mask = [True, True, True, True, True, True, True] # standard CMA-ES values
-    # for i, val in enumerate(options):
-    #     cond_mask.extend([bool(individual.genotype[i] * 1)] * val[2])
-    conditional_mask=[True,True,True,True,True,True,True]
+    """
+        Mutate the discrete part of a Mixed-Integer representation
+
+        :param individual:      The individual to mutate
+        :param begin:           Start index of the discrete part of the individual's representation
+        :param end:             End index of the discrete part of the individual's representation
+        :param u:               A pre-determined random value from a Gaussian distribution
+        :param num_options:     List :data:`~code.num_options` with the number of available modules per module position
+                                that are available to choose from
+        :param options:         List of tuples :data:`~code.options` with the number of tunable parameters per module
+        :return:                A boolean mask array to be used for further conditional mutations based on which modules
+                                are active
+    """
+    conditional_mask = [True,True,True,True,True,True,True]
     for x in range(begin, end):
         if individual.genotype[x] is not None:
 
             # set stepsize
-
             tau = 1 / sqrt(2 * individual.num_discrete)
             tau_prime = 1 / sqrt(2 * sqrt(individual.num_discrete))
             individual.stepSizeOffsetMIES[x] = 1 / (
-            1 + ((1 - individual.stepSizeOffsetMIES[x]) / individual.stepSizeOffsetMIES[x]) * exp(
-                (-tau) * u - tau_prime * gauss(0.5, 1)))
+                1 + ((1 - individual.stepSizeOffsetMIES[x]) / individual.stepSizeOffsetMIES[x]) * exp(
+                    (-tau) * u - tau_prime * gauss(0.5, 1)))
             # Keep stepsize within the bounds
             baseMIESstep = 1 / (3 * num_options[x])  # p'_i = T[ 1 / (3n_d) , 0.5]
             individual.stepSizeOffsetMIES[x] = _keepInBounds(individual.stepSizeOffsetMIES[x], baseMIESstep, 0.5)
 
-            threshold = np.random.random_integers(0, 10000) / 10000
+            threshold = np.random.random_sample()
             # change discrete
-            if (threshold < individual.stepSizeOffsetMIES[x]):
+            if threshold < individual.stepSizeOffsetMIES[x]:
                 temparray = []
                 for i in range(num_options[x]):
                     temparray.append(i)
                 temparray.remove(individual.genotype[x])
                 individual.genotype[x] = random.choice(temparray)
-            for i in range (options[x][2]):
+            for i in range(options[x][2]):
                 conditional_mask.append(individual.genotype[x])
 
-    # conditional_mask=[True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True]
     return conditional_mask
 
-def MIES_MutateIntegers(individual, begin, end, u,param):
+
+def MIES_MutateIntegers(individual, begin, end, u, param):
+    """
+        Mutate the integer part of a Mixed-Integer representation
+
+        :param individual:      The individual to mutate
+        :param begin:           Start index of the integer part of the individual's representation
+        :param end:             End index of the integer part of the individual's representation
+        :param u:               A pre-determined random value from a Gaussian distribution
+        :param param:           :class:`~code.Parameters.Parameters` object
+    """
     for x in range(begin, end):
         if individual.genotype[x] is not None:
-            u1 = np.random.random_integers(0, 9999) / 10000
-            u2 = np.random.random_integers(0, 9999) / 10000
+            u1 = np.random.random_sample()
+            u2 = np.random.random_sample()
             tau = 1 / sqrt(2 * individual.num_ints)
             tau_prime = 1 / sqrt(2 * sqrt(individual.num_ints))
             individual.stepSizeOffsetMIES[x] = max(1,
                                                    individual.stepSizeOffsetMIES[x] * exp(tau * u + tau_prime * gauss(0.5, 1)))
             psi = 1 - (individual.stepSizeOffsetMIES[x] / individual.num_ints) / (
-            1 + sqrt(1 + pow(individual.stepSizeOffsetMIES[x] / individual.num_ints, 2)))
+                1 + sqrt(1 + pow(individual.stepSizeOffsetMIES[x] / individual.num_ints, 2)))
             G1 = int(floor(np.log(1 - u1) / np.log(1 - psi)))
             G2 = int(floor(np.log(1 - u2) / np.log(1 - psi)))
             individual.genotype[x] = individual.genotype[x] + G1 - G2
             # Keep the change within the bounds
-            print("upperbound/lowerbound",param.u_bound[x],param.l_bound[x])
             individual.genotype[x] = int(_keepInBounds(individual.genotype[x], param.l_bound[x], param.u_bound[x]))
-            print("noway",individual.genotype[x])
 
 
 def MIES_MutateFloats(conditional_mask,individual, begin, end, u, param):
-    print(conditional_mask)
+    """
+        Mutate the floating point part of a Mixed-Integer representation
+
+        :param conditional_mask:    Conditional mask that determines which floating point values are allowed to mutate
+        :param individual:          The individual to mutate
+        :param begin:               Start index of the integer part of the individual's representation
+        :param end:                 End index of the integer part of the individual's representation
+        :param u:                   A pre-determined random value from a Gaussian distribution
+        :param param:               :class:`~code.Parameters.Parameters` object
+    """
     for x in range(begin, end):
-        print(individual.genotype[x], conditional_mask[x-(individual.num_discrete+individual.num_ints)])
         if individual.genotype[x] is not None and conditional_mask[x-(individual.num_discrete+individual.num_ints)]:
             tau = 1 / sqrt(2 * individual.num_floats)
             tau_prime = 1 / sqrt(2 * sqrt(individual.num_floats))
@@ -347,8 +350,8 @@ def MIES_MutateFloats(conditional_mask,individual, begin, end, u, param):
             individual.genotype[x] = _keepInBounds(individual.genotype[x] + individual.stepSizeOffsetMIES[x],
                                                    param.l_bound[x], param.u_bound[x])
 
-def MIES_Mutate(individual, param, options, num_options):
 
+def MIES_Mutate(individual, param, options, num_options):
     """
         Self-adaptive mixed-integer mutation of the structure of an ES
 
@@ -361,8 +364,6 @@ def MIES_Mutate(individual, param, options, num_options):
 
     u = gauss(0.5, 1)
 
-    conditional_mask = MIES_MutateDiscrete(individual, 0, individual.num_discrete,u, num_options,options )
+    conditional_mask = MIES_MutateDiscrete(individual, 0, individual.num_discrete, u, num_options, options)
     MIES_MutateIntegers(individual, individual.num_discrete, individual.num_discrete+individual.num_ints, u, param)
-    MIES_MutateFloats(conditional_mask,individual,individual.num_discrete+individual.num_ints,individual.n, u,param )
-    # print("full genotype",individual.genotype)
-    # print("full temp floats", individual.genotype_temp)
+    MIES_MutateFloats(conditional_mask, individual, individual.num_discrete+individual.num_ints, individual.n, u, param)
