@@ -283,7 +283,13 @@ def runPool(runFunction, arguments):
         :return:            List of any results produced by ``runFunction``
     """
     p = Pool(min(num_threads, len(arguments)))
-    results = p.map(runFunction, arguments)
+
+    # Inline function definition to allow the passing of multiple arguments to 'runFunction' through 'Pool.map'
+    def func_star(a_b, func):
+        """Convert `f([1,2])` to `f(1,2)` call."""
+        return func(*a_b)
+
+    results = p.map(partial(func_star, func=runFunction), arguments)
     return results
 
 
