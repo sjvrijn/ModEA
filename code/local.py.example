@@ -12,6 +12,10 @@ __author__ = 'Sander van Rijn'
 __email__ = 's.j.van.rijn@liacs.leidenuniv.nl'
 
 
+### MPI Core-Counts ###
+MPI_num_host_threads = 16  # Number of available threads per host
+MPI_num_hosts = 12         # Number of available hosts
+
 ### Data Generation ###
 datapath = "test_results/"  # Where to store results
 non_bbob_datapath = "ga_results/"  # Where to store the results I personally generate
