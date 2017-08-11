@@ -8,6 +8,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
+import os
 import numpy as np
 from functools import total_ordering
 
@@ -126,6 +127,15 @@ def chunkListByLength(iterable, length):
     while start < len(iterable):
         yield iterable[start:end]
         start, end = end, end+length
+
+
+def guaranteeFolderExists(path_name):
+    try:
+        os.mkdir(path_name)
+    except OSError:
+        pass  # Folder exists, nothing to be done
+
+    return path_name
 
 
 @total_ordering
