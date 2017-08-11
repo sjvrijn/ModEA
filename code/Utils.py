@@ -34,7 +34,7 @@ def reprToString(representation):
         :param representation:  Iterable; the genotype of the ES-structure
         :returns:               String consisting of all structure choices concatenated, e.g.: ``00000101010``
     """
-    max_length = 11  # Hardcoded
+    max_length = 11  # TODO FIXME Hardcoded
     return ''.join([str(i) for i in representation[:max_length]])
 
 
@@ -49,7 +49,7 @@ def reprToInt(representation):
         :param representation:  Iterable; the genotype of the ES-structure
         :returns:               String consisting of all structure choices concatenated,
     """
-    # Hardcoded
+    # TODO FIXME Hardcoded
     max_length = 11
     factors = [2304, 1152, 576, 288, 144, 72, 36, 18, 9, 3, 1]
     integer = 0
@@ -67,10 +67,10 @@ def intToRepr(integer):
         >>> intToRepr(93)
         >>> [0,0,0,0,0,1,0,1,0,1,0]
 
-        :param integer: Integer (e.g. outoutput from
+        :param integer: Integer (e.g. outoutput from reprToInt() )
         :returns:       String consisting of all structure choices concatenated,
     """
-    # Hardcoded
+    # TODO FIXME Hardcoded
     max_length = 11
     factors = [2304, 1152, 576, 288, 144, 72, 36, 18, 9, 3, 1]
     representation = []
@@ -107,6 +107,25 @@ def create_bounds(values, percentage):
 
     u_bound, l_bound = zip(*bounds)
     return list(u_bound), list(l_bound)
+
+
+def chunkListByLength(iterable, length):
+    """
+        Given a list, defines a generator that slices it into 'chunks'
+
+        >>> chunkListByLength(range(10), 3)
+        <generator object chunkListByLength at 0x...>
+        >>> list(chunkListByLength(range(10), 3))
+        [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
+
+        :param iterable:    The list to be split into chunks
+        :param length:      The maximum length of each chunk
+        :return:            Returns each chunk in order of the original list
+    """
+    start, end = 0, length
+    while start < len(iterable):
+        yield iterable[start:end]
+        start, end = end, end+length
 
 
 @total_ordering
