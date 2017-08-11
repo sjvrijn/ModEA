@@ -17,7 +17,7 @@ from code import getBitString, getOpts, getPrintName, getVals, options, initiali
 from code import Config
 from code import allow_parallel, MPI_available, MPI
 from code.Algorithms import GA, MIES, customizedES
-from code.Utils import ESFitness
+from code.Utils import chunkListByLength, ESFitness
 from code.local import datapath, non_bbob_datapath
 
 # BBOB parameters: Sets of noise-free and noisy benchmarks
@@ -259,7 +259,7 @@ def runMPI(runFunction, arguments):
     results = []
     num_parallel = Config.MPI_num_total_threads
 
-    for args in zip(*(iter(arguments),) * num_parallel):
+    for args in chunkListByLength(arguments, num_parallel):
         res = None  # Required pre-initialization of the variable that will receive the data from comm.gather()
 
         comm = MPI.COMM_SELF.Spawn(sys.executable, args=['code/MPI_slave.py'], maxprocs=num_parallel)  # Initialize
