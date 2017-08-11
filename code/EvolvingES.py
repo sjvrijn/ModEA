@@ -256,15 +256,20 @@ def runMPI(runFunction, arguments):
         :param arguments:   The arguments to passed distributedly to ``runFunction``
         :return:            List of any results produced by ``runFunction``
     """
-    results = None  # Required pre-initialization of the variable that will receive the data from comm.gather()
+    results = []
+    num_parallel = Config.MPI_num_total_threads
 
-    comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'],
-                               maxprocs=(min(Config.MPI_num_total_threads, len(arguments))))  # Initialize
-    comm.bcast(runFunction, root=MPI.ROOT)          # Equal for all processes
-    comm.scatter(arguments, root=MPI.ROOT)          # Different for each process
-    comm.Barrier()                                  # Wait for everything to finish...
-    results = comm.gather(results, root=MPI.ROOT)   # And gather everything up
-    comm.Disconnect()
+    for args in zip(*(iter(arguments),) * num_parallel):
+        res = None  # Required pre-initialization of the variable that will receive the data from comm.gather()
+
+        comm = MPI.COMM_SELF.Spawn(sys.executable, args=['code/MPI_slave.py'], maxprocs=num_parallel)  # Initialize
+        comm.bcast(runFunction, root=MPI.ROOT)    # Equal for all processes
+        comm.scatter(args, root=MPI.ROOT)         # Different for each process
+        comm.Barrier()                            # Wait for everything to finish...
+        res = comm.gather(res, root=MPI.ROOT)     # And gather everything up
+        comm.Disconnect()
+
+        results.extend(res)
 
     return results
 
