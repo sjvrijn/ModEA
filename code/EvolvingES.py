@@ -17,7 +17,7 @@ from code import getBitString, getOpts, getPrintName, getVals, options, initiali
 from code import Config
 from code import allow_parallel, MPI_available, MPI
 from code.Algorithms import GA, MIES, customizedES
-from code.Utils import chunkListByLength, ESFitness
+from code.Utils import chunkListByLength, guaranteeFolderExists, reprToString, ESFitness
 from code.local import datapath, non_bbob_datapath
 
 # BBOB parameters: Sets of noise-free and noisy benchmarks
@@ -229,7 +229,8 @@ def runCustomizedES(representation, iid, ndim, fid, budget):
     """
     # Setup BBOB function + logging
     bbob_opts['algid'] = representation
-    f = fgeneric.LoggingFunction(datapath, **bbob_opts)
+    datapath_ext = '{}-{}-{}-{}/'.format(reprToString(representation), fid, ndim, iid)
+    f = fgeneric.LoggingFunction(guaranteeFolderExists(datapath + datapath_ext), **bbob_opts)
     f_target = f.setfun(*bbobbenchmarks.instantiate(fid, iinstance=iid)).ftarget
 
     # Interpret the representation into parameters for the ES
@@ -274,6 +275,12 @@ def runMPI(runFunction, arguments):
     return results
 
 
+# Inline function definition to allow the passing of multiple arguments to 'runFunction' through 'Pool.map'
+def func_star(a_b, func):
+    """Convert `f([1,2])` to `f(1,2)` call."""
+    return func(*a_b)
+
+
 def runPool(runFunction, arguments):
     """
         Small overhead-function to handle multi-processing using Python's built-in multiprocessing.Pool
@@ -284,12 +291,8 @@ def runPool(runFunction, arguments):
     """
     p = Pool(min(num_threads, len(arguments)))
 
-    # Inline function definition to allow the passing of multiple arguments to 'runFunction' through 'Pool.map'
-    def func_star(a_b, func):
-        """Convert `f([1,2])` to `f(1,2)` call."""
-        return func(*a_b)
-
-    results = p.map(partial(func_star, func=runFunction), arguments)
+    local_func = partial(func_star, func=runFunction)
+    results = p.map(local_func, arguments)
     return results
 
 
