@@ -836,7 +836,7 @@ def GA(n, fitnessFunction, budget):
         'select': select,
         'mutateParameters': mutateParameters,
     }
-    # TODO FIXME: parallel currently causes ValueError: I/O operation on closed file
+
     _, results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters,
                                parallel=Config.GA_evaluate_parallel, debug=Config.GA_debug)
     return results
