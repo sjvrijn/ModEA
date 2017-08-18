@@ -270,8 +270,9 @@ class MirroredOrthogonalSampling(object):
         :return:                A ``MirroredSampling`` object with as base sampler an ``OrthogonalSampling`` object
                                 initialized with the given parameters.
     """
-    def __init__(self, n, shape='col', base_sampler=None):
-        sampler = OrthogonalSampling(n, shape, base_sampler)
+    def __init__(self, n, lambda_, shape='col', base_sampler=None):
+        sampler = OrthogonalSampling(n, lambda_, shape, base_sampler)
+        self.base_sampler = sampler
         self.sampler = MirroredSampling(n, shape, sampler)
 
     def next(self):
