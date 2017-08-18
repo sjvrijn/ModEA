@@ -97,14 +97,14 @@ def create_bounds(values, percentage):
         :return:            Tuple (u_bound, l_bound), each a regular list.
     """
     if percentage <= 0 or percentage >= 1:
-        raise Exception("Argument 'percentage' is expected to be a float from the range (0, 1).")
+        raise ValueError("Argument 'percentage' is expected to be a float from the range (0, 1).")
 
     u_perc = 1 + percentage
     l_perc = 1 - percentage
 
     bounds = []
     for val in values:
-        bound = (val * u_perc, val * l_perc) if val != 0 else (0, 1)
+        bound = (val * u_perc, val * l_perc) if val != 0 else (1, 0)
         bounds.append(bound)
 
     u_bound, l_bound = zip(*bounds)
