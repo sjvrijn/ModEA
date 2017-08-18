@@ -53,7 +53,6 @@ class BaseSampler(object):
         return np.array(vector).reshape(*self.shape)
 
 
-
 class SamplingTest(unittest.TestCase):
     small_n = 5
     medium_n = 18
@@ -85,9 +84,6 @@ class SamplingTest(unittest.TestCase):
 
     def setUp(self):
         np.random.seed(42)
-
-    def tearDown(self):
-        pass
 
     sampling_setUp = setUp
 
@@ -202,6 +198,7 @@ class MirroredSamplingTest(SamplingTest):
 
     mirror_setUp = setUp
 
+
 class OrthogonalSamplingTest(SamplingTest):
 
     def setUp(self):
@@ -227,6 +224,7 @@ class OrthogonalSamplingTest(SamplingTest):
         self.assertAlmostEqual(np.dot(vector1.flatten(), vector2.flatten()), 0)
 
     orthogonal_setUp = setUp
+
 
 class MirroredOrthogonalSamplingTest(OrthogonalSamplingTest):
 
