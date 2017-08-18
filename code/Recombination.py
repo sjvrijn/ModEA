@@ -83,24 +83,25 @@ def weighted(pop, param):
     return new_population
 
 def MIES_recombine(pop, param):
-    # print("upperbound", param.u_bound)
-    # print("genotype:", pop[0].genotype)
-    # print("lowerbound", param.l_bound)
+    """
+        Returns a new set of individuals whose genotype is determined according to
+        the Mixed-Integer ES by Rui Li.
+
+        :param pop:     The population to be recombined
+        :param param:   :class:`~code.Parameters.Parameters` object
+        :returns:       A list of lambda individuals, with as genotype the weighted average of the given population.
+    """
     new_ind = copy(pop[0])
     new_population = [new_ind]
-    reco = 1
-    # print("new recombination")
-    for all in range(param.lambda_-1):
+    reco = 1  # TODO: Remove or store in Parameters
+
+    for _ in range(param.lambda_-1):
         # Select random individual from the current parent population
         c1 = np.random.random_integers(0, param.mu_int-1)
         c2 = np.random.random_integers(0, param.mu_int-1)
-        # Optional: replace by copy(choice(pop))
-
-        # print("c1:", c1)
-        # print("c2:",c2)
 
         if reco == 1:
-            new_population.append(copy(pop[c1]))
+            new_population.append(copy(pop[c1]))  # Optional: replace by copy(choice(pop))
         elif reco == 0:
             new_ind = copy(pop[c1])
             new_ind.fitness = None  # This is a choice
@@ -115,7 +116,6 @@ def MIES_recombine(pop, param):
             else:
                 print("c2 won")
                 new_population.append(copy(pop[c2]))
-    # for x in range (param.lambda_):
-    #     print("new pop",new_population[x])
+
     return new_population
 

@@ -121,7 +121,7 @@ class _CMA_ES(object):
         self.parameters = Parameters(n, budget, mu, lambda_, elitist=elitist)
         self.population = [FloatIndividual(n) for _ in range(mu)]
 
-        # Artificial init: in hopes of fixing CMA-ES
+        # TODO FIXME Artificial init: in hopes of fixing CMA-ES
         wcm = self.parameters.wcm
         for individual in self.population:
             individual.genotype = wcm

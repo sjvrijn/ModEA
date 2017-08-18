@@ -511,7 +511,7 @@ class Parameters(BaseParameters):
         """
             Defines a list of weights to be used in weighted recombination. Available options are:
 * ``1/n``: Each weight is set to 1/n
-* ``1/2^n``: Each weight is set to 1/2^n + (1/2^n)/mu
+* ``1/2^n``: Each weight is set to 1/2^i + (1/2^n)/mu
 * ``default``: Each weight is set to log((lambda-1)/2) - log(i)
 
             :param weights_option:  String to indicate which weights should be used.

@@ -15,6 +15,7 @@ from functools import total_ordering
 from code import Config
 
 
+# TODO: make function of Individual base-class
 def getFitness(individual):
     """
         Function that can be used as key when sorting

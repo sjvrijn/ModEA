@@ -37,7 +37,6 @@ def _keepInBounds(x, l_bound, u_bound):
         :returns:       An in-bounds kept version of the column vector ``x``
     """
 
-    # TODO: Move this check (or a similar one) to Parameters.py ?
     y = (x - l_bound) / (u_bound - l_bound)
     floor_y = floor(y)                              # Local storage to prevent double calls
     I = mod(floor_y, 2) == 0
@@ -330,7 +329,7 @@ def MIES_MutateIntegers(individual, begin, end, u, param):
             individual.genotype[x] = int(_keepInBounds(individual.genotype[x], param.l_bound[x], param.u_bound[x]))
 
 
-def MIES_MutateFloats(conditional_mask,individual, begin, end, u, param):
+def MIES_MutateFloats(conditional_mask, individual, begin, end, u, param):
     """
         Mutate the floating point part of a Mixed-Integer representation
 

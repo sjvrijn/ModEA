@@ -33,6 +33,7 @@ try:
     halton_available = True
 except ImportError:
     halton_available = False
+    Halton = None
 
 
 class GaussianSampling(object):
@@ -286,4 +287,4 @@ class MirroredOrthogonalSampling(object):
         """
             Reset the internal state of this sampler, so the next sample is forced to be taken new.
         """
-        return self.sampler.reset()
+        self.sampler.reset()

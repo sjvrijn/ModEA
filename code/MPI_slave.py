@@ -32,7 +32,6 @@ def runSlaveRun():
         >>> comm.Disconnect()
     """
 
-
     np.set_printoptions(linewidth=1000)
     function = None
     options = None
@@ -50,5 +49,4 @@ def runSlaveRun():
 
 
 if __name__ == '__main__':
-
     runSlaveRun()

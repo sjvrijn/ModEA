@@ -81,8 +81,8 @@ def _trimListOfListsByLength(lists):
         Given a list of lists of varying sizes, trim them to make the overall shape rectangular:
 
         >>> _trimListOfListsByLength([
-        ...     [1, 2, 3, 4, 5],
-        ...     [10, 20, 30],
+        ...     [1,   2,   3,   4,   5],
+        ...     [10,  20,  30],
         ...     ['a', 'b', 'c', 'd']
         ... ])
         [[1, 2, 3], [10, 20, 30], ['a', 'b', 'c']]
@@ -176,7 +176,7 @@ def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, storage
         :returns:               A list containing one instance of ESFitness representing the fitness of the defined ES
     """
 
-    # TODO: Expand this function to include number of repetitions per (ndim, fid, iid) combination?
+    # TODO: Expand this function to include number of repetitions per (ndim, fid, iid) combination
 
     representations = _ensureListOfLists(representations)
 

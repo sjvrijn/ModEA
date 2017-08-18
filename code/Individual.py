@@ -75,14 +75,13 @@ class MixedIntIndividual(object):
             raise MixedIntIndividualError("Number of discrete, integer or floating point values not specified")
 
         self.n = n
-        self.num_discrete = num_discrete  #if num_discrete is not None else n - num_floats  # num_discrete + num_floats = n
+        self.num_discrete = num_discrete
         self.num_ints = num_ints
         self.num_floats = n - (num_discrete + num_ints)
         self.genotype = np.ones((n, 1))                                       # Column vector
-        # self.genotype_temp=[np.ones(num_floats)]
         self.fitness = np.inf                                                 # Default 'unset' value
         self.sigma = 1
-        self.stepSizeOffsetMIES=np.ones(n)
+        self.stepSizeOffsetMIES = np.ones(n)
         # Self-adaptive step size parameters
         self.maxStepSize = 0.5
         self.initStepSize = 0.2
