@@ -126,27 +126,41 @@ class ESFitnessTest(unittest.TestCase):
         self.assertEqual(es4.FCE, float(42))
 
     def test_create_both_from_summary_values(self):
-        es = ESFitness(target=0,
-                       min_fitnesses=[ 0,  0,  40,  0,  0],
-                       min_indices=  [32, 48, 999, 16, 64],
-                       num_successful=4)
-        self.assertAlmostEqual(es.ERT, 289.75)
-        self.assertAlmostEqual(es.std_dev_ERT, 383.9335359147)
-        self.assertAlmostEqual(es.FCE, 8)
-        self.assertAlmostEqual(es.std_dev_FCE, 16)
+        ERT, FCE, std_dev_ERT, std_dev_FCE = ESFitness._calcFCEandERT(min_fitnesses=[ 0,  0,  40,  0,  0],
+                                                                      min_indices=  [32, 48, 999, 16, 64],
+                                                                      num_successful=4)
+        self.assertAlmostEqual(ERT, 289.75)
+        self.assertAlmostEqual(std_dev_ERT, 383.9335359147)
+        self.assertAlmostEqual(FCE, 8)
+        self.assertAlmostEqual(std_dev_FCE, 16)
 
     def test_create_FCE_from_summary_values(self):
-        es = ESFitness(target=0,
-                       min_fitnesses=[  1,   2,  42,   3,   4],
-                       min_indices=  [999, 999, 999, 999, 999],
-                       num_successful=0)
-        self.assertIs(es.ERT, None)
-        self.assertAlmostEqual(es.std_dev_ERT, 0)
-        self.assertAlmostEqual(es.FCE, 10.4)
-        self.assertAlmostEqual(es.std_dev_FCE, 15.83161394173)
+        ERT, FCE, std_dev_ERT, std_dev_FCE = ESFitness._calcFCEandERT(min_fitnesses=[  1,   2,  42,   3,   4],
+                                                                      min_indices=  [999, 999, 999, 999, 999],
+                                                                      num_successful=0)
+        self.assertIs(ERT, None)
+        self.assertAlmostEqual(std_dev_ERT, 0)
+        self.assertAlmostEqual(FCE, 10.4)
+        self.assertAlmostEqual(std_dev_FCE, 15.83161394173)
 
-    def test_create_from_original_values(self):
-        pass  # TODO
+    def test_create_both_from_original_values(self):
+        fitnesses = [
+            [9]*10 + [6]*10 + [4]*10 + [3]*10 + [1]*10,
+            [6]*10 + [1]*10 + [3]*10 + [4]*20,
+            [9]*10 + [8]*10 + [7]*10 + [6]*10 + [5]*10,
+            [5]*10 + [3]*10 + [1]*30,
+            [9]*10 + [6]*10 + [4]*10 + [1]*10 + [3]*10,
+        ]
+        fitnesses = np.array(fitnesses)
+        min_fitnesses, min_indices, num_successful = ESFitness._preCalcFCEandERT(fitnesses=fitnesses, target=2)
+        self.assertListEqual(min_fitnesses, [ 1,  1,  5,  1,  1])
+        self.assertListEqual(min_indices,   [40, 10, 50, 20, 30])
+        self.assertEqual(num_successful, 4)
+
+        min_fitnesses, min_indices, num_successful = ESFitness._preCalcFCEandERT(fitnesses=fitnesses, target=0)
+        self.assertListEqual(min_fitnesses, [ 1,  1,  5,  1,  1])
+        self.assertListEqual(min_indices,   [50, 50, 50, 50, 50])
+        self.assertEqual(num_successful, 0)
 
     def test_correct_sorting(self):
         es1 = ESFitness(ERT=None, FCE=float('inf'))
