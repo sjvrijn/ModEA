@@ -102,12 +102,6 @@ class GuaranteedFolderTest(unittest.TestCase):
 
 class ESFitnessTest(unittest.TestCase):
 
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
     def test_create_from_human_radable_values(self):
         es1 = ESFitness(ERT=None, FCE=float('inf'))
         self.assertIs(es1.ERT, None)
@@ -187,6 +181,21 @@ class ESFitnessTest(unittest.TestCase):
         es2 = ESFitness(ERT=4, FCE=42)
         self.assertTrue(es1 != es2)
 
+    def test_repr_min_fitnesses(self):
+        es = ESFitness(target=1,
+                       min_fitnesses=[0, 0, 40, 0, 0],
+                       min_indices=[32, 48, 999, 16, 64],
+                       num_successful=4)
+        self.assertEqual(repr(es), 'ESFitness(target=1,min_fitnesses=[0, 0, 40, 0, 0],'
+                                   'min_indices=[32, 48, 999, 16, 64],num_successful=4)')
+
+    def test_repr_ERT_FCE(self):
+        es = ESFitness(target=1, ERT=2, FCE=3, std_dev_ERT=4, std_dev_FCE=5)
+        self.assertEqual(repr(es), 'ESFitness(target=1,ERT=2,FCE=3,std_dev_ERT=4,std_dev_FCE=5)')
+
+    def test_str(self):
+        es = ESFitness(target=1, ERT=1234.5678, FCE=123.45678, std_dev_ERT=12.345678, std_dev_FCE=1.2345678)
+        self.assertEqual(str(es), 'ERT: 1234.568  (std:     12.3)  |  FCE: 1.23e+02  (std:     1.23)')
 
 if __name__ == '__main__':
     unittest.main()
