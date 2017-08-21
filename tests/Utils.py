@@ -104,11 +104,11 @@ class ESFitnessTest(unittest.TestCase):
 
     def test_create_from_human_radable_values(self):
         es1 = ESFitness(ERT=None, FCE=float('inf'))
-        self.assertIs(es1.ERT, None)
+        self.assertIsNone(es1.ERT)
         self.assertEqual(es1.FCE, float('inf'))
 
         es2 = ESFitness(ERT=None, FCE=float(32))
-        self.assertIs(es2.ERT, None)
+        self.assertIsNone(es2.ERT)
         self.assertEqual(es2.FCE, float(32))
 
         es3 = ESFitness(ERT=2   , FCE=float('inf'))
@@ -132,7 +132,7 @@ class ESFitnessTest(unittest.TestCase):
         ERT, FCE, std_dev_ERT, std_dev_FCE = ESFitness._calcFCEandERT(min_fitnesses=[  1,   2,  42,   3,   4],
                                                                       min_indices=  [999, 999, 999, 999, 999],
                                                                       num_successful=0)
-        self.assertIs(ERT, None)
+        self.assertIsNone(ERT)
         self.assertAlmostEqual(std_dev_ERT, 0)
         self.assertAlmostEqual(FCE, 10.4)
         self.assertAlmostEqual(std_dev_FCE, 15.83161394173)
