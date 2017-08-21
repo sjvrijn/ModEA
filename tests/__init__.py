@@ -1,3 +1,3 @@
-from . import Sampling, Utils
+from . import Sampling, Selection, Utils
 
-modules_to_test = [Sampling, Utils]
+modules_to_test = [Sampling, Selection, Utils]
