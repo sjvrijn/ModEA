@@ -3,76 +3,129 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import unittest
+import numpy as np
 from mock import Mock
 from code.Selection import bestGA, best, pairwise, roulette, \
     onePlusOneSelection, onePlusOneCholeskySelection, onePlusOneActiveSelection
+from code.Utils import chunkListByLength, getFitness
 
 
 
 class SelectionTest(unittest.TestCase):
 
     def setUp(self):
-        pop1, pop2, pop3 = Mock(fitness=35, genotype='a'), \
-                           Mock(fitness=15, genotype='b'), \
-                           Mock(fitness=25, genotype='c')
-        self.pop = [pop1, pop2, pop3]
+        self.pop = [
+            Mock(fitness=35, genotype='a'),
+            Mock(fitness=15, genotype='b')
+        ]
 
-        npop1, npop2, npop3, npop4, npop5 = Mock(fitness=40, genotype='A'), \
-                                            Mock(fitness=30, genotype='B'), \
-                                            Mock(fitness=10, genotype='C'), \
-                                            Mock(fitness=50, genotype='D'), \
-                                            Mock(fitness=20, genotype='E')
-        self.npop = [npop1, npop2, npop3, npop4, npop5]
-
-        self.result = [npop3, npop5, npop2]
-        self.elitist_result = [npop3, pop2, npop5]
+        self.npop = [
+            Mock(fitness=40, genotype='A'),
+            Mock(fitness=30, genotype='B'),
+            Mock(fitness=10, genotype='C'),
+            Mock(fitness=50, genotype='D'),
+            Mock(fitness=20, genotype='E'),
+            Mock(fitness=60, genotype='F')
+        ]
 
         self.param = Mock()
-        self.param.mu_int = 3
+        self.param.mu_int = len(self.pop)
         self.param.elitist = False
 
     def tearDown(self):
         pass
 
+    _setUp = setUp
+
 
 class BestGATest(SelectionTest):
 
     def test_non_elitist(self):
-        self.assertListEqual(bestGA(self.pop, self.npop, self.param), self.result)
+        result = sorted(self.npop, key=getFitness)[:self.param.mu_int]
+        self.assertListEqual(bestGA(self.pop, self.npop, self.param), result)
 
     def test_elitist(self):
+        result = sorted(self.npop + self.pop, key=getFitness)[:self.param.mu_int]
         self.param.elitist = True
-        self.assertListEqual(bestGA(self.pop, self.npop, self.param), self.elitist_result)
+        self.assertListEqual(bestGA(self.pop, self.npop, self.param), result)
 
 
 class BestTest(SelectionTest):
 
     def test_non_elitist(self):
-        self.assertListEqual(bestGA(self.pop, self.npop, self.param), self.result)
+        result = sorted(self.npop, key=getFitness)[:self.param.mu_int]
+        self.assertListEqual(bestGA(self.pop, self.npop, self.param), result)
 
     def test_elitist(self):
+        result = sorted(self.npop + self.pop, key=getFitness)[:self.param.mu_int]
         self.param.elitist = True
-        self.assertListEqual(bestGA(self.pop, self.npop, self.param), self.elitist_result)
+        self.assertListEqual(bestGA(self.pop, self.npop, self.param), result)
 
 
 class PairwiseTest(SelectionTest):
-    pass
+
+    def test_non_elitist(self):
+        pairwise_filtered = [min(pair, key=getFitness) for pair in chunkListByLength(self.npop, length=2)]
+        result = sorted(pairwise_filtered, key=getFitness)[:self.param.mu_int]
+        self.assertListEqual(pairwise(self.pop, self.npop, self.param), result)
+
+    def test_elitist(self):
+        pairwise_filtered = [min(pair, key=getFitness) for pair in chunkListByLength(self.npop, length=2)]
+        result = sorted(pairwise_filtered + self.pop, key=getFitness)[:self.param.mu_int]
+        self.param.elitist = True
+        self.assertListEqual(pairwise(self.pop, self.npop, self.param), result)
 
 
 class RouletteTest(SelectionTest):
-    pass
+
+    def setUp(self):
+        self._setUp()
+        np.random.seed(42)
+
+    def test_non_elitist(self):
+        result = [self.npop[2], self.npop[5]]
+        roulette_outcome = roulette(self.pop, self.npop, self.param)
+        self.assertListEqual(roulette_outcome, result)
+
+    def test_elitist(self):
+        result = [self.pop[1], self.npop[3]]
+        self.param.elitist = True
+        roulette_outcome = roulette(self.pop, self.npop, self.param)
+        self.assertListEqual(roulette_outcome, result)
 
 
 class OnePlusOneSelectionTest(SelectionTest):
-    pass
+
+    def test_selection(self):
+        t = 0
+        self.assertListEqual(onePlusOneSelection([self.pop[0]], [self.npop[0]],
+                                                 t=t, param=self.param),
+                             [self.pop[0]])
+        self.assertListEqual(onePlusOneSelection([self.pop[0]], [self.npop[1]],
+                                                 t=t, param=self.param),
+                             [self.npop[1]])
 
 
 class OnePlusOneCholeskySelectionTest(SelectionTest):
-    pass
+
+    def test_selection(self):
+        self.assertListEqual(onePlusOneCholeskySelection([self.pop[0]], [self.npop[0]],
+                                                         param=self.param),
+                             [self.pop[0]])
+        self.assertListEqual(onePlusOneCholeskySelection([self.pop[0]], [self.npop[1]],
+                                                         param=self.param),
+                             [self.npop[1]])
 
 
 class OnePlusOneActiveSelectionTest(SelectionTest):
-    pass
+
+    def test_selection(self):
+        self.assertListEqual(onePlusOneActiveSelection([self.pop[0]], [self.npop[0]],
+                                                       param=self.param),
+                             [self.pop[0]])
+        self.assertListEqual(onePlusOneActiveSelection([self.pop[0]], [self.npop[1]],
+                                                       param=self.param),
+                             [self.npop[1]])
 
 if __name__ == '__main__':
     unittest.main()
