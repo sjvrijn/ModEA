@@ -13,8 +13,20 @@ from code.Mutation import _keepInBounds, adaptStepSize, _scaleWithThreshold, _ad
 
 
 class keepInBoundsTest(unittest.TestCase):
-    def test_something(self):
-        self.assertEqual(True, False)
+
+    def setUp(self):
+        self.lbound = np.array([ 5, 5, 5, 5, 5])
+        self.ubound = np.array([-5,-5,-5,-5,-5])
+
+    def test_in_bounds(self):
+        vector = np.array([0, 1, 2, 3, 4])
+        result = vector
+        np.testing.assert_array_almost_equal(_keepInBounds(vector, self.lbound, self.ubound), result)
+
+    def test_out_of_bounds(self):
+        vector = np.array([10,11,12,13,14])
+        result = np.array([ 0,-1,-2,-3,-4])
+        np.testing.assert_array_almost_equal(_keepInBounds(vector, self.lbound, self.ubound), result)
 
 
 class adaptStepSizeTest(unittest.TestCase):
@@ -70,63 +82,79 @@ class getXiTest(unittest.TestCase):
 
 
 
-class addRandomOffsetTest(unittest.TestCase):
+class MockSampler(object):
+    def __init__(self, n):
+        self.n = n
+    def next(self):
+        return np.array([0.1]*self.n)
+
+class SamplerMutationTest(unittest.TestCase):
+    def setUp(self):
+        size = 5
+        self.sampler = MockSampler(n=size)
+        self.param = Mock(sigma=0.5)
+        self.individual = Mock(genotype=np.array(range(5), dtype=np.float64))
+
+class addRandomOffsetTest(SamplerMutationTest):
+
+    def test_simple_mutation(self):
+        addRandomOffset(self.individual, self.param, self.sampler)
+        np.testing.assert_array_almost_equal(self.individual.genotype,
+                                             [ 0.05,  1.05,  2.05,  3.05,  4.05])
+
+
+class CMAMutationTest(SamplerMutationTest):
     def test_something(self):
-        self.assertEqual(True, False)
+        pass
 
 
-class CMAMutationTest(unittest.TestCase):
+class choleskyCMAMutationTest(SamplerMutationTest):
     def test_something(self):
-        self.assertEqual(True, False)
-
-
-class choleskyCMAMutationTest(unittest.TestCase):
-    def test_something(self):
-        self.assertEqual(True, False)
+        pass
 
 
 
 
 class mutateBitstringTest(unittest.TestCase):
     def test_something(self):
-        self.assertEqual(True, False)
+        pass
 
 
 class mutateIntListTest(unittest.TestCase):
     def test_something(self):
-        self.assertEqual(True, False)
+        pass
 
 
 class mutateFloatListTest(unittest.TestCase):
     def test_something(self):
-        self.assertEqual(True, False)
+        pass
 
 
 class mutateMixedIntegerTest(unittest.TestCase):
     def test_something(self):
-        self.assertEqual(True, False)
+        pass
 
 
 
 
 class MIES_MutateDiscreteTest(unittest.TestCase):
     def test_something(self):
-        self.assertEqual(True, False)
+        pass
 
 
 class MIES_MutateIntegersTest(unittest.TestCase):
     def test_something(self):
-        self.assertEqual(True, False)
+        pass
 
 
 class MIES_MutateFloatsTest(unittest.TestCase):
     def test_something(self):
-        self.assertEqual(True, False)
+        pass
 
 
 class MIES_MutateTest(unittest.TestCase):
     def test_something(self):
-        self.assertEqual(True, False)
+        pass
 
 
 if __name__ == '__main__':
