@@ -86,31 +86,47 @@ class MockSampler(object):
     def __init__(self, n):
         self.n = n
     def next(self):
-        return np.array([0.1]*self.n)
+        return np.array([0.1]*self.n).reshape((self.n,1))
 
 class SamplerMutationTest(unittest.TestCase):
     def setUp(self):
-        size = 5
-        self.sampler = MockSampler(n=size)
-        self.param = Mock(sigma=0.5)
-        self.individual = Mock(genotype=np.array(range(5), dtype=np.float64))
+        self.size = 5
+        self.sampler = MockSampler(n=self.size)
+        self.param = Mock(sigma=0.5, B=np.identity(self.size), D=np.ones((self.size,1)),
+                          l_bound=np.array([5, 5, 5, 5, 5]).reshape((self.size,1)),
+                          u_bound=np.array([-5, -5, -5, -5, -5]).reshape((self.size,1)),
+                          threshold=1
+        )
+        self.individual = Mock(genotype=np.array(range(5), dtype=np.float64).reshape((self.size,1)))
 
 class addRandomOffsetTest(SamplerMutationTest):
 
     def test_simple_mutation(self):
         addRandomOffset(self.individual, self.param, self.sampler)
-        np.testing.assert_array_almost_equal(self.individual.genotype,
+        np.testing.assert_array_almost_equal(self.individual.genotype.flatten(),
                                              [ 0.05,  1.05,  2.05,  3.05,  4.05])
 
 
 class CMAMutationTest(SamplerMutationTest):
-    def test_something(self):
-        pass
+
+    def test_default_CMA_Mutation(self):
+        CMAMutation(self.individual, self.param, self.sampler)
+        np.testing.assert_array_almost_equal(self.individual.genotype.flatten(),
+                                             [ 0.05,  1.05,  2.05,  3.05,  4.05])
+
+    def test_threshold_CMA_Mutation(self):
+        CMAMutation(self.individual, self.param, self.sampler, threshold_convergence=True)
+        np.testing.assert_array_almost_equal(self.individual.genotype.flatten(),
+                                             [ 0.397214,  1.397214,  2.397214,  3.397214,  4.397214])
 
 
 class choleskyCMAMutationTest(SamplerMutationTest):
-    def test_something(self):
-        pass
+
+    def test_mutation(self):
+        self.param.A = np.identity(self.size)
+        CMAMutation(self.individual, self.param, self.sampler)
+        np.testing.assert_array_almost_equal(self.individual.genotype.flatten(),
+                                             [ 0.05,  1.05,  2.05,  3.05,  4.05])
 
 
 
