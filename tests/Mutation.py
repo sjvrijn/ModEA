@@ -6,6 +6,7 @@ import unittest
 import random
 import numpy as np
 from mock import Mock
+from code import num_options_per_module
 from code.Mutation import _keepInBounds, adaptStepSize, _scaleWithThreshold, _adaptSigma, _getXi, \
     addRandomOffset, CMAMutation, choleskyCMAMutation, \
     mutateBitstring, mutateIntList, mutateFloatList, mutateMixedInteger, \
@@ -132,44 +133,56 @@ class choleskyCMAMutationTest(SamplerMutationTest):
 
 
 class mutateBitstringTest(unittest.TestCase):
-    def test_something(self):
-        pass
+
+    def setUp(self):
+        np.random.seed(42)
+
+    def test_bitstring_mutate_zero_to_one(self):
+        individual = Mock(genotype=[0]*10)
+        mutateBitstring(individual)
+        self.assertListEqual(individual.genotype, [0,0,0,0,0,0,1,0,0,0])
+
+    def test_bitstring_mutate_one_to_zero(self):
+        individual = Mock(genotype=[1] * 10)
+        mutateBitstring(individual)
+        self.assertListEqual(individual.genotype, [1,1,1,1,1,1,0,1,1,1])
 
 
 class mutateIntListTest(unittest.TestCase):
-    def test_something(self):
-        pass
+
+    def test_intList(self):
+        individual = Mock(baseStepSize=0.2, stepSizeOffset=0.3,
+                          genotype=np.array([0]*11 + [5]), num_ints=12)
+        param = Mock(l_bound=[0]*11 + [2], u_bound=[1]*11 + [100])
+        np.random.seed(42)
+        mutateIntList(individual, param, num_options_per_module)
+        np.testing.assert_array_equal(individual.genotype,
+                                      [1,0,0,0,1,1,1,0,0,0,1,5])
 
 
 class mutateFloatListTest(unittest.TestCase):
-    def test_something(self):
         pass
 
 
 class mutateMixedIntegerTest(unittest.TestCase):
-    def test_something(self):
         pass
 
 
 
 
 class MIES_MutateDiscreteTest(unittest.TestCase):
-    def test_something(self):
         pass
 
 
 class MIES_MutateIntegersTest(unittest.TestCase):
-    def test_something(self):
         pass
 
 
 class MIES_MutateFloatsTest(unittest.TestCase):
-    def test_something(self):
         pass
 
 
 class MIES_MutateTest(unittest.TestCase):
-    def test_something(self):
         pass
 
 
