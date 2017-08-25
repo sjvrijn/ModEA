@@ -27,7 +27,7 @@ def onePointCrossover(ind_a, ind_b):
     """
     # -1 as randint is inclusive, -1 to not choose the last element
     crossover_point = np.random.randint(1, len(ind_a.genotype) - 2)
-    ind_a[:crossover_point], ind_b[:crossover_point] = ind_b[:crossover_point], ind_a[:crossover_point]
+    ind_a.genotype[:crossover_point], ind_b.genotype[:crossover_point] = ind_b.genotype[:crossover_point], ind_a.genotype[:crossover_point]
     return ind_a, ind_b
 
 
