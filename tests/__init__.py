@@ -1,3 +1,3 @@
-from . import Mutation, Recombination, Sampling, Selection, Utils
+from . import Individual, Mutation, Recombination, Sampling, Selection, Utils
 
-modules_to_test = [Mutation, Recombination, Sampling, Selection, Utils]
+modules_to_test = [Individual, Mutation, Recombination, Sampling, Selection, Utils]

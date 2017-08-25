@@ -102,8 +102,6 @@ class MixedIntIndividual(object):
     def stepsizeMIES(self):
         return self.stepSizeOffset + self.baseStepSize
 
-    def stepsizeMIES(self,x):
-        return self.stepSizeOffsetMIES[x] + self.baseStepSizeMIES
 
     def __copy__(self):
         """
