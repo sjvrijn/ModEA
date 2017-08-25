@@ -5,7 +5,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import unittest
 import random
 import numpy as np
-from mock import Mock
+from mock import Mock, patch
 from code import num_options_per_module
 from code.Mutation import _keepInBounds, adaptStepSize, _scaleWithThreshold, _adaptSigma, _getXi, \
     addRandomOffset, CMAMutation, choleskyCMAMutation, \
@@ -161,11 +161,25 @@ class mutateIntListTest(unittest.TestCase):
 
 
 class mutateFloatListTest(unittest.TestCase):
-        pass
+    #TODO: separate into more testable functions first
+    pass
 
 
 class mutateMixedIntegerTest(unittest.TestCase):
-        pass
+
+    def test_call_throughs(self):
+        ind = object()
+        param = object()
+        opts = object()
+        nopm = object()
+        with patch('code.Mutation.adaptStepSize') as adaptStepSize:
+            with patch('code.Mutation.mutateIntList') as mutateIntList:
+                with patch('code.Mutation.mutateFloatList') as mutateFloatList:
+                    mutateMixedInteger(ind, param, opts, nopm)
+
+                    adaptStepSize.assert_called_with(ind)
+                    mutateIntList.assert_called_with(ind, param, nopm)
+                    mutateFloatList.assert_called_with(ind, param, opts)
 
 
 
