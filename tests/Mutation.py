@@ -125,7 +125,7 @@ class choleskyCMAMutationTest(SamplerMutationTest):
 
     def test_mutation(self):
         self.param.A = np.identity(self.size)
-        CMAMutation(self.individual, self.param, self.sampler)
+        choleskyCMAMutation(self.individual, self.param, self.sampler)
         np.testing.assert_array_almost_equal(self.individual.genotype.flatten(),
                                              [ 0.05,  1.05,  2.05,  3.05,  4.05])
 

@@ -159,7 +159,7 @@ def choleskyCMAMutation(individual, param, sampler):
     """
 
     param.last_z = sampler.next()
-    mutation_vector = np.dot(param.A, param.last_z.T)
+    mutation_vector = np.dot(param.A, param.last_z)
 
     individual.genotype += param.sigma * mutation_vector
 
