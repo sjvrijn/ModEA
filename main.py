@@ -12,6 +12,7 @@ from bbob import bbobbenchmarks
 from code import getOpts, options, num_options_per_module, getBitString, getPrintName, Config
 from code.Algorithms import MIES
 from code.EvolvingES import ensureFullLengthRepresentation, evaluateCustomizedESs, _displayDuration
+from code.Parameters import Parameters
 from code.Utils import ESFitness
 from code.local import non_bbob_datapath
 
@@ -208,8 +209,12 @@ def _runGA(ndim=5, fid=1, run=1):
     fitnessFunction = partial(evaluateCustomizedESs, fid=fid, ndim=ndim,
                               iids=range(Config.ES_num_runs), storage_file=storage_file)
 
+    parameters = Parameters(len(options) + 15, Config.GA_budget, mu=Config.GA_mu, lambda_=Config.GA_lambda)
+    parameters.l_bound[len(options):] = np.array([  2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15)
+    parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15)
+
     gen_sizes, sigmas, fitness, best = MIES(n=ndim, fitnessFunction=fitnessFunction, budget=Config.GA_budget,
-                                            mu=Config.GA_mu, lambda_=Config.GA_lambda)  # This line does all the work!
+                                            mu=Config.GA_mu, lambda_=Config.GA_lambda, parameters=parameters)  # This line does all the work!
     y = datetime.now()
     print()
     print("Best Individual:     {}\n"
@@ -227,10 +232,14 @@ def _runGA(ndim=5, fid=1, run=1):
 def _runExperiments():
     for ndim in Config.experiment_dims:
         for fid in Config.experiment_funcs:
+            parameters = Parameters(len(options) + 15, Config.GA_budget, mu=Config.GA_mu, lambda_=Config.GA_lambda)
+            parameters.l_bound[len(options):] = np.array([  2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15)
+            parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15)
+
             print("Optimizing for function ID {} in {}-dimensional space:".format(fid, ndim))
             x = datetime.now()
             gen_sizes, sigmas, fitness, best = MIES(n=ndim, fitnessFunction=fid, budget=Config.GA_budget,
-                                                    mu=Config.GA_mu, lambda_=Config.GA_lambda)
+                                                    mu=Config.GA_mu, lambda_=Config.GA_lambda, parameters=parameters)
             y = datetime.now()
 
             z = y - x

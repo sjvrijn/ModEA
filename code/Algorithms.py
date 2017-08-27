@@ -792,7 +792,7 @@ class _BaseOptimizer(object):
         pass
 
 
-def GA(n, fitnessFunction, budget, mu, lambda_):
+def GA(n, fitnessFunction, budget, mu, lambda_, parameters=None):
     """
         Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function
 
@@ -801,12 +801,12 @@ def GA(n, fitnessFunction, budget, mu, lambda_):
         :param budget:          The budget for the GA
         :param mu:              Population size of the GA
         :param lambda_:         Offpsring size of the GA
+        :param parameters:      Parameters object to be used by the GA
         :returns:               A tuple containing a bunch of optimization results
     """
 
-    parameters = Parameters(len(options) + 15, budget, mu=mu, lambda_=lambda_)
-    parameters.l_bound[len(options):] = np.array([  2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15,1)
-    parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15,1)
+    if parameters is None:
+        parameters = Parameters(n=n, budget=budget, mu=mu, lambda_=lambda_)
 
     # Initialize the first individual in the population
     population = [MixedIntIndividual(n, num_discrete=len(num_options_per_module), num_ints=1)]
@@ -841,7 +841,7 @@ def GA(n, fitnessFunction, budget, mu, lambda_):
     return results
 
 
-def MIES(n, fitnessFunction, budget, mu, lambda_):
+def MIES(n, fitnessFunction, budget, mu, lambda_, parameters=None):
     """
         Defines a Mixed-Integer Evolution Strategy (MIES) that evolves an Evolution Strategy (ES) for a given fitness function
 
@@ -850,13 +850,12 @@ def MIES(n, fitnessFunction, budget, mu, lambda_):
         :param budget:          The budget for the MIES
         :param mu:              Population size of the MIES
         :param lambda_:         Offpsring size of the MIES
+        :param parameters:      Parameters object to be used by the MIES
         :returns:               A tuple containing a bunch of optimization results
     """
 
-    parameters = Parameters(len(options) + 15, budget, mu=mu, lambda_=lambda_)
-    # initialize the upper and lower bound, later to be changed by creat_bounds after the floats_part is set
-    parameters.l_bound[len(options):] = np.array([2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15)
-    parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15)
+    if parameters is None:
+        parameters = Parameters(n=n, budget=budget, mu=mu, lambda_=lambda_)
 
     # Initialize the first individual in the population
     discrete_part = [np.random.randint(len(x[1])) for x in options]
