@@ -16,7 +16,7 @@ from numpy import ceil, floor, log, ones
 # Internal classes
 from .Individual import FloatIndividual, MixedIntIndividual
 from .Parameters import Parameters
-from code import allow_parallel, num_threads, Config, options, num_options_per_module, MPI
+from code import allow_parallel, num_threads, Config, options, num_options_per_module
 from code.Utils import create_bounds, ESFitness
 # Internal modules
 import code.Mutation as Mut
@@ -792,20 +792,19 @@ class _BaseOptimizer(object):
         pass
 
 
-def GA(n, fitnessFunction, budget):
+def GA(n, fitnessFunction, budget, mu, lambda_):
     """
         Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function
 
         :param n:               Dimensionality of the search-space for the GA
         :param fitnessFunction: Fitness function the GA should use to evaluate candidate solutions
         :param budget:          The budget for the GA
+        :param mu:              Population size of the GA
+        :param lambda_:         Offpsring size of the GA
         :returns:               A tuple containing a bunch of optimization results
     """
 
-    GA_mu = Config.GA_mu
-    GA_lambda = Config.GA_lambda
-
-    parameters = Parameters(len(options) + 15, budget, mu=GA_mu, lambda_=GA_lambda)
+    parameters = Parameters(len(options) + 15, budget, mu=mu, lambda_=lambda_)
     parameters.l_bound[len(options):] = np.array([  2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15,1)
     parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15,1)
 
@@ -818,7 +817,7 @@ def GA(n, fitnessFunction, budget):
     population[0].genotype = np.array(int_part + float_part)
     population[0].fitness = ESFitness()
 
-    while len(population) < GA_mu:
+    while len(population) < mu:
         population.append(copy(population[0]))
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
@@ -842,20 +841,19 @@ def GA(n, fitnessFunction, budget):
     return results
 
 
-def MIES(n, fitnessFunction, budget):
+def MIES(n, fitnessFunction, budget, mu, lambda_):
     """
         Defines a Mixed-Integer Evolution Strategy (MIES) that evolves an Evolution Strategy (ES) for a given fitness function
 
         :param n:               Dimensionality of the search-space for the MIES
         :param fitnessFunction: Fitness function the MIES should use to evaluate candidate solutions
         :param budget:          The budget for the MIES
+        :param mu:              Population size of the MIES
+        :param lambda_:         Offpsring size of the MIES
         :returns:               A tuple containing a bunch of optimization results
     """
 
-    GA_mu = Config.GA_mu
-    GA_lambda = Config.GA_lambda
-
-    parameters = Parameters(len(options) + 15, budget, mu=GA_mu, lambda_=GA_lambda)
+    parameters = Parameters(len(options) + 15, budget, mu=mu, lambda_=lambda_)
     # initialize the upper and lower bound, later to be changed by creat_bounds after the floats_part is set
     parameters.l_bound[len(options):] = np.array([2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15)
     parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15)
@@ -882,7 +880,7 @@ def MIES(n, fitnessFunction, budget):
     population[0].genotype = np.array(discrete_part + int_part + float_part)
     population[0].fitness = ESFitness()
 
-    while len(population) < GA_mu:
+    while len(population) < mu:
         population.append(copy(population[0]))
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific

@@ -6,19 +6,18 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
 import sys
-from datetime import datetime
 from functools import partial
 from itertools import product
 from multiprocessing import Pool
 
 
 from bbob import bbobbenchmarks, fgeneric
-from code import getBitString, getOpts, getPrintName, getVals, options, initializable_parameters, num_options_per_module, num_threads
+from code import getOpts, getVals, options, initializable_parameters, num_threads
 from code import Config
 from code import allow_parallel, MPI_available, MPI
-from code.Algorithms import GA, MIES, customizedES
+from code.Algorithms import customizedES
 from code.Utils import chunkListByLength, guaranteeFolderExists, reprToString, ESFitness
-from code.local import datapath, non_bbob_datapath
+from code.local import datapath
 
 # BBOB parameters: Sets of noise-free and noisy benchmarks
 free_function_ids = bbobbenchmarks.nfreeIDs

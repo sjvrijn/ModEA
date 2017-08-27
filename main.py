@@ -10,7 +10,7 @@ from datetime import datetime
 from functools import partial
 from bbob import bbobbenchmarks
 from code import getOpts, options, num_options_per_module, getBitString, getPrintName, Config
-from code.Algorithms import GA, MIES
+from code.Algorithms import MIES
 from code.EvolvingES import ensureFullLengthRepresentation, evaluateCustomizedESs, _displayDuration
 from code.Utils import ESFitness
 from code.local import non_bbob_datapath
@@ -208,9 +208,8 @@ def _runGA(ndim=5, fid=1, run=1):
     fitnessFunction = partial(evaluateCustomizedESs, fid=fid, ndim=ndim,
                               iids=range(Config.ES_num_runs), storage_file=storage_file)
 
-    budget = Config.GA_budget
-
-    gen_sizes, sigmas, fitness, best = MIES(n=ndim, fitnessFunction=fitnessFunction, budget=budget)  # This line does all the work!
+    gen_sizes, sigmas, fitness, best = MIES(n=ndim, fitnessFunction=fitnessFunction, budget=Config.GA_budget,
+                                            mu=Config.GA_mu, lambda_=Config.GA_lambda)  # This line does all the work!
     y = datetime.now()
     print()
     print("Best Individual:     {}\n"
@@ -230,7 +229,8 @@ def _runExperiments():
         for fid in Config.experiment_funcs:
             print("Optimizing for function ID {} in {}-dimensional space:".format(fid, ndim))
             x = datetime.now()
-            gen_sizes, sigmas, fitness, best = MIES(ndim=ndim, fid=fid)
+            gen_sizes, sigmas, fitness, best = MIES(n=ndim, fitnessFunction=fid, budget=Config.GA_budget,
+                                                    mu=Config.GA_mu, lambda_=Config.GA_lambda)
             y = datetime.now()
 
             z = y - x
