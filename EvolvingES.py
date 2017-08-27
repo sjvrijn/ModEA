@@ -262,7 +262,7 @@ def runMPI(runFunction, arguments):
     for args in chunkListByLength(arguments, num_parallel):
         res = None  # Required pre-initialization of the variable that will receive the data from comm.gather()
 
-        comm = MPI.COMM_SELF.Spawn(sys.executable, args=['code/MPI_slave.py'], maxprocs=num_parallel)  # Initialize
+        comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=num_parallel)  # Initialize
         comm.bcast(runFunction, root=MPI.ROOT)    # Equal for all processes
         comm.scatter(args, root=MPI.ROOT)         # Different for each process
         comm.Barrier()                            # Wait for everything to finish...

@@ -12,7 +12,7 @@ from copy import copy
 from bbob import bbobbenchmarks
 from code import getOpts, options, num_options_per_module, getBitString, getPrintName, Config
 from code.Algorithms import MIES
-from code.EvolvingES import ensureFullLengthRepresentation, evaluateCustomizedESs, _displayDuration
+from EvolvingES import ensureFullLengthRepresentation, evaluateCustomizedESs, _displayDuration
 from code.Individual import MixedIntIndividual
 from code.Parameters import Parameters
 from code.Utils import ESFitness, create_bounds
@@ -215,8 +215,37 @@ def _runGA(ndim=5, fid=1, run=1):
     parameters.l_bound[len(options):] = np.array([  2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15)
     parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15)
 
+    # Initialize the first individual in the population
+    discrete_part = [np.random.randint(len(x[1])) for x in options]
+    lamb = int(4 + np.floor(3 * np.log(parameters.n)))
+    int_part = [lamb]
+    float_part = [
+        parameters.mu,
+        parameters.alpha_mu, parameters.c_sigma, parameters.damps, parameters.c_c, parameters.c_1,
+        parameters.c_mu,
+        0.2, 0.955,
+        0.5, 0, 0.3, 0.5,
+        2
+    ]
+
+    population = [
+        MixedIntIndividual(len(discrete_part) + len(int_part) + len(float_part),
+                           num_discrete=len(num_options_per_module),
+                           num_ints=len(int_part))
+    ]
+    population[0].genotype = np.array(discrete_part + int_part + float_part)
+    population[0].fitness = ESFitness()
+
+    while len(population) < Config.GA_mu:
+        population.append(copy(population[0]))
+
+    u_bound, l_bound = create_bounds(float_part, 0.3)
+    parameters.u_bound[len(options) + 1:] = np.array(u_bound)
+    parameters.l_bound[len(options) + 1:] = np.array(l_bound)
+
     gen_sizes, sigmas, fitness, best = MIES(n=ndim, fitnessFunction=fitnessFunction, budget=Config.GA_budget,
-                                            mu=Config.GA_mu, lambda_=Config.GA_lambda, parameters=parameters)  # This line does all the work!
+                                            mu=Config.GA_mu, lambda_=Config.GA_lambda, parameters=parameters,
+                                            population=population)  # This line does all the work!
     y = datetime.now()
     print()
     print("Best Individual:     {}\n"
