@@ -792,7 +792,7 @@ class _BaseOptimizer(object):
         pass
 
 
-def GA(n, fitnessFunction, budget, mu, lambda_, parameters=None):
+def GA(n, fitnessFunction, budget, mu, lambda_, population, parameters=None):
     """
         Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function
 
@@ -801,24 +801,13 @@ def GA(n, fitnessFunction, budget, mu, lambda_, parameters=None):
         :param budget:          The budget for the GA
         :param mu:              Population size of the GA
         :param lambda_:         Offpsring size of the GA
+        :param population:      Initial population of candidates to be used by the MIES
         :param parameters:      Parameters object to be used by the GA
         :returns:               A tuple containing a bunch of optimization results
     """
 
     if parameters is None:
         parameters = Parameters(n=n, budget=budget, mu=mu, lambda_=lambda_)
-
-    # Initialize the first individual in the population
-    population = [MixedIntIndividual(n, num_discrete=len(num_options_per_module), num_ints=1)]
-    int_part = [np.random.randint(len(x[1])) for x in options]
-    int_part.append(None)
-    float_part = [None, None, None, None, None, None, None, None, None, None, None, None, None, None]
-
-    population[0].genotype = np.array(int_part + float_part)
-    population[0].fitness = ESFitness()
-
-    while len(population) < mu:
-        population.append(copy(population[0]))
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.random
@@ -841,7 +830,7 @@ def GA(n, fitnessFunction, budget, mu, lambda_, parameters=None):
     return results
 
 
-def MIES(n, fitnessFunction, budget, mu, lambda_, parameters=None):
+def MIES(n, fitnessFunction, budget, mu, lambda_, population, parameters=None):
     """
         Defines a Mixed-Integer Evolution Strategy (MIES) that evolves an Evolution Strategy (ES) for a given fitness function
 
@@ -850,37 +839,13 @@ def MIES(n, fitnessFunction, budget, mu, lambda_, parameters=None):
         :param budget:          The budget for the MIES
         :param mu:              Population size of the MIES
         :param lambda_:         Offpsring size of the MIES
+        :param population:      Initial population of candidates to be used by the MIES
         :param parameters:      Parameters object to be used by the MIES
         :returns:               A tuple containing a bunch of optimization results
     """
 
     if parameters is None:
         parameters = Parameters(n=n, budget=budget, mu=mu, lambda_=lambda_)
-
-    # Initialize the first individual in the population
-    discrete_part = [np.random.randint(len(x[1])) for x in options]
-    lamb = int(4 + floor(3 * log(parameters.n)))
-    int_part = [lamb]
-    float_part = [
-        parameters.mu,
-        parameters.alpha_mu, parameters.c_sigma, parameters.damps, parameters.c_c, parameters.c_1, parameters.c_mu,
-        0.2, 0.955,
-        0.5, 0, 0.3, 0.5,
-        2
-    ]
-
-    u_bound, l_bound = create_bounds(float_part, 0.3)
-    parameters.u_bound[len(options)+1:] = np.array(u_bound)
-    parameters.l_bound[len(options)+1:] = np.array(l_bound)
-
-    population = [
-        MixedIntIndividual(len(discrete_part) + len(int_part) + len(float_part), num_discrete=len(num_options_per_module),
-                           num_ints=len(int_part))]
-    population[0].genotype = np.array(discrete_part + int_part + float_part)
-    population[0].fitness = ESFitness()
-
-    while len(population) < mu:
-        population.append(copy(population[0]))
 
     # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
     recombine = Rec.MIES_recombine
