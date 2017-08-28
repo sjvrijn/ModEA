@@ -4,10 +4,108 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import unittest
 from collections import namedtuple
-from code.Utils import getFitness, reprToString, reprToInt, intToRepr, \
+from code.Utils import options, initializable_parameters, num_options_per_module, \
+    getVals, getOpts, getBitString, getFullOpts, getPrintName, \
+    getFitness, reprToString, reprToInt, intToRepr, \
     create_bounds, chunkListByLength, guaranteeFolderExists, ESFitness
 import numpy as np
 import os
+
+
+
+class GetValsTest(unittest.TestCase):
+
+    def setUp(self):
+        self.length = len(initializable_parameters)
+
+    def test_zip_case(self):
+        expected_result = dict(zip(initializable_parameters, range(self.length)))
+        result = getVals(range(self.length))
+        self.assertDictEqual(expected_result, result)
+
+    def test_nones(self):
+        self.assertDictEqual(getVals([None]*self.length), dict())
+
+    def test_error(self):
+        with self.assertRaises(IndexError):
+            getVals(range(self.length*2))
+
+
+class GetOptsTest(unittest.TestCase):
+
+    def setUp(self):
+        self.length = len(options)
+
+    def test_input_too_short(self):
+        with self.assertRaises(IndexError):
+            getOpts([0]*(self.length-1))
+
+    def test_incorrect_values(self):
+        with self.assertRaises(IndexError):
+            getOpts([3]*self.length)
+
+    def test_input_too_long(self):
+        expected_output = dict(((opt[0], opt[1][0]) for opt in options))
+        self.assertDictEqual(getOpts([0]*(self.length+1)), expected_output)
+
+
+class GetBitStringTest(unittest.TestCase):
+
+    def setUp(self):
+        self.default = dict(((opt[0], opt[1][0]) for opt in options))
+        self.length = len(options)
+
+    def test_base_case(self):
+        self.assertListEqual(getBitString(self.default), [0]*self.length)
+
+    def test_unknown_key(self):
+        self.assertListEqual(getBitString({'foo': 1, 'bar': 2, 'spam': 3, 'eggs': 4}), [0]*self.length)
+
+
+class GetFullOptsTest(unittest.TestCase):
+
+    def setUp(self):
+        self.foo = {'foo': 1, 'bar': 2, 'spam': 3, 'eggs': 4}
+        self.default = dict(((opt[0], opt[1][0]) for opt in options))
+        self.length = len(options)
+        self.maxDiff = None
+
+    def test_complete(self):
+        import copy
+        modified_in_place = copy.copy(self.default)
+        getFullOpts(modified_in_place)
+        self.assertDictEqual(modified_in_place, self.default)
+
+    def test_incomplete(self):
+        getFullOpts(self.foo)
+        self.assertDictEqual(self.foo, self.default)
+
+    def test_alternative(self):
+        import copy
+        default = dict(((opt[0], opt[1][1]) for opt in options))
+        modified_in_place = copy.copy(default)
+        getFullOpts(modified_in_place)
+        self.assertDictEqual(modified_in_place, default)
+
+    def test_faulty(self):
+        import copy
+        modified_in_place = copy.copy(self.default)
+        modified_in_place[options[0][0]] = 'foo'
+        getFullOpts(modified_in_place)
+        self.assertDictEqual(modified_in_place, self.default)
+
+
+class GetPrintNameTest(unittest.TestCase):
+
+    def test_default_case(self):
+        case = dict(((opt[0], opt[1][0]) for opt in options))
+        self.assertEqual(getPrintName(case), '(mu,lambda)-CMA-ES')
+
+    def test_alternative_case(self):
+        case = dict(((opt[0], opt[1][1]) for opt in options))
+        self.assertEqual(getPrintName(case),
+                         'Sequential Threshold $1/n$-weighted Mirrored-Orthogonal-Active-'
+                         '(mu+lambda)-TPA-IPOP-CMA-ES with Pairwise selection and a quasi-sobol sampler')
 
 
 class MockIndividual(object):
