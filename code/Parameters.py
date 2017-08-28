@@ -8,7 +8,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
-from code import initializable_parameters
+from code.Utils import initializable_parameters
 import numpy as np
 from numpy import abs, all, any, append, arange, ceil, diag, dot, exp, eye, floor, isfinite, isinf, isreal,\
                   ones, log, max, mean, median, mod, newaxis, outer, real, sqrt, square, sum, triu, zeros

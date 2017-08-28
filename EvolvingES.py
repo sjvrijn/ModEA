@@ -11,10 +11,10 @@ from itertools import product
 from multiprocessing import Pool
 
 from bbob import bbobbenchmarks, fgeneric
-from code import getOpts, getVals, options, initializable_parameters
 from code import Config
 from code.Algorithms import customizedES
-from code.Utils import chunkListByLength, guaranteeFolderExists, reprToString, ESFitness
+from code.Utils import getOpts, getVals, options, initializable_parameters, \
+    chunkListByLength, guaranteeFolderExists, reprToString, ESFitness
 from code.local import datapath
 
 try:

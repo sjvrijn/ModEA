@@ -16,7 +16,8 @@ from numpy import ceil, floor, log, ones
 # Internal classes
 from .Individual import FloatIndividual
 from .Parameters import Parameters
-from code import Config, options, num_options_per_module
+from code import Config
+from code.Utils import options, num_options_per_module
 # Internal modules
 import code.Mutation as Mut
 import code.Recombination as Rec

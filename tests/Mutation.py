@@ -6,7 +6,7 @@ import unittest
 import random
 import numpy as np
 from mock import Mock, patch
-from code import num_options_per_module
+from code.Utils import num_options_per_module
 from code.Mutation import _keepInBounds, adaptStepSize, _scaleWithThreshold, _adaptSigma, _getXi, \
     addRandomOffset, CMAMutation, choleskyCMAMutation, \
     mutateBitstring, mutateIntList, mutateFloatList, mutateMixedInteger, \

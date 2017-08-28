@@ -10,12 +10,12 @@ from datetime import datetime
 from functools import partial
 from copy import copy
 from bbob import bbobbenchmarks
-from code import getOpts, options, num_options_per_module, getBitString, getPrintName, Config
+from code import Config
 from code.Algorithms import MIES
 from EvolvingES import ensureFullLengthRepresentation, evaluateCustomizedESs, _displayDuration
 from code.Individual import MixedIntIndividual
 from code.Parameters import Parameters
-from code.Utils import ESFitness, create_bounds
+from code.Utils import ESFitness, getOpts, options, num_options_per_module, getBitString, getPrintName, create_bounds
 from code.local import non_bbob_datapath
 
 # Sets of noise-free and noisy benchmarks
