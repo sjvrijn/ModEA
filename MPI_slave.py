@@ -8,7 +8,7 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 # The following are imports that are required by the functions that are passed to this MPI slave in order to run
 
 import numpy as np
-from code import MPI
+from EvolvingES import MPI
 comm = MPI.COMM_SELF.Get_parent()
 size = comm.Get_size()
 rank = comm.Get_rank()

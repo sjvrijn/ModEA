@@ -5,13 +5,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 __version__ = '0.2.0'
 
-try:
-    from mpi4py import MPI
-    MPI_available = True
-except:
-    MPI = None
-    MPI_available = False
-
 
 # The following list contains all possible options from which the Evolving ES can choose.
 # To give this list a 'constant' property, it is defined as a tuple (i.e. immutable)

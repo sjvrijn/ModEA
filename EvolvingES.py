@@ -10,14 +10,19 @@ from functools import partial
 from itertools import product
 from multiprocessing import Pool
 
-
 from bbob import bbobbenchmarks, fgeneric
 from code import getOpts, getVals, options, initializable_parameters
 from code import Config
-from code import MPI_available, MPI
 from code.Algorithms import customizedES
 from code.Utils import chunkListByLength, guaranteeFolderExists, reprToString, ESFitness
 from code.local import datapath
+
+try:
+    from mpi4py import MPI
+    MPI_available = True
+except:
+    MPI = None
+    MPI_available = False
 
 # BBOB parameters: Sets of noise-free and noisy benchmarks
 free_function_ids = bbobbenchmarks.nfreeIDs
