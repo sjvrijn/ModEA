@@ -14,10 +14,9 @@ from functools import partial
 from multiprocessing import Pool
 from numpy import ceil, floor, log, ones
 # Internal classes
-from .Individual import FloatIndividual, MixedIntIndividual
+from .Individual import FloatIndividual
 from .Parameters import Parameters
-from code import allow_parallel, num_threads, Config, options, num_options_per_module
-from code.Utils import create_bounds, ESFitness
+from code import Config, options, num_options_per_module
 # Internal modules
 import code.Mutation as Mut
 import code.Recombination as Rec
@@ -1035,8 +1034,8 @@ class _BaseAlgorithm(object):
         sequential_evaluation = self.parameters.sequential
         two_point_adaptation = self.parameters.tpa
         if self.parallel:
-            if allow_parallel:
-                num_workers = min(num_threads, self.parameters.lambda_)
+            if Config.allow_parallel:
+                num_workers = min(Config.num_threads, self.parameters.lambda_)
                 p = Pool(num_workers)
             else:
                 self.parallel = False
@@ -1198,8 +1197,8 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
     sequential_evaluation = parameters.sequential
     two_point_adaptation = parameters.tpa
     if parallel:
-        if allow_parallel:
-            num_workers = min(num_threads, parameters.lambda_)
+        if Config.allow_parallel:
+            num_workers = min(Config.num_threads, parameters.lambda_)
             p = Pool(num_workers)
         else:
             parallel = False

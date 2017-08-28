@@ -9,9 +9,20 @@ Nothing else to see here, move along...
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 from math import floor
+from multiprocessing import cpu_count
 from code.local import MPI_num_host_threads, MPI_num_hosts
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
+
+num_threads = 1  # Default case, always true
+try:
+    num_threads = cpu_count()
+    if num_threads > 1:
+        allow_parallel = True
+    else:
+        allow_parallel = False
+except NotImplementedError:
+    allow_parallel = False
 
 ### General Settings ###
 use_MPI = True

@@ -12,9 +12,9 @@ from multiprocessing import Pool
 
 
 from bbob import bbobbenchmarks, fgeneric
-from code import getOpts, getVals, options, initializable_parameters, num_threads
+from code import getOpts, getVals, options, initializable_parameters
 from code import Config
-from code import allow_parallel, MPI_available, MPI
+from code import MPI_available, MPI
 from code.Algorithms import customizedES
 from code.Utils import chunkListByLength, guaranteeFolderExists, reprToString, ESFitness
 from code.local import datapath
@@ -187,7 +187,7 @@ def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, storage
 
     if MPI_available and Config.use_MPI and Config.GA_evaluate_parallel:
         run_data = runMPI(runFunction, list(arguments))
-    elif allow_parallel and Config.GA_evaluate_parallel:
+    elif Config.allow_parallel and Config.GA_evaluate_parallel:
         run_data = runPool(runFunction, list(arguments))
     else:
         run_data = runSingleThreaded(runFunction, list(arguments))
@@ -288,7 +288,7 @@ def runPool(runFunction, arguments):
         :param arguments:   The arguments to passed distributedly to ``runFunction``
         :return:            List of any results produced by ``runFunction``
     """
-    p = Pool(min(num_threads, len(arguments)))
+    p = Pool(min(Config.num_threads, len(arguments)))
 
     local_func = partial(func_star, func=runFunction)
     results = p.map(local_func, arguments)

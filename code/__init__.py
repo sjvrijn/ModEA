@@ -5,18 +5,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 __version__ = '0.2.0'
 
-from multiprocessing import cpu_count
-
-num_threads = 1  # Default case, always true
-try:
-    num_threads = cpu_count()
-    if num_threads > 1:
-        allow_parallel = True
-    else:
-        allow_parallel = False
-except NotImplementedError:
-    allow_parallel = False
-
 try:
     from mpi4py import MPI
     MPI_available = True
@@ -111,10 +99,6 @@ def getFullOpts(opts):
     for name, choices, _ in options:
         if name not in opts:
             opts[name] = choices[0]
-
-        # Optional, should already be checked above
-        # elif opts[name] not in choices:
-        #     opts[name] = choices[0]
 
 def getPrintName(opts):
     """
