@@ -182,19 +182,15 @@ def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, num_rep
     """
 
     representations = _ensureListOfLists(representations)
+    for rep in representations:
+        displayRepresentation(rep)
 
     budget = Config.ES_budget_factor * ndim if budget is None else budget
     runFunction = partial(runCustomizedES, ndim=ndim, fid=fid, budget=budget)
-    for rep in representations:
-        displayRepresentation(rep)
-    arguments = product(representations, iids, range(num_reps))
 
-    if MPI_available and Config.use_MPI and Config.GA_evaluate_parallel:
-        run_data = runMPI(runFunction, list(arguments))
-    elif Config.allow_parallel and Config.GA_evaluate_parallel:
-        run_data = runPool(runFunction, list(arguments))
-    else:
-        run_data = runSingleThreaded(runFunction, list(arguments))
+    num_multiplications = len(iids*num_reps)
+    arguments = list(product(representations, iids, range(num_reps)))
+    run_data = runParallelFunction(runFunction, arguments)
 
     targets, results = zip(*run_data)
     fitness_results = []
@@ -202,11 +198,11 @@ def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, num_rep
     for i, rep in enumerate(representations):
 
         # Preprocess/unpack results
-        _, _, fitnesses, _ = (list(x) for x in zip(*results[i*len(iids):(i+1)*len(iids)]))
+        _, _, fitnesses, _ = (list(x) for x in zip(*results[i*num_multiplications:(i+1)*num_multiplications]))
         fitnesses = _trimListOfListsByLength(fitnesses)
 
         # Subtract the target fitness value from all returned fitnesses to only get the absolute distance
-        fitnesses = np.subtract(np.array(fitnesses), np.array(targets[i*len(iids):(i+1)*len(iids)]).T[:, np.newaxis])
+        fitnesses = np.subtract(np.array(fitnesses), np.array(targets[i*num_multiplications:(i+1)*num_multiplications]).T[:, np.newaxis])
         fitness = ESFitness(fitnesses)
         fitness_results.append(fitness)
 
@@ -253,11 +249,29 @@ def runCustomizedES(representation, iid, rep, ndim, fid, budget):
 -----------------------------------------------------------------------------'''
 
 
+def runParallelFunction(runFunction, arguments):
+    """
+        Return the output of runFunction for each set of arguments,
+        making use of as much parallelization as possible on this system
+
+        :param runFunction: The function that can be executed in parallel
+        :param arguments:   List of tuples, where each tuple are the arguments
+                            to pass to the function
+        :return:
+    """
+    if MPI_available and Config.use_MPI and Config.GA_evaluate_parallel:
+        return runMPI(runFunction, arguments)
+    elif Config.allow_parallel and Config.GA_evaluate_parallel:
+        return runPool(runFunction, arguments)
+    else:
+        return runSingleThreaded(runFunction, arguments)
+
+
 def runMPI(runFunction, arguments):
     """
         Small overhead-function to handle multi-processing using MPI
 
-        :param runFunction: The (``partial``) function to run in parallel, accepting ``arguments``
+        :param runFunction: The function to run in parallel, accepting ``arguments``
         :param arguments:   The arguments to passed distributedly to ``runFunction``
         :return:            List of any results produced by ``runFunction``
     """
