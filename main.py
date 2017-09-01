@@ -181,7 +181,7 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
     for i in range(num_iters):
         bitstrings = all_combos[(start_at + i * parallel):(start_at + (i + 1) * parallel)]
         bitstrings = [ensureFullLengthRepresentation(bitstring) for bitstring in bitstrings]
-        result = evaluateCustomizedESs(bitstrings, fid=fid, ndim=ndim,
+        result = evaluateCustomizedESs(bitstrings, fid=fid, ndim=ndim, num_reps=10,
                                        iids=range(Config.ES_num_runs), storage_file=storage_file)
 
         with open(progress_fname, 'w') as progress_file:

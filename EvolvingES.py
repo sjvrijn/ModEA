@@ -137,10 +137,10 @@ def displayRepresentation(representation):
     """
     disc_part = representation[:len(options)]
     lambda_ = representation[len(options)]
-    mu = representation[len(options)+1]
+    mu = '{:.3f}'.format(representation[len(options)+1]) if representation[len(options)+1] is not None else 'None'
     float_part = representation[len(options)+2:]
 
-    print("{}({:.3f}, {}) with {}".format([int(x) for x in disc_part], mu, lambda_, float_part))
+    print("{}({}, {}) with {}".format([int(x) for x in disc_part], mu, lambda_, float_part))
 
 
 def ensureFullLengthRepresentation(representation):
@@ -165,7 +165,7 @@ def ensureFullLengthRepresentation(representation):
 -----------------------------------------------------------------------------'''
 
 
-def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, storage_file=None):
+def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, num_reps=1, storage_file=None):
     """
         Function to evaluate customizedES instances using the BBOB framework. Can be passed one or more representations
         at once, will run them in parallel as much as possible if instructed to do so in Config.
@@ -176,11 +176,10 @@ def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, storage
         :param ndim:            The dimensionality to test the BBOB function with
         :param fid:             The BBOB function ID to use in the evaluation
         :param budget:          The allowed number of BBOB function evaluations
+        :param num_reps:        Number of times each (ndim, fid, iid) combination has to be repeated
         :param storage_file:    Filename to use when storing fitness information
         :returns:               A list containing one instance of ESFitness representing the fitness of the defined ES
     """
-
-    # TODO: Expand this function to include number of repetitions per (ndim, fid, iid) combination
 
     representations = _ensureListOfLists(representations)
 
@@ -188,7 +187,7 @@ def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, storage
     runFunction = partial(runCustomizedES, ndim=ndim, fid=fid, budget=budget)
     for rep in representations:
         displayRepresentation(rep)
-    arguments = product(representations, iids)
+    arguments = product(representations, iids, range(num_reps))
 
     if MPI_available and Config.use_MPI and Config.GA_evaluate_parallel:
         run_data = runMPI(runFunction, list(arguments))
@@ -218,7 +217,7 @@ def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, storage
     return fitness_results
 
 
-def runCustomizedES(representation, iid, ndim, fid, budget):
+def runCustomizedES(representation, iid, rep, ndim, fid, budget):
     """
         Runs a customized ES on a particular instance of a BBOB function in some dimensionality with given budget.
         This function takes care of the BBOB setup and the translation of the representation to input arguments for
@@ -226,6 +225,7 @@ def runCustomizedES(representation, iid, ndim, fid, budget):
 
         :param representation:  Representation of a customized ES (structure and parameter initialization)
         :param iid:             Instance ID for the BBOB function
+        :param rep:             Repetition number (for output storage purposes only)
         :param ndim:            Dimensionality to run the ES in
         :param fid:             BBOB function ID
         :param budget:          Evaluation budget for the ES
@@ -233,7 +233,7 @@ def runCustomizedES(representation, iid, ndim, fid, budget):
     """
     # Setup BBOB function + logging
     bbob_opts['algid'] = representation
-    datapath_ext = '{}-{}-{}-{}/'.format(reprToString(representation), fid, ndim, iid)
+    datapath_ext = '{}-f{}-n{}-i{}-r{}/'.format(reprToString(representation), fid, ndim, iid, rep)
     f = fgeneric.LoggingFunction(guaranteeFolderExists(datapath + datapath_ext), **bbob_opts)
     f_target = f.setfun(*bbobbenchmarks.instantiate(fid, iinstance=iid)).ftarget
 
