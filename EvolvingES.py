@@ -170,8 +170,7 @@ def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, num_rep
         Function to evaluate customizedES instances using the BBOB framework. Can be passed one or more representations
         at once, will run them in parallel as much as possible if instructed to do so in Config.
 
-        :param representations: The genotype to be translated into customizedES-ready options. Must manually be set to
-                                None if options are given as opts
+        :param representations: The genotype to be translated into customizedES-ready options.
         :param iids:            The BBOB instance ID's to run the representation on (for statistical significance)
         :param ndim:            The dimensionality to test the BBOB function with
         :param fid:             The BBOB function ID to use in the evaluation
@@ -281,7 +280,7 @@ def runMPI(runFunction, arguments):
     for args in chunkListByLength(arguments, num_parallel):
         res = None  # Required pre-initialization of the variable that will receive the data from comm.gather()
 
-        comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=num_parallel)  # Initialize
+        comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=len(args))  # Initialize
         comm.bcast(runFunction, root=MPI.ROOT)    # Equal for all processes
         comm.scatter(args, root=MPI.ROOT)         # Different for each process
         comm.Barrier()                            # Wait for everything to finish...
