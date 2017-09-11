@@ -59,7 +59,7 @@ class Parameters(BaseParameters):
         :param sequential:      Boolean switch on using sequential evaluation. Default: False
         :param tpa:             Boolean switch on using two-point step-size adaptation. Default: False
         :param values:          Dictionary in the form of ``{'name': value}`` of initial values for allowed parameters.
-                                Any values for names not in :data:`code.initializable_parameters` are ignored.
+                                Any values for names not in :data:`code.Utils.initializable_parameters` are ignored.
     """
 
     def __init__(self, n, budget, sigma=None,

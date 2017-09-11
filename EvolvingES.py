@@ -130,7 +130,9 @@ def _ensureListOfLists(iterable):
 def displayRepresentation(representation):
     """
         Displays a representation of a customizedES instance in a more human-readable format:
-        >>> displayRepresentation([0,0,0,0,0,0,0,0,0,0,0, 20, 0.25, 1, 1, 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2])
+
+        >>> displayRepresentation([0,0,0,0,0,0,0,0,0,0,0,
+        ...     20,0.25,1,1,1,1,1,1,0.2,0.955,0.5,0,0.3,0.5,2])
         [0,0,0,0,0,0,0,0,0,0,0] (0.25, 20) with [1,1,1,1,1,1,0.2,0.955,0.5,0,0.3,0.5,2]
 
         :param representation:  Representation of a customizedES instance to display

@@ -12,15 +12,18 @@ A note from the author
 
 This documentation serves as a reference for the structure of this framework.
 
-Please note, this framework is still under development, and no guarantees will be given on it's
-correctness of execution. Currently (|today|), there are still a large number of files and functions
-incorporated in this framework that are remains of experiments performed while this framework was
-initially created. I realise that makes this framework a bit of a mess for now, but it will get
-better... promise! Most of this mess is contained in the :mod:`code.GA` file.
+Please note, this framework is still under development, and no guarantees will
+be given on it's correctness of execution. Any modules, classes or functions
+currently specified may be renamed, removed, reinvented, rescued, rolled over,
+and whatever else turns out to be most useful  for the future of this framework
+as a whole.
 
-Furthermore, any other modules currently specified may be renamed, removed, reinvented, rescued, rolled over,
-and whatever else turns out to be most useful for the future of this framework as a whole.
+The files :mod:`EvolvingES` file contains functions related to this framework
+that are  remains of experiments performed while this framework was initially
+created. I  realise that makes this framework a bit of a mess for now, but it
+will get  better... promise!
 
+Last updated: (|today|)
 
 Contents
 ========

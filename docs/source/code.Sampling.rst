@@ -1,5 +1,5 @@
 code.Sampling module
-=========================
+====================
 
 .. automodule:: code.Sampling
     :members:
