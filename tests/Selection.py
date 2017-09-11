@@ -5,8 +5,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import unittest
 import numpy as np
 from mock import Mock
-from code.Selection import bestGA, best, pairwise, roulette, \
-    onePlusOneSelection, onePlusOneCholeskySelection, onePlusOneActiveSelection
+from code.Selection import bestGA, best, pairwise, roulette, onePlusOneSelection
 from code.Utils import chunkListByLength, getFitness
 
 
@@ -54,12 +53,12 @@ class BestTest(SelectionTest):
 
     def test_non_elitist(self):
         result = sorted(self.npop, key=getFitness)[:self.param.mu_int]
-        self.assertListEqual(bestGA(self.pop, self.npop, self.param), result)
+        self.assertListEqual(best(self.pop, self.npop, self.param), result)
 
     def test_elitist(self):
         result = sorted(self.npop + self.pop, key=getFitness)[:self.param.mu_int]
         self.param.elitist = True
-        self.assertListEqual(bestGA(self.pop, self.npop, self.param), result)
+        self.assertListEqual(best(self.pop, self.npop, self.param), result)
 
 
 class PairwiseTest(SelectionTest):
@@ -105,27 +104,6 @@ class OnePlusOneSelectionTest(SelectionTest):
                                                  t=t, param=self.param),
                              [self.npop[1]])
 
-
-class OnePlusOneCholeskySelectionTest(SelectionTest):
-
-    def test_selection(self):
-        self.assertListEqual(onePlusOneCholeskySelection([self.pop[0]], [self.npop[0]],
-                                                         param=self.param),
-                             [self.pop[0]])
-        self.assertListEqual(onePlusOneCholeskySelection([self.pop[0]], [self.npop[1]],
-                                                         param=self.param),
-                             [self.npop[1]])
-
-
-class OnePlusOneActiveSelectionTest(SelectionTest):
-
-    def test_selection(self):
-        self.assertListEqual(onePlusOneActiveSelection([self.pop[0]], [self.npop[0]],
-                                                       param=self.param),
-                             [self.pop[0]])
-        self.assertListEqual(onePlusOneActiveSelection([self.pop[0]], [self.npop[1]],
-                                                       param=self.param),
-                             [self.npop[1]])
 
 if __name__ == '__main__':
     unittest.main()
