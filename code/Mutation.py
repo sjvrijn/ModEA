@@ -149,21 +149,6 @@ def CMAMutation(individual, param, sampler, threshold_convergence=False):
     individual.genotype = _keepInBounds(add(individual.genotype, mutation_vector), param.l_bound, param.u_bound)
 
 
-def choleskyCMAMutation(individual, param, sampler):
-    """
-        Cholesky CMA based mutation
-
-        :param individual:  :class:`~code.Individual.FloatIndividual` to be mutated
-        :param param:       :class:`~code.Parameters.Parameters` object to store settings
-        :param sampler:     :mod:`~code.Sampling` module from which the random values should be drawn
-    """
-
-    param.last_z = sampler.next()
-    mutation_vector = np.dot(param.A, param.last_z)
-
-    individual.genotype += param.sigma * mutation_vector
-
-
 '''-----------------------------------------------------------------------------
 #                                GA Mutations                                  #
 -----------------------------------------------------------------------------'''

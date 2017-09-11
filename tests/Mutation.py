@@ -8,7 +8,7 @@ import numpy as np
 from mock import Mock, patch
 from code.Utils import num_options_per_module
 from code.Mutation import _keepInBounds, adaptStepSize, _scaleWithThreshold, _adaptSigma, _getXi, \
-    addRandomOffset, CMAMutation, choleskyCMAMutation, \
+    addRandomOffset, CMAMutation, \
     mutateBitstring, mutateIntList, mutateFloatList, mutateMixedInteger, \
     MIES_MutateDiscrete,  MIES_MutateIntegers, MIES_MutateFloats, MIES_Mutate
 
@@ -82,7 +82,6 @@ class getXiTest(unittest.TestCase):
 
 
 
-
 class MockSampler(object):
     def __init__(self, n):
         self.n = n
@@ -119,16 +118,6 @@ class CMAMutationTest(SamplerMutationTest):
         CMAMutation(self.individual, self.param, self.sampler, threshold_convergence=True)
         np.testing.assert_array_almost_equal(self.individual.genotype.flatten(),
                                              [ 0.397214,  1.397214,  2.397214,  3.397214,  4.397214])
-
-
-class choleskyCMAMutationTest(SamplerMutationTest):
-
-    def test_mutation(self):
-        self.param.A = np.identity(self.size)
-        choleskyCMAMutation(self.individual, self.param, self.sampler)
-        np.testing.assert_array_almost_equal(self.individual.genotype.flatten(),
-                                             [ 0.05,  1.05,  2.05,  3.05,  4.05])
-
 
 
 
@@ -180,7 +169,6 @@ class mutateMixedIntegerTest(unittest.TestCase):
                     adaptStepSize.assert_called_with(ind)
                     mutateIntList.assert_called_with(ind, param, nopm)
                     mutateFloatList.assert_called_with(ind, param, opts)
-
 
 
 
