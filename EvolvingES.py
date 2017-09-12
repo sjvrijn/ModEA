@@ -230,8 +230,11 @@ def runCustomizedES(representation, iid, rep, ndim, fid, budget):
     """
     # Setup BBOB function + logging
     bbob_opts['algid'] = representation
-    datapath_ext = '{}-f{}-n{}-i{}-r{}/'.format(reprToString(representation), fid, ndim, iid, rep)
-    f = fgeneric.LoggingFunction(guaranteeFolderExists(datapath + datapath_ext), **bbob_opts)
+    datapath_ext = '{ndim}d-f{fid}/{repr}/i{iid}-r{rep}/'.format(ndim=ndim, fid=fid, repr=reprToString(representation),
+                                                                 iid=iid, rep=rep)
+    guaranteeFolderExists(datapath + datapath_ext)
+
+    f = fgeneric.LoggingFunction(datapath + datapath_ext, **bbob_opts)
     f_target = f.setfun(*bbobbenchmarks.instantiate(fid, iinstance=iid)).ftarget
 
     # Interpret the representation into parameters for the ES
