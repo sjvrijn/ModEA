@@ -258,12 +258,11 @@ def chunkListByLength(iterable, length):
 
 
 def guaranteeFolderExists(path_name):
+    """ Make sure the given path exists after this call """
     try:
         os.mkdir(path_name)
     except OSError:
         pass  # Folder exists, nothing to be done
-
-    return path_name
 
 
 @total_ordering
