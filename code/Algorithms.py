@@ -942,13 +942,6 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
     mutateParameters = functions['mutateParameters']
     sequential_evaluation = parameters.sequential
     two_point_adaptation = parameters.tpa
-    if parallel:
-        if Config.allow_parallel:
-            num_workers = min(Config.num_threads, parameters.lambda_)
-            p = Pool(num_workers)
-        else:
-            parallel = False
-            print("Warning: Parallel execution not available, defaulting to non-parallel evaluation.")
 
     # Single recombination outside the eval loop to create the new population
     new_population = recombine(population, parameters)
