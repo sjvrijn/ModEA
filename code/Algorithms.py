@@ -683,17 +683,12 @@ class _BaseAlgorithm(object):
             self.tpaUpdate()
 
         self.mutateParameters(self.used_budget)
-        if self.parameters.checkLocalRestartConditions(self.used_budget):
-            return True  # interrupted=True
-
-        return False
 
 
     def runOptimizer(self):
-        interrupted = False
         # The main evaluation loop
-        while self.used_budget < self.budget and not interrupted:
-            interrupted = self.runOneGeneration()
+        while self.used_budget < self.budget and not self.parameters.checkLocalRestartConditions(self.used_budget):
+            self.runOneGeneration()
             self.recordStatistics()
 
 
