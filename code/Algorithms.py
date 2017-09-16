@@ -611,7 +611,7 @@ class _BaseAlgorithm(object):
         self.new_population = self.recombine(population, parameters)
 
 
-    def eval_population(self):
+    def evalPopulation(self):
 
         for ind in self.new_population:
             self.mutate(ind, self.parameters)
@@ -622,7 +622,7 @@ class _BaseAlgorithm(object):
         self.used_budget += self.parameters.lambda_
 
 
-    def eval_population_sequentially(self):
+    def evalPopulationSequentially(self):
         improvement_found = False
         for i, individual in enumerate(self.new_population):
             self.mutate(individual, self.parameters)  # Mutation
@@ -641,7 +641,7 @@ class _BaseAlgorithm(object):
         self.new_population = self.new_population[:i+1]  # Discard unused individuals
 
 
-    def tpa_update(self):
+    def tpaUpdate(self):
         wcm = self.parameters.wcm
         tpa_vector = (wcm - self.parameters.wcm_old) * self.parameters.tpa_factor
 
@@ -674,9 +674,9 @@ class _BaseAlgorithm(object):
             self.new_population = self.new_population[:-2]
 
         if self.parallel:
-            self.eval_population()
+            self.evalPopulation()
         else:  # Sequential
-            self.eval_population_sequentially()
+            self.evalPopulationSequentially()
 
         self.trackParameters()
         if self.used_budget >= self.budget:
@@ -691,7 +691,7 @@ class _BaseAlgorithm(object):
 
         # Two-Point step-size Adaptation
         if self.parameters.tpa:
-            self.tpa_update()
+            self.tpaUpdate()
         self.mutateParameters(self.used_budget)  # Parameter mutation
         # Local restart
         if self.parameters.localRestart(self.used_budget, fitnesses):
