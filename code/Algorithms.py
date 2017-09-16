@@ -642,6 +642,24 @@ class _BaseAlgorithm(object):
         return i
 
 
+    def tpa_update(self):
+        wcm = self.parameters.wcm
+        tpa_vector = (wcm - self.parameters.wcm_old) * self.parameters.tpa_factor
+
+        tpa_fitness_plus = self.fitnessFunction(wcm + tpa_vector)[0]
+        tpa_fitness_min = self.fitnessFunction(wcm - tpa_vector)[0]
+
+        self.used_budget += 2
+        if self.used_budget > self.budget and self.parameters.sequential:
+            self.used_budget = self.budget
+
+        # Is the ideal step size larger (True) or smaller (False)? None if TPA is not used
+        if tpa_fitness_plus < tpa_fitness_min:
+            self.parameters.tpa_result = 1
+        else:
+            self.parameters.tpa_result = -1
+
+
     def __call__(self, population, fitnessFunction, budget, functions, parameters, parallel=False):
 
         self.initialize(population, fitnessFunction, budget, functions, parameters, parallel)
@@ -682,23 +700,8 @@ class _BaseAlgorithm(object):
                                                                                              self.used_budget))
 
             # Two-Point step-size Adaptation
-            # TODO: Move the following code to >= 1 separate function(s)
             if self.parameters.tpa:
-                wcm = self.parameters.wcm
-                tpa_vector = (wcm - self.parameters.wcm_old) * self.parameters.tpa_factor
-
-                tpa_fitness_plus = self.fitnessFunction(wcm + tpa_vector)[0]
-                tpa_fitness_min = self.fitnessFunction(wcm - tpa_vector)[0]
-
-                self.used_budget += 2
-                if self.used_budget > self.budget and self.parameters.sequential:
-                    self.used_budget = self.budget
-
-                # Is the ideal step size larger (True) or smaller (False)? None if TPA is not used
-                if tpa_fitness_plus < tpa_fitness_min:
-                    self.parameters.tpa_result = 1
-                else:
-                    self.parameters.tpa_result = -1
+                self.tpa_update()
 
             self.mutateParameters(self.used_budget)  # Parameter mutation
 
