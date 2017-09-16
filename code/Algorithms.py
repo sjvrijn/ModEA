@@ -660,6 +660,15 @@ class _BaseAlgorithm(object):
             self.parameters.tpa_result = -1
 
 
+    def trackParameters(self, population):
+        gen_size = self.used_budget - len(self.fitness_over_time)
+        self.generation_size.append(gen_size)
+        self.sigma_over_time.extend([self.parameters.sigma_mean] * gen_size)
+        self.fitness_over_time.extend([population[0].fitness] * gen_size)
+        if population[0].fitness < self.best_individual.fitness:
+            self.best_individual = copy(population[0])
+
+
     def __call__(self, population, fitnessFunction, budget, functions, parameters, parallel=False):
 
         self.initialize(population, fitnessFunction, budget, functions, parameters, parallel)
@@ -675,33 +684,22 @@ class _BaseAlgorithm(object):
             else:  # Sequential
                 i = self.eval_population_sequentially()
 
-            self.new_population = self.new_population[:i+1]  # Discard unused individuals
-            fitnesses = sorted([individual.fitness for individual in self.new_population])
-            population = self.select(population, self.new_population, self.used_budget, self.parameters)  # Selection
-
-            # Track parameters
-            gen_size = self.used_budget - len(self.fitness_over_time)
-            self.generation_size.append(gen_size)
-            self.sigma_over_time.extend([self.parameters.sigma_mean] * gen_size)
-            self.fitness_over_time.extend([population[0].fitness] * gen_size)
-            if population[0].fitness < self.best_individual.fitness:
-                self.best_individual = copy(population[0])
-
-            # We can stop here if we know we reached our budget
+            self.trackParameters(population)
             if self.used_budget >= self.budget:
                 break
 
+            self.new_population = self.new_population[:i+1]  # Discard unused individuals
+            fitnesses = sorted([individual.fitness for individual in self.new_population])
+            population = self.select(population, self.new_population, self.used_budget, self.parameters)
             if len(population) != self.parameters.mu_int:
                 raise ValueError('Bad population size! Size: {} instead of {}'.format(len(population),
                                                                                       self.parameters.mu_int))
-            self.new_population = self.recombine(population, self.parameters)  # Recombination
+            self.new_population = self.recombine(population, self.parameters)
 
             # Two-Point step-size Adaptation
             if self.parameters.tpa:
                 self.tpa_update()
-
             self.mutateParameters(self.used_budget)  # Parameter mutation
-
             # Local restart
             if self.parameters.localRestart(self.used_budget, fitnesses):
                 break
