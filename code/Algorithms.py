@@ -673,8 +673,7 @@ class _BaseAlgorithm(object):
         else:  # Sequential
             self.evalPopulationSequentially()
 
-        fitnesses = sorted([individual.fitness for individual in self.new_population])
-        self.parameters.recordRecentFitnessValues(self.used_budget, fitnesses)
+        self.parameters.recordRecentFitnessValues(self.used_budget, [ind.fitness for ind in self.new_population])
 
         self.population = self.select(self.population, self.new_population, self.used_budget, self.parameters)
         self.new_population = self.recombine(self.population, self.parameters)

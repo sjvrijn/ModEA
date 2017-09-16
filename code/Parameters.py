@@ -564,15 +564,15 @@ class Parameters(BaseParameters):
         """
             Record recent fitness values at current budget
         """
-        self.histfunevals[int(mod(evalcount/self.lambda_-1, self.nbin))] = fitnesses[0]
+        self.histfunevals[int(mod(evalcount/self.lambda_-1, self.nbin))] = min(fitnesses)
 
-        self.recent_best_fitnesses.append(fitnesses[0])
+        self.recent_best_fitnesses.append(min(fitnesses))
         self.recent_best_fitnesses = self.recent_best_fitnesses[-20:]
 
         self.stagnation_list.append(median(fitnesses))
         self.stagnation_list = self.stagnation_list[-int(ceil(0.2*evalcount + 120 + 30*self.n/self.lambda_)):]
 
-        self.is_fitness_flat = fitnesses[0] == fitnesses[self.flat_fitness_index]
+        self.is_fitness_flat = min(fitnesses) == sorted(fitnesses)[self.flat_fitness_index]
 
 
     def checkLocalRestartConditions(self, evalcount):
@@ -580,7 +580,6 @@ class Parameters(BaseParameters):
             Check for local restart conditions according to (B)IPOP
 
             :param evalcount:   Counter for the current generation
-            :param fitnesses:   Fitness values of the most recent generation, used to detect stagnation
             :returns:           Boolean value ``restart_required``, True if a restart should be performed
         """
 
