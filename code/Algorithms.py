@@ -11,7 +11,6 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 import numpy as np
 from copy import copy
 from functools import partial
-from multiprocessing import Pool
 from numpy import ceil, floor, log, ones
 # Internal classes
 from .Individual import FloatIndividual
@@ -588,99 +587,101 @@ class _BaseAlgorithm(object):
     def __init__(self):
         pass
 
-    def __call__(self, population, fitnessFunction, budget, functions, parameters, parallel=False):
+    def initialize(self, population, functions, parameters):
         # Parameter tracking
-        sigma_over_time = []
-        fitness_over_time = []
-        generation_size = []
-        best_individual = population[0]
-
-        seq_cutoff = parameters.mu_int * parameters.seq_cutoff
+        self.sigma_over_time = []
+        self.fitness_over_time = []
+        self.generation_size = []
+        self.best_individual = population[0]
 
         # Initialization
-        used_budget = 0
-        recombine = functions['recombine']
-        mutate = functions['mutate']
-        select = functions['select']
-        mutateParameters = functions['mutateParameters']
-        sequential_evaluation = parameters.sequential
-        two_point_adaptation = parameters.tpa
+        self.seq_cutoff = parameters.mu_int * parameters.seq_cutoff
+        self.used_budget = 0
+        self.recombine = functions['recombine']
+        self.mutate = functions['mutate']
+        self.select = functions['select']
+        self.mutateParameters = functions['mutateParameters']
+
+
+    def __call__(self, population, fitnessFunction, budget, functions, parameters, parallel=False):
+
+        self.initialize(population, functions, parameters)
 
         # Single recombination outside the eval loop to create the new population
-        new_population = recombine(population, parameters)
+        new_population = self.recombine(population, parameters)
 
         # The main evaluation loop
-        while used_budget < budget:
+        while self.used_budget < budget:
 
-            if two_point_adaptation:
+            if parameters.tpa:
                 new_population = new_population[:-2]
 
             if parallel:
 
                 for ind in new_population:
-                    mutate(ind, parameters)
+                    self.mutate(ind, parameters)
                 fitnesses = fitnessFunction(
                     [ind.genotype for ind in new_population])  # Assumption: fitnessFunction is parallelized
                 for j, ind in enumerate(new_population):
                     ind.fitness = fitnesses[j]
 
-                used_budget += parameters.lambda_
+                self.used_budget += parameters.lambda_
                 i = parameters.lambda_
 
             else:  # Sequential
                 improvement_found = False
                 for i, individual in enumerate(new_population):
-                    mutate(individual, parameters)  # Mutation
+                    self.mutate(individual, parameters)  # Mutation
                     # Evaluation
                     individual.fitness = fitnessFunction(individual.genotype)[
                         0]  # fitnessFunction returns a list, to allow
-                    used_budget += 1  # evaluation of >1 individuals in 1 call
+                    self.used_budget += 1  # evaluation of >1 individuals in 1 call
 
                     # Sequential Evaluation
-                    if sequential_evaluation:  # Sequential evaluation: we interrupt once a better individual has been found
-                        if individual.fitness < best_individual.fitness:
+                    if parameters.sequential:  # Sequential evaluation: we interrupt once a better individual has been found
+                        if individual.fitness < self.best_individual.fitness:
                             improvement_found = True
-                        if i >= seq_cutoff and improvement_found:
+                        if i >= self.seq_cutoff and improvement_found:
                             break
-                        if used_budget == budget:
+                        if self.used_budget == budget:
                             break
 
             new_population = new_population[:i + 1]  # Any un-used individuals in the new population are discarded
             fitnesses = sorted([individual.fitness for individual in new_population])
-            population = select(population, new_population, used_budget, parameters)  # Selection
+            population = self.select(population, new_population, self.used_budget, parameters)  # Selection
 
             # Track parameters
-            gen_size = used_budget - len(fitness_over_time)
-            generation_size.append(gen_size)
-            sigma_over_time.extend([parameters.sigma_mean] * gen_size)
-            fitness_over_time.extend([population[0].fitness] * gen_size)
-            if population[0].fitness < best_individual.fitness:
-                best_individual = copy(population[0])
+            gen_size = self.used_budget - len(self.fitness_over_time)
+            self.generation_size.append(gen_size)
+            self.sigma_over_time.extend([parameters.sigma_mean] * gen_size)
+            self.fitness_over_time.extend([population[0].fitness] * gen_size)
+            if population[0].fitness < self.best_individual.fitness:
+                self.best_individual = copy(population[0])
 
             # We can stop here if we know we reached our budget
-            if used_budget >= budget:
+            if self.used_budget >= budget:
                 break
 
             if len(population) == parameters.mu_int:
-                new_population = recombine(population, parameters)  # Recombination
+                new_population = self.recombine(population, parameters)  # Recombination
             else:
                 print('Error encountered in baseAlgorithm():\n'
                       'Bad population size! Size: {} instead of {} at used budget {}'.format(len(population),
                                                                                              parameters.mu_int,
-                                                                                             used_budget))
+                                                                                             self.used_budget))
 
             # Two-Point step-size Adaptation
             # TODO: Move the following code to >= 1 separate function(s)
-            if two_point_adaptation:
+            if parameters.tpa:
                 wcm = parameters.wcm
                 tpa_vector = (wcm - parameters.wcm_old) * parameters.tpa_factor
 
                 tpa_fitness_plus = fitnessFunction(wcm + tpa_vector)[0]
                 tpa_fitness_min = fitnessFunction(wcm - tpa_vector)[0]
 
-                used_budget += 2
-                if used_budget > budget and sequential_evaluation:
-                    used_budget = budget
+                self.used_budget += 2
+                if self.used_budget > budget and parameters.sequential:
+                    self.used_budget = budget
 
                 # Is the ideal step size larger (True) or smaller (False)? None if TPA is not used
                 if tpa_fitness_plus < tpa_fitness_min:
@@ -688,13 +689,13 @@ class _BaseAlgorithm(object):
                 else:
                     parameters.tpa_result = -1
 
-            mutateParameters(used_budget)  # Parameter mutation
+            self.mutateParameters(self.used_budget)  # Parameter mutation
 
             # Local restart
-            if parameters.localRestart(used_budget, fitnesses):
+            if parameters.localRestart(self.used_budget, fitnesses):
                 break
 
-        return used_budget, (generation_size, sigma_over_time, fitness_over_time, best_individual)
+        return self.used_budget, (self.generation_size, self.sigma_over_time, self.fitness_over_time, self.best_individual)
 
 
 def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, parallel=False):
@@ -722,4 +723,3 @@ def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, pa
 
     baseAlg = _BaseAlgorithm()
     return baseAlg(population, fitnessFunction, budget, functions, parameters, parallel)
-
