@@ -601,6 +601,7 @@ class _BaseAlgorithm(object):
         self.mutate = functions['mutate']
         self.select = functions['select']
         self.mutateParameters = functions['mutateParameters']
+        self.population = population
         self.fitnessFunction = fitnessFunction
         self.budget = budget
         self.parameters = parameters
@@ -660,49 +661,56 @@ class _BaseAlgorithm(object):
             self.parameters.tpa_result = -1
 
 
-    def trackParameters(self, population):
+    def trackParameters(self):
         gen_size = self.used_budget - len(self.fitness_over_time)
         self.generation_size.append(gen_size)
         self.sigma_over_time.extend([self.parameters.sigma_mean] * gen_size)
-        self.fitness_over_time.extend([population[0].fitness] * gen_size)
-        if population[0].fitness < self.best_individual.fitness:
-            self.best_individual = copy(population[0])
+        self.fitness_over_time.extend([self.population[0].fitness] * gen_size)
+        if self.population[0].fitness < self.best_individual.fitness:
+            self.best_individual = copy(self.population[0])
+
+
+    def runOneGeneration(self):
+
+        if self.parameters.tpa:
+            self.new_population = self.new_population[:-2]
+
+        if self.parallel:
+            i = self.eval_population()
+        else:  # Sequential
+            i = self.eval_population_sequentially()
+
+        self.trackParameters()
+        if self.used_budget >= self.budget:
+            return True
+
+        self.new_population = self.new_population[:i + 1]  # Discard unused individuals
+        fitnesses = sorted([individual.fitness for individual in self.new_population])
+        self.population = self.select(self.population, self.new_population, self.used_budget, self.parameters)
+        if len(self.population) != self.parameters.mu_int:
+            raise ValueError('Bad population size! Size: {} instead of {}'.format(len(self.population),
+                                                                                  self.parameters.mu_int))
+        self.new_population = self.recombine(self.population, self.parameters)
+
+        # Two-Point step-size Adaptation
+        if self.parameters.tpa:
+            self.tpa_update()
+        self.mutateParameters(self.used_budget)  # Parameter mutation
+        # Local restart
+        if self.parameters.localRestart(self.used_budget, fitnesses):
+            return True
+
+        return False
 
 
     def __call__(self, population, fitnessFunction, budget, functions, parameters, parallel=False):
 
         self.initialize(population, fitnessFunction, budget, functions, parameters, parallel)
 
+        interrupted = False
         # The main evaluation loop
-        while self.used_budget < self.budget:
-
-            if self.parameters.tpa:
-                self.new_population = self.new_population[:-2]
-
-            if self.parallel:
-                i = self.eval_population()
-            else:  # Sequential
-                i = self.eval_population_sequentially()
-
-            self.trackParameters(population)
-            if self.used_budget >= self.budget:
-                break
-
-            self.new_population = self.new_population[:i+1]  # Discard unused individuals
-            fitnesses = sorted([individual.fitness for individual in self.new_population])
-            population = self.select(population, self.new_population, self.used_budget, self.parameters)
-            if len(population) != self.parameters.mu_int:
-                raise ValueError('Bad population size! Size: {} instead of {}'.format(len(population),
-                                                                                      self.parameters.mu_int))
-            self.new_population = self.recombine(population, self.parameters)
-
-            # Two-Point step-size Adaptation
-            if self.parameters.tpa:
-                self.tpa_update()
-            self.mutateParameters(self.used_budget)  # Parameter mutation
-            # Local restart
-            if self.parameters.localRestart(self.used_budget, fitnesses):
-                break
+        while self.used_budget < self.budget and not interrupted:
+            interrupted = self.runOneGeneration()
 
         return self.used_budget, (self.generation_size, self.sigma_over_time, self.fitness_over_time, self.best_individual)
 
