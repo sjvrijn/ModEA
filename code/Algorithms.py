@@ -587,7 +587,7 @@ class _BaseAlgorithm(object):
     def __init__(self):
         pass
 
-    def initialize(self, population, functions, parameters):
+    def initialize(self, population, functions, parameters, parallel=False):
         # Parameter tracking
         self.sigma_over_time = []
         self.fitness_over_time = []
@@ -601,28 +601,29 @@ class _BaseAlgorithm(object):
         self.mutate = functions['mutate']
         self.select = functions['select']
         self.mutateParameters = functions['mutateParameters']
+        self.parallel = parallel
+
+        # Single recombination outside the eval loop to create the new population
+        self.new_population = self.recombine(population, parameters)
 
 
     def __call__(self, population, fitnessFunction, budget, functions, parameters, parallel=False):
 
-        self.initialize(population, functions, parameters)
-
-        # Single recombination outside the eval loop to create the new population
-        new_population = self.recombine(population, parameters)
+        self.initialize(population, functions, parameters, parallel)
 
         # The main evaluation loop
         while self.used_budget < budget:
 
             if parameters.tpa:
-                new_population = new_population[:-2]
+                self.new_population = self.new_population[:-2]
 
-            if parallel:
+            if self.parallel:
 
-                for ind in new_population:
+                for ind in self.new_population:
                     self.mutate(ind, parameters)
                 fitnesses = fitnessFunction(
-                    [ind.genotype for ind in new_population])  # Assumption: fitnessFunction is parallelized
-                for j, ind in enumerate(new_population):
+                    [ind.genotype for ind in self.new_population])  # Assumption: fitnessFunction is parallelized
+                for j, ind in enumerate(self.new_population):
                     ind.fitness = fitnesses[j]
 
                 self.used_budget += parameters.lambda_
@@ -630,7 +631,7 @@ class _BaseAlgorithm(object):
 
             else:  # Sequential
                 improvement_found = False
-                for i, individual in enumerate(new_population):
+                for i, individual in enumerate(self.new_population):
                     self.mutate(individual, parameters)  # Mutation
                     # Evaluation
                     individual.fitness = fitnessFunction(individual.genotype)[
@@ -646,9 +647,9 @@ class _BaseAlgorithm(object):
                         if self.used_budget == budget:
                             break
 
-            new_population = new_population[:i + 1]  # Any un-used individuals in the new population are discarded
-            fitnesses = sorted([individual.fitness for individual in new_population])
-            population = self.select(population, new_population, self.used_budget, parameters)  # Selection
+            self.new_population = self.new_population[:i + 1]  # Any un-used individuals in the new population are discarded
+            fitnesses = sorted([individual.fitness for individual in self.new_population])
+            population = self.select(population, self.new_population, self.used_budget, parameters)  # Selection
 
             # Track parameters
             gen_size = self.used_budget - len(self.fitness_over_time)
@@ -663,7 +664,7 @@ class _BaseAlgorithm(object):
                 break
 
             if len(population) == parameters.mu_int:
-                new_population = self.recombine(population, parameters)  # Recombination
+                self.new_population = self.recombine(population, parameters)  # Recombination
             else:
                 print('Error encountered in baseAlgorithm():\n'
                       'Bad population size! Size: {} instead of {} at used budget {}'.format(len(population),
