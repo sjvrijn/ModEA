@@ -609,6 +609,19 @@ class _BaseAlgorithm(object):
         self.new_population = self.recombine(population, parameters)
 
 
+    def eval_population(self):
+
+        for ind in self.new_population:
+            self.mutate(ind, self.parameters)
+        fitnesses = self.fitnessFunction(
+            [ind.genotype for ind in self.new_population])  # Assumption: fitnessFunction is parallelized
+        for j, ind in enumerate(self.new_population):
+            ind.fitness = fitnesses[j]
+
+        self.used_budget += self.parameters.lambda_
+        return self.parameters.lambda_
+
+
     def __call__(self, population, fitnessFunction, budget, functions, parameters, parallel=False):
 
         self.initialize(population, fitnessFunction, functions, parameters, parallel)
@@ -620,17 +633,7 @@ class _BaseAlgorithm(object):
                 self.new_population = self.new_population[:-2]
 
             if self.parallel:
-
-                for ind in self.new_population:
-                    self.mutate(ind, self.parameters)
-                fitnesses = self.fitnessFunction(
-                    [ind.genotype for ind in self.new_population])  # Assumption: fitnessFunction is parallelized
-                for j, ind in enumerate(self.new_population):
-                    ind.fitness = fitnesses[j]
-
-                self.used_budget += self.parameters.lambda_
-                i = self.parameters.lambda_
-
+                i = self.eval_population()
             else:  # Sequential
                 improvement_found = False
                 for i, individual in enumerate(self.new_population):
