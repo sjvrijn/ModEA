@@ -110,7 +110,6 @@ class Parameters(BaseParameters):
 
         ### Meta-parameters ###
         self.N = 10 * self.n
-        self.count_degenerations = 0
 
         ### (1+1)-ES ###
         self.success_history = zeros((self.N, ), dtype=np.int)

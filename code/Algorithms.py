@@ -697,10 +697,6 @@ class _BaseAlgorithm(object):
             if parameters.localRestart(used_budget, fitnesses):
                 break
 
-        # Debug print statement, displaying the number of degenerations that occurred during the run of this algorithm
-        if parameters.count_degenerations and debug:
-            print(parameters.count_degenerations, end=' ')
-
         return used_budget, (generation_size, sigma_over_time, fitness_over_time, best_individual)
 
 
