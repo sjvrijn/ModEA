@@ -675,7 +675,7 @@ class _BaseAlgorithm(object):
             else:  # Sequential
                 i = self.eval_population_sequentially()
 
-            self.new_population = self.new_population[:i+1]  # Any un-used individuals in the new population are discarded
+            self.new_population = self.new_population[:i+1]  # Discard unused individuals
             fitnesses = sorted([individual.fitness for individual in self.new_population])
             population = self.select(population, self.new_population, self.used_budget, self.parameters)  # Selection
 
@@ -691,13 +691,10 @@ class _BaseAlgorithm(object):
             if self.used_budget >= self.budget:
                 break
 
-            if len(population) == self.parameters.mu_int:
-                self.new_population = self.recombine(population, self.parameters)  # Recombination
-            else:
-                print('Error encountered in baseAlgorithm():\n'
-                      'Bad population size! Size: {} instead of {} at used budget {}'.format(len(population),
-                                                                                             self.parameters.mu_int,
-                                                                                             self.used_budget))
+            if len(population) != self.parameters.mu_int:
+                raise ValueError('Bad population size! Size: {} instead of {}'.format(len(population),
+                                                                                      self.parameters.mu_int))
+            self.new_population = self.recombine(population, self.parameters)  # Recombination
 
             # Two-Point step-size Adaptation
             if self.parameters.tpa:
