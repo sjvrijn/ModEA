@@ -587,7 +587,7 @@ class _BaseAlgorithm(object):
     def __init__(self):
         pass
 
-    def initialize(self, population, functions, parameters, parallel=False):
+    def initialize(self, population, fitnessFunction, functions, parameters, parallel=False):
         # Parameter tracking
         self.sigma_over_time = []
         self.fitness_over_time = []
@@ -601,6 +601,8 @@ class _BaseAlgorithm(object):
         self.mutate = functions['mutate']
         self.select = functions['select']
         self.mutateParameters = functions['mutateParameters']
+        self.fitnessFunction = fitnessFunction
+        self.parameters = parameters
         self.parallel = parallel
 
         # Single recombination outside the eval loop to create the new population
@@ -609,37 +611,37 @@ class _BaseAlgorithm(object):
 
     def __call__(self, population, fitnessFunction, budget, functions, parameters, parallel=False):
 
-        self.initialize(population, functions, parameters, parallel)
+        self.initialize(population, fitnessFunction, functions, parameters, parallel)
 
         # The main evaluation loop
         while self.used_budget < budget:
 
-            if parameters.tpa:
+            if self.parameters.tpa:
                 self.new_population = self.new_population[:-2]
 
             if self.parallel:
 
                 for ind in self.new_population:
-                    self.mutate(ind, parameters)
-                fitnesses = fitnessFunction(
+                    self.mutate(ind, self.parameters)
+                fitnesses = self.fitnessFunction(
                     [ind.genotype for ind in self.new_population])  # Assumption: fitnessFunction is parallelized
                 for j, ind in enumerate(self.new_population):
                     ind.fitness = fitnesses[j]
 
-                self.used_budget += parameters.lambda_
-                i = parameters.lambda_
+                self.used_budget += self.parameters.lambda_
+                i = self.parameters.lambda_
 
             else:  # Sequential
                 improvement_found = False
                 for i, individual in enumerate(self.new_population):
-                    self.mutate(individual, parameters)  # Mutation
+                    self.mutate(individual, self.parameters)  # Mutation
                     # Evaluation
-                    individual.fitness = fitnessFunction(individual.genotype)[
+                    individual.fitness = self.fitnessFunction(individual.genotype)[
                         0]  # fitnessFunction returns a list, to allow
                     self.used_budget += 1  # evaluation of >1 individuals in 1 call
 
                     # Sequential Evaluation
-                    if parameters.sequential:  # Sequential evaluation: we interrupt once a better individual has been found
+                    if self.parameters.sequential:  # Sequential evaluation: we interrupt once a better individual has been found
                         if individual.fitness < self.best_individual.fitness:
                             improvement_found = True
                         if i >= self.seq_cutoff and improvement_found:
@@ -649,12 +651,12 @@ class _BaseAlgorithm(object):
 
             self.new_population = self.new_population[:i + 1]  # Any un-used individuals in the new population are discarded
             fitnesses = sorted([individual.fitness for individual in self.new_population])
-            population = self.select(population, self.new_population, self.used_budget, parameters)  # Selection
+            population = self.select(population, self.new_population, self.used_budget, self.parameters)  # Selection
 
             # Track parameters
             gen_size = self.used_budget - len(self.fitness_over_time)
             self.generation_size.append(gen_size)
-            self.sigma_over_time.extend([parameters.sigma_mean] * gen_size)
+            self.sigma_over_time.extend([self.parameters.sigma_mean] * gen_size)
             self.fitness_over_time.extend([population[0].fitness] * gen_size)
             if population[0].fitness < self.best_individual.fitness:
                 self.best_individual = copy(population[0])
@@ -663,37 +665,37 @@ class _BaseAlgorithm(object):
             if self.used_budget >= budget:
                 break
 
-            if len(population) == parameters.mu_int:
-                self.new_population = self.recombine(population, parameters)  # Recombination
+            if len(population) == self.parameters.mu_int:
+                self.new_population = self.recombine(population, self.parameters)  # Recombination
             else:
                 print('Error encountered in baseAlgorithm():\n'
                       'Bad population size! Size: {} instead of {} at used budget {}'.format(len(population),
-                                                                                             parameters.mu_int,
+                                                                                             self.parameters.mu_int,
                                                                                              self.used_budget))
 
             # Two-Point step-size Adaptation
             # TODO: Move the following code to >= 1 separate function(s)
-            if parameters.tpa:
-                wcm = parameters.wcm
-                tpa_vector = (wcm - parameters.wcm_old) * parameters.tpa_factor
+            if self.parameters.tpa:
+                wcm = self.parameters.wcm
+                tpa_vector = (wcm - self.parameters.wcm_old) * self.parameters.tpa_factor
 
-                tpa_fitness_plus = fitnessFunction(wcm + tpa_vector)[0]
-                tpa_fitness_min = fitnessFunction(wcm - tpa_vector)[0]
+                tpa_fitness_plus = self.fitnessFunction(wcm + tpa_vector)[0]
+                tpa_fitness_min = self.fitnessFunction(wcm - tpa_vector)[0]
 
                 self.used_budget += 2
-                if self.used_budget > budget and parameters.sequential:
+                if self.used_budget > budget and self.parameters.sequential:
                     self.used_budget = budget
 
                 # Is the ideal step size larger (True) or smaller (False)? None if TPA is not used
                 if tpa_fitness_plus < tpa_fitness_min:
-                    parameters.tpa_result = 1
+                    self.parameters.tpa_result = 1
                 else:
-                    parameters.tpa_result = -1
+                    self.parameters.tpa_result = -1
 
             self.mutateParameters(self.used_budget)  # Parameter mutation
 
             # Local restart
-            if parameters.localRestart(self.used_budget, fitnesses):
+            if self.parameters.localRestart(self.used_budget, fitnesses):
                 break
 
         return self.used_budget, (self.generation_size, self.sigma_over_time, self.fitness_over_time, self.best_individual)
