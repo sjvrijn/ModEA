@@ -587,7 +587,7 @@ class _BaseAlgorithm(object):
     def __init__(self):
         pass
 
-    def initialize(self, population, fitnessFunction, functions, parameters, parallel=False):
+    def initialize(self, population, fitnessFunction, budget, functions, parameters, parallel=False):
         # Parameter tracking
         self.sigma_over_time = []
         self.fitness_over_time = []
@@ -602,6 +602,7 @@ class _BaseAlgorithm(object):
         self.select = functions['select']
         self.mutateParameters = functions['mutateParameters']
         self.fitnessFunction = fitnessFunction
+        self.budget = budget
         self.parameters = parameters
         self.parallel = parallel
 
@@ -622,12 +623,31 @@ class _BaseAlgorithm(object):
         return self.parameters.lambda_
 
 
+    def eval_population_sequentially(self):
+        improvement_found = False
+        for i, individual in enumerate(self.new_population):
+            self.mutate(individual, self.parameters)  # Mutation
+            # Evaluation
+            individual.fitness = self.fitnessFunction(individual.genotype)[0]
+            self.used_budget += 1  # evaluation of >1 individuals in 1 call
+
+            # Sequential Evaluation
+            if self.parameters.sequential:  # Sequential evaluation: we interrupt once a better individual has been found
+                if individual.fitness < self.best_individual.fitness:
+                    improvement_found = True
+                if i >= self.seq_cutoff and improvement_found:
+                    break
+                if self.used_budget == self.budget:
+                    break
+        return i
+
+
     def __call__(self, population, fitnessFunction, budget, functions, parameters, parallel=False):
 
-        self.initialize(population, fitnessFunction, functions, parameters, parallel)
+        self.initialize(population, fitnessFunction, budget, functions, parameters, parallel)
 
         # The main evaluation loop
-        while self.used_budget < budget:
+        while self.used_budget < self.budget:
 
             if self.parameters.tpa:
                 self.new_population = self.new_population[:-2]
@@ -635,24 +655,9 @@ class _BaseAlgorithm(object):
             if self.parallel:
                 i = self.eval_population()
             else:  # Sequential
-                improvement_found = False
-                for i, individual in enumerate(self.new_population):
-                    self.mutate(individual, self.parameters)  # Mutation
-                    # Evaluation
-                    individual.fitness = self.fitnessFunction(individual.genotype)[
-                        0]  # fitnessFunction returns a list, to allow
-                    self.used_budget += 1  # evaluation of >1 individuals in 1 call
+                i = self.eval_population_sequentially()
 
-                    # Sequential Evaluation
-                    if self.parameters.sequential:  # Sequential evaluation: we interrupt once a better individual has been found
-                        if individual.fitness < self.best_individual.fitness:
-                            improvement_found = True
-                        if i >= self.seq_cutoff and improvement_found:
-                            break
-                        if self.used_budget == budget:
-                            break
-
-            self.new_population = self.new_population[:i + 1]  # Any un-used individuals in the new population are discarded
+            self.new_population = self.new_population[:i+1]  # Any un-used individuals in the new population are discarded
             fitnesses = sorted([individual.fitness for individual in self.new_population])
             population = self.select(population, self.new_population, self.used_budget, self.parameters)  # Selection
 
@@ -665,7 +670,7 @@ class _BaseAlgorithm(object):
                 self.best_individual = copy(population[0])
 
             # We can stop here if we know we reached our budget
-            if self.used_budget >= budget:
+            if self.used_budget >= self.budget:
                 break
 
             if len(population) == self.parameters.mu_int:
@@ -686,8 +691,8 @@ class _BaseAlgorithm(object):
                 tpa_fitness_min = self.fitnessFunction(wcm - tpa_vector)[0]
 
                 self.used_budget += 2
-                if self.used_budget > budget and self.parameters.sequential:
-                    self.used_budget = budget
+                if self.used_budget > self.budget and self.parameters.sequential:
+                    self.used_budget = self.budget
 
                 # Is the ideal step size larger (True) or smaller (False)? None if TPA is not used
                 if tpa_fitness_plus < tpa_fitness_min:
