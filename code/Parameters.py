@@ -560,7 +560,7 @@ class Parameters(BaseParameters):
         # TODO: add feedback of resetting sigma to the sigma per individual
 
 
-    def localRestart(self, evalcount, fitnesses):
+    def checkLocalRestartConditions(self, evalcount, fitnesses):
         """
             Check for local restart conditions according to (B)IPOP
 

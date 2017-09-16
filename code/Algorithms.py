@@ -613,8 +613,8 @@ class _BaseAlgorithm(object):
         for ind in self.new_population:
             self.mutate(ind, self.parameters)
         fitnesses = self.fitnessFunction([ind.genotype for ind in self.new_population])
-        for j, ind in enumerate(self.new_population):
-            ind.fitness = fitnesses[j]
+        for ind, fit in zip(self.new_population, fitnesses):
+            ind.fitness = fit
 
         self.used_budget += self.parameters.lambda_
 
@@ -628,7 +628,7 @@ class _BaseAlgorithm(object):
             self.used_budget += 1  # evaluation of >1 individuals in 1 call
 
             # Sequential Evaluation
-            if self.parameters.sequential:  # Sequential evaluation: we interrupt once a better individual has been found
+            if self.parameters.sequential:  # We interrupt once a better individual has been found
                 if individual.fitness < self.best_individual.fitness:
                     improvement_found = True
                 if i >= self.seq_cutoff and improvement_found:
@@ -675,9 +675,6 @@ class _BaseAlgorithm(object):
         else:  # Sequential
             self.evalPopulationSequentially()
 
-        if self.used_budget >= self.budget:
-            return True  # interrupted=True
-
         fitnesses = sorted([individual.fitness for individual in self.new_population])
         self.population = self.select(self.population, self.new_population, self.used_budget, self.parameters)
         self.new_population = self.recombine(self.population, self.parameters)
@@ -688,7 +685,7 @@ class _BaseAlgorithm(object):
 
         self.mutateParameters(self.used_budget)  # Parameter mutation
         # Local restart
-        if self.parameters.localRestart(self.used_budget, fitnesses):
+        if self.parameters.checkLocalRestartConditions(self.used_budget, fitnesses):
             return True  # interrupted=True
 
         return False
