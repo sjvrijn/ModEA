@@ -615,13 +615,11 @@ class _BaseAlgorithm(object):
 
         for ind in self.new_population:
             self.mutate(ind, self.parameters)
-        fitnesses = self.fitnessFunction(
-            [ind.genotype for ind in self.new_population])  # Assumption: fitnessFunction is parallelized
+        fitnesses = self.fitnessFunction([ind.genotype for ind in self.new_population])
         for j, ind in enumerate(self.new_population):
             ind.fitness = fitnesses[j]
 
         self.used_budget += self.parameters.lambda_
-        return self.parameters.lambda_
 
 
     def eval_population_sequentially(self):
@@ -640,7 +638,7 @@ class _BaseAlgorithm(object):
                     break
                 if self.used_budget == self.budget:
                     break
-        return i
+        self.new_population = self.new_population[:i+1]  # Discard unused individuals
 
 
     def tpa_update(self):
@@ -676,15 +674,14 @@ class _BaseAlgorithm(object):
             self.new_population = self.new_population[:-2]
 
         if self.parallel:
-            i = self.eval_population()
+            self.eval_population()
         else:  # Sequential
-            i = self.eval_population_sequentially()
+            self.eval_population_sequentially()
 
         self.trackParameters()
         if self.used_budget >= self.budget:
             return True
 
-        self.new_population = self.new_population[:i + 1]  # Discard unused individuals
         fitnesses = sorted([individual.fitness for individual in self.new_population])
         self.population = self.select(self.population, self.new_population, self.used_budget, self.parameters)
         if len(self.population) != self.parameters.mu_int:
