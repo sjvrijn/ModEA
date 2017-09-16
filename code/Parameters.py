@@ -171,7 +171,8 @@ class Parameters(BaseParameters):
         self.histfunevals = zeros(self.nbin)
 
         self.recent_best_fitnesses = []  # Contains the most recent best fitnesses of the 20 most recent generations
-        self.stagnation_list = []  # Contains median fitness of some recent generations (formula: see local_restart())
+        self.stagnation_list = []        # Contains median fitness of some recent generations
+        self.is_fitness_flat = False  # (effectively) are all fitness values this generation equal?
 
         self.max_iter = 100 + 50*(n+3)**2 / sqrt(lambda_)
         self.tolx = 1e-12 * self.sigma
@@ -559,8 +560,22 @@ class Parameters(BaseParameters):
         self.sigma_mean = self.sigma = 1          # TODO: make this depend on any input default sigma value
         # TODO: add feedback of resetting sigma to the sigma per individual
 
+    def recordRecentFitnessValues(self, evalcount, fitnesses):
+        """
+            Record recent fitness values at current budget
+        """
+        self.histfunevals[int(mod(evalcount/self.lambda_-1, self.nbin))] = fitnesses[0]
 
-    def checkLocalRestartConditions(self, evalcount, fitnesses):
+        self.recent_best_fitnesses.append(fitnesses[0])
+        self.recent_best_fitnesses = self.recent_best_fitnesses[-20:]
+
+        self.stagnation_list.append(median(fitnesses))
+        self.stagnation_list = self.stagnation_list[-int(ceil(0.2*evalcount + 120 + 30*self.n/self.lambda_)):]
+
+        self.is_fitness_flat = fitnesses[0] == fitnesses[self.flat_fitness_index]
+
+
+    def checkLocalRestartConditions(self, evalcount):
         """
             Check for local restart conditions according to (B)IPOP
 
@@ -578,13 +593,6 @@ class Parameters(BaseParameters):
         diagC = diag(self.C).reshape(-1, 1)
         tmp = append(abs(self.p_c), sqrt(diagC), axis=1)
         a = int(mod(evalcount/self.lambda_-1, self.n))
-        self.histfunevals[int(mod(evalcount/self.lambda_-1, self.nbin))] = fitnesses[0]
-
-        self.recent_best_fitnesses.append(fitnesses[0])
-        self.recent_best_fitnesses = self.recent_best_fitnesses[-20:]
-
-        self.stagnation_list.append(median(fitnesses))
-        self.stagnation_list = self.stagnation_list[-int(ceil(0.2*evalcount + 120 + 30*self.n/self.lambda_)):]
 
         # TolX
         if all(self.sigma*(max(tmp, axis=1)) < self.tolx):
@@ -617,13 +625,13 @@ class Parameters(BaseParameters):
             restart_required = True
 
         elif mod(evalcount, self.lambda_) == self.nbin and \
-                                max(self.histfunevals) - min(self.histfunevals) < self.tolfun:
+                max(self.histfunevals) - min(self.histfunevals) < self.tolfun:
             if debug:
                 print('tolfun')
             restart_required = True
 
         # Adjust step size in case of equal function values
-        elif fitnesses[0] == fitnesses[self.flat_fitness_index]:
+        elif self.is_fitness_flat:
             if debug:
                 print('flatfitness')
             restart_required = True
@@ -636,7 +644,7 @@ class Parameters(BaseParameters):
 
         # Stagnation, median of most recent 20 best values is no better than that of the oldest 20 medians/generation
         elif len(self.stagnation_list) > 20 and len(self.recent_best_fitnesses) > 20 and \
-                                                median(self.stagnation_list[:20]) > median(self.recent_best_fitnesses):
+                median(self.stagnation_list[:20]) > median(self.recent_best_fitnesses):
             if debug:
                 print('stagnation')
             restart_required = True

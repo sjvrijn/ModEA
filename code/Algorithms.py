@@ -609,7 +609,6 @@ class _BaseAlgorithm(object):
 
 
     def evalPopulation(self):
-
         for ind in self.new_population:
             self.mutate(ind, self.parameters)
         fitnesses = self.fitnessFunction([ind.genotype for ind in self.new_population])
@@ -656,7 +655,7 @@ class _BaseAlgorithm(object):
             self.parameters.tpa_result = -1
 
 
-    def trackParameters(self):
+    def recordStatistics(self):
         gen_size = self.used_budget - len(self.fitness_over_time)
         self.generation_size.append(gen_size)
         self.sigma_over_time.extend([self.parameters.sigma_mean] * gen_size)
@@ -666,7 +665,6 @@ class _BaseAlgorithm(object):
 
 
     def runOneGeneration(self):
-
         if self.parameters.tpa:
             self.new_population = self.new_population[:-2]
 
@@ -676,16 +674,16 @@ class _BaseAlgorithm(object):
             self.evalPopulationSequentially()
 
         fitnesses = sorted([individual.fitness for individual in self.new_population])
+        self.parameters.recordRecentFitnessValues(self.used_budget, fitnesses)
+
         self.population = self.select(self.population, self.new_population, self.used_budget, self.parameters)
         self.new_population = self.recombine(self.population, self.parameters)
 
-        # Two-Point step-size Adaptation
-        if self.parameters.tpa:
+        if self.parameters.tpa:  # Two-Point step-size Adaptation
             self.tpaUpdate()
 
-        self.mutateParameters(self.used_budget)  # Parameter mutation
-        # Local restart
-        if self.parameters.checkLocalRestartConditions(self.used_budget, fitnesses):
+        self.mutateParameters(self.used_budget)
+        if self.parameters.checkLocalRestartConditions(self.used_budget):
             return True  # interrupted=True
 
         return False
@@ -696,7 +694,7 @@ class _BaseAlgorithm(object):
         # The main evaluation loop
         while self.used_budget < self.budget and not interrupted:
             interrupted = self.runOneGeneration()
-            self.trackParameters()
+            self.recordStatistics()
 
 
 def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, parallel=False):
