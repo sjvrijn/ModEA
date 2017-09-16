@@ -41,7 +41,6 @@ GA_generations = 20
 GA_budget = GA_lambda * GA_generations
 GA_evaluate_parallel = True
 GA_num_parallel = int(floor(MPI_num_total_threads / ES_num_runs))
-GA_debug = False
 
 ### Experiment Settings ###
 default_target = 1e-8
