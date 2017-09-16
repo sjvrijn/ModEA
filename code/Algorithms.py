@@ -675,20 +675,17 @@ class _BaseAlgorithm(object):
         else:  # Sequential
             self.evalPopulationSequentially()
 
-        self.trackParameters()
         if self.used_budget >= self.budget:
             return True  # interrupted=True
 
         fitnesses = sorted([individual.fitness for individual in self.new_population])
         self.population = self.select(self.population, self.new_population, self.used_budget, self.parameters)
-        if len(self.population) != self.parameters.mu_int:
-            raise ValueError('Bad population size! Size: {} instead of {}'.format(len(self.population),
-                                                                                  self.parameters.mu_int))
         self.new_population = self.recombine(self.population, self.parameters)
 
         # Two-Point step-size Adaptation
         if self.parameters.tpa:
             self.tpaUpdate()
+
         self.mutateParameters(self.used_budget)  # Parameter mutation
         # Local restart
         if self.parameters.localRestart(self.used_budget, fitnesses):
@@ -702,6 +699,7 @@ class _BaseAlgorithm(object):
         # The main evaluation loop
         while self.used_budget < self.budget and not interrupted:
             interrupted = self.runOneGeneration()
+            self.trackParameters()
 
 
 def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, parallel=False):
