@@ -245,6 +245,7 @@ def runCustomizedES(representation, iid, rep, ndim, fid, budget):
 
     # Run the ES defined by opts once with the given budget
     results = customizedES(ndim, f.evalfun, budget, lambda_=lambda_, mu=mu, opts=opts, values=values)
+    f.finalizerun()
     return f_target, results
 
 
