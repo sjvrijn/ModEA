@@ -545,22 +545,6 @@ def localRestartAlgorithm(fitnessFunction, budget, functions, parameter_opts, pa
     return tuple(total_results)
 
 
-# Helper function
-def _mutateAndEvaluate(ind, mutate, fitFunc):
-    """
-        Simple helper function for use by parallel running: mutate and evaluate an individual, since there is no
-        use in waiting until all mutations are finished before we evaluate.
-
-        :param ind:     The individual to mutate and evaluate
-        :param mutate:  The mutation function to apply
-        :param fitFunc: The fitness function to evaluate the individual with
-        :return:        The original individual, with its genotype mutated and fitness stored inline
-    """
-    mutate(ind)
-    ind.fitness = fitFunc(ind.genotype)[0]
-    return ind
-
-
 class _BaseAlgorithm(object):
     """
         Skeleton function for all ES algorithms
