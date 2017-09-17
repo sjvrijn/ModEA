@@ -580,11 +580,18 @@ class EvolutionaryOptimizer(object):
         self.population = population
         self.fitnessFunction = fitnessFunction
         self.budget = budget
-        self.parameters = parameters
+        self.parameters = self.instantiateParameters(parameters)
         self.parallel = parallel
 
         # Single recombination outside the eval loop to create the new population
         self.new_population = self.recombine(population, parameters)
+
+
+    def instantiateParameters(self, params):
+        if isinstance(params, Parameters):
+            return params
+        elif isinstance(params, dict):
+            return Parameters(**params)
 
 
     def evalPopulation(self):
