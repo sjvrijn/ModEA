@@ -105,6 +105,7 @@ class Parameters(BaseParameters):
         self.sequential = sequential
         self.seq_cutoff = seq_cutoff
         self.tpa = tpa
+        self.weights_option = weights_option
         self.weights = self.getWeights(weights_option)
         self.mu_eff = 1 / sum(square(self.weights))
 
@@ -207,8 +208,17 @@ class Parameters(BaseParameters):
         self.c_cov_pos = 2/(n**2 + 6)
         self.c_cov_neg = 0.4/(n**1.6 + 1)
 
+        self.values = values
         if values:  # Now we've had the default values, we change all values that were passed along
             self.__init_values(values)
+
+
+    def getParameterOpts(self):
+        return {'n': self.n, 'budget': self.budget, 'sigma': self.sigma,
+                'mu': self.mu, 'lambda_': self.lambda_, 'weights_option': self.weights_option, 'l_bound': self.l_bound,
+                'u_bound': self.u_bound, 'seq_cutoff': self.seq_cutoff, 'wcm': self.wcm,
+                'active': self.active, 'elitist': self.elitist, 'local_restart': self.local_restart,
+                'sequential': self.sequential, 'tpa': self.tpa, 'values': self.values}
 
 
     def __init_values(self, values):
