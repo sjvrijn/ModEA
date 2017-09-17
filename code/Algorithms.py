@@ -676,6 +676,15 @@ class EvolutionaryOptimizer(object):
             self.runOneGeneration()
             self.recordStatistics()
 
+
+    def initializePopulation(self):
+        self.population = [FloatIndividual(self.parameters.n) for _ in range(self.parameters.mu_int)]
+        # Init all individuals of the first population at the same random point in the search space
+        wcm = (np.random.randn(self.parameters.n, 1) * (self.parameters.u_bound - self.parameters.l_bound)) + self.parameters.l_bound
+        for individual in self.population:
+            individual.genotype = copy(wcm)
+
+
 def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, parallel=False):
     """
         Skeleton function for all ES algorithms
