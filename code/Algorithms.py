@@ -685,6 +685,68 @@ class EvolutionaryOptimizer(object):
             individual.genotype = copy(wcm)
 
 
+    def runLocalRestartOptimizer(self):
+        """
+            Run the baseAlgorithm with the given specifications using a local-restart strategy.
+        """
+
+        parameter_opts = self.parameters.getParameterOpts()
+
+        local_budget = self.budget
+
+        if parameter_opts['lambda_']:
+            lambda_init = parameter_opts['lambda_']
+        elif parameter_opts['local_restart'] in ['IPOP', 'BIPOP']:
+            lambda_init = int(4 + floor(3 * log(parameter_opts['n'])))
+        else:
+            lambda_init = None
+        parameter_opts['lambda_'] = lambda_init
+
+        # BIPOP Specific parameters
+        self.lambda_ = {'small': None, 'large': lambda_init}
+        self.budgets = {'small': None, 'large': None}
+        self.regime = 'first'  # Later alternates between 'large' and 'small'
+
+        while local_budget > 0:
+
+            # Every local restart needs its own parameters, so parameter update/mutation must also be linked every time
+            self.parameters = Parameters(**parameter_opts)
+            self.mutateParameters = self.parameters.adaptCovarianceMatrix
+
+            self.initializePopulation()
+            parameter_opts['wcm'] = self.population[0].genotype
+
+            # Run the actual algorithm
+            prev_budget = self.used_budget
+            self.runOptimizer()
+            used_budget = self.used_budget - prev_budget
+            local_budget -= used_budget
+
+            # Increasing Population Strategies
+            if parameter_opts['local_restart'] == 'IPOP':
+                parameter_opts['lambda_'] *= 2
+
+            elif parameter_opts['local_restart'] == 'BIPOP':
+
+                try:
+                    self.budgets[self.regime] -= used_budget
+                    self.regime = 'small' if self.budgets['small'] > self.budgets['large'] > 0 else 'large'
+                except IndexError:  # Setup of the two regimes after running regularily for the first time
+                    self.budgets['small'] = local_budget // 2
+                    self.budgets['large'] = local_budget - self.budgets['small']
+                    self.regime = 'large'
+
+                if self.regime == 'large':
+                    self.lambda_['large'] *= 2
+                    parameter_opts['sigma'] = 2
+                elif self.regime == 'small':
+                    rand_val = np.random.random() ** 2
+                    self.lambda_['small'] = int(floor(lambda_init * (.5 * self.lambda_['large'] / lambda_init) ** rand_val))
+                    parameter_opts['sigma'] = 2e-2 * np.random.random()
+
+                parameter_opts['lambda'] = self.lambda_[self.regime]
+
+
 def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, parallel=False):
     """
         Skeleton function for all ES algorithms
