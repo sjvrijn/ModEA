@@ -72,7 +72,7 @@ def CMA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
     """
 
     parameters = Parameters(n, budget, mu, lambda_, elitist=elitist)
-    population = [FloatIndividual(n) for _ in range(mu)]
+    population = [FloatIndividual(n) for _ in range(parameters.mu_int)]
 
     # Artificial init
     wcm = parameters.wcm
@@ -271,6 +271,9 @@ def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None, v
     eff_lambda = lambda_
     if mu is None:
         mu = 0.5
+
+    if opts is None:
+        opts = dict()
 
     # Boolean defaults, if not given
     bool_default_opts = ['active', 'elitist', 'mirrored', 'orthogonal', 'sequential', 'threshold', 'tpa']
@@ -485,10 +488,10 @@ class EvolutionaryOptimizer(object):
             self.population = population
         else:
             self.initializePopulation()
+        self.parameters = self.instantiateParameters(parameters)
         self.new_population = self.recombine(self.population, self.parameters)
         self.fitnessFunction = fitnessFunction
         self.budget = budget
-        self.parameters = self.instantiateParameters(parameters)
         self.parallel = parallel
 
         # Parameter tracking
