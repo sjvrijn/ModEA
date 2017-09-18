@@ -478,7 +478,8 @@ class EvolutionaryOptimizer(object):
 
     def __init__(self, population, fitnessFunction, budget, functions, parameters, parallel=False):
         # Initialization
-        self.seq_cutoff = parameters.mu_int * parameters.seq_cutoff
+        self.parameters = self.instantiateParameters(parameters)
+        self.seq_cutoff = self.parameters.mu_int * self.parameters.seq_cutoff
         self.used_budget = 0
         self.recombine = functions['recombine']
         self.mutate = functions['mutate']
@@ -488,7 +489,6 @@ class EvolutionaryOptimizer(object):
             self.population = population
         else:
             self.initializePopulation()
-        self.parameters = self.instantiateParameters(parameters)
         self.new_population = self.recombine(self.population, self.parameters)
         self.fitnessFunction = fitnessFunction
         self.budget = budget
@@ -498,7 +498,7 @@ class EvolutionaryOptimizer(object):
         self.sigma_over_time = []
         self.fitness_over_time = []
         self.generation_size = []
-        self.best_individual = population[0]
+        self.best_individual = self.population[0]
 
 
     def instantiateParameters(self, params):
@@ -629,6 +629,7 @@ class EvolutionaryOptimizer(object):
 
             self.initializePopulation()
             parameter_opts['wcm'] = self.population[0].genotype
+            self.new_population = self.recombine(self.population, self.parameters)
 
             # Run the actual algorithm
             prev_budget = self.used_budget
@@ -658,7 +659,7 @@ class EvolutionaryOptimizer(object):
                     self.lambda_['small'] = int(floor(lambda_init * (.5 * self.lambda_['large'] / lambda_init) ** rand_val))
                     parameter_opts['sigma'] = 2e-2 * np.random.random()
 
-                parameter_opts['lambda'] = self.lambda_[self.regime]
+                parameter_opts['lambda_'] = self.lambda_[self.regime]
 
 
 def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, parallel=False):
@@ -704,5 +705,5 @@ def localRestartAlgorithm(fitnessFunction, budget, functions, parameter_opts, pa
     """
     functions['mutateParameters'] = None  # None to prevent KeyError, will be set later
     baseAlg = EvolutionaryOptimizer(None, fitnessFunction, budget, functions, parameter_opts, parallel)
-    baseAlg.runOptimizer()
+    baseAlg.runLocalRestartOptimizer()
     return baseAlg.generation_size, baseAlg.sigma_over_time, baseAlg.fitness_over_time, baseAlg.best_individual
