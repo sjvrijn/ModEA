@@ -575,6 +575,9 @@ class EvolutionaryOptimizer(object):
 
         self.parameters.recordRecentFitnessValues(self.used_budget, [ind.fitness for ind in self.new_population])
 
+        if self.used_budget >= self.budget:  # Prevents errors from having to deal with too small populations
+            return
+
         self.population = self.select(self.population, self.new_population, self.used_budget, self.parameters)
         self.new_population = self.recombine(self.population, self.parameters)
 
