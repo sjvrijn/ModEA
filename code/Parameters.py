@@ -582,7 +582,8 @@ class Parameters(BaseParameters):
         self.stagnation_list.append(median(fitnesses))
         self.stagnation_list = self.stagnation_list[-int(ceil(0.2*evalcount + 120 + 30*self.n/self.lambda_)):]
 
-        self.is_fitness_flat = min(fitnesses) == sorted(fitnesses)[self.flat_fitness_index]
+        flat_fitness_index = min(len(fitnesses)-1, self.flat_fitness_index)
+        self.is_fitness_flat = min(fitnesses) == sorted(fitnesses)[flat_fitness_index]
 
 
     def checkLocalRestartConditions(self, evalcount):
