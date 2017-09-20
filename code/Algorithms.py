@@ -556,7 +556,7 @@ class EvolutionaryOptimizer(object):
 
 
     def recordStatistics(self):
-        gen_size = self.used_budget - len(self.fitness_over_time)
+        gen_size = int(self.used_budget - len(self.fitness_over_time))
         self.generation_size.append(gen_size)
         self.sigma_over_time.extend([self.parameters.sigma_mean] * gen_size)
         self.fitness_over_time.extend([self.population[0].fitness] * gen_size)
