@@ -530,7 +530,7 @@ class EvolutionaryOptimizer(object):
             if self.parameters.sequential:  # We interrupt once a better individual has been found
                 if individual.fitness < self.best_individual.fitness:
                     improvement_found = True
-                if i >= self.parameters.mu_int and improvement_found:
+                if i >= self.seq_cutoff and improvement_found:
                     break
                 if self.used_budget == self.budget:
                     break
@@ -628,6 +628,7 @@ class EvolutionaryOptimizer(object):
 
             # Every local restart needs its own parameters, so parameter update/mutation must also be linked every time
             self.parameters = Parameters(**parameter_opts)
+            self.seq_cutoff = self.parameters.mu_int * self.parameters.seq_cutoff
             self.mutateParameters = self.parameters.adaptCovarianceMatrix
 
             self.initializePopulation()
