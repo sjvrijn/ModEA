@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
+import os
 import numpy as np
 import sys
 from functools import partial
@@ -160,6 +161,44 @@ def ensureFullLengthRepresentation(representation):
     if len(representation) < len(default_rep):
         representation.extend(default_rep[len(representation):])
     return representation
+
+
+def reorganiseBBOBOutput(path, fid, ndim, iids, num_reps):
+    subfolder = 'i{iid}-r{rep}/'
+    extensions = ['.dat', '.rdat', '.tdat']
+    info_fname = 'bbobexp_f{}.info'.format(fid)
+    data_folder = 'data_f{}/'.format(fid)
+    data_fname = '_f{}_DIM{}'.format(fid, ndim)
+    counter = 1
+    cases = list(product(iids, range(num_reps)))
+    iid, rep = cases[0]
+
+    os.rename(path+subfolder.format(iid=iid, rep=rep)+info_fname, path+info_fname)
+    os.rename(path+subfolder.format(iid=iid, rep=rep)+data_folder, path+data_folder)
+
+    for iid, rep in cases[1:]:
+        this_folder = subfolder.format(iid=iid, rep=rep)
+
+        # copy content of info file into 'global' info file
+        # print(os.listdir(path+this_folder))
+        with open(path+this_folder+info_fname, 'r') as f_from:
+            with open(path+info_fname, 'a') as f_to:
+                f_to.writelines([line for line in f_from])
+                f_to.write('\n')
+
+        # move and rename data files into the data folder
+        for ext in extensions:
+            os.rename(path + this_folder + data_folder + 'bbobexp' + data_fname + ext,
+                      path + data_folder + 'bbobexp-{:02d}'.format(counter) + data_fname + ext)
+        counter += 1
+
+    for iid, rep in cases:
+        try:  # will fail for 'i0-r0' as they have been moved already
+            os.remove(path + subfolder.format(iid=iid, rep=rep) + info_fname)
+            os.rmdir(path + subfolder.format(iid=iid, rep=rep) + data_folder)
+        except:
+            pass
+        os.rmdir(path + subfolder.format(iid=iid, rep=rep))
 
 
 '''-----------------------------------------------------------------------------
