@@ -164,6 +164,7 @@ def ensureFullLengthRepresentation(representation):
 
 
 def reorganiseBBOBOutput(path, fid, ndim, iids, num_reps):
+    path += '{ndim}d-f{fid}/'.format(ndim=ndim, fid=fid)
     subfolder = 'i{iid}-r{rep}/'
     extensions = ['.dat', '.rdat', '.tdat']
     info_fname = 'bbobexp_f{}.info'.format(fid)
@@ -176,21 +177,20 @@ def reorganiseBBOBOutput(path, fid, ndim, iids, num_reps):
     os.rename(path+subfolder.format(iid=iid, rep=rep)+info_fname, path+info_fname)
     os.rename(path+subfolder.format(iid=iid, rep=rep)+data_folder, path+data_folder)
 
-    for iid, rep in cases[1:]:
-        this_folder = subfolder.format(iid=iid, rep=rep)
+    with open(path + info_fname, 'a') as f_to:
+        for iid, rep in cases[1:]:
+            this_folder = subfolder.format(iid=iid, rep=rep)
 
-        # copy content of info file into 'global' info file
-        # print(os.listdir(path+this_folder))
-        with open(path+this_folder+info_fname, 'r') as f_from:
-            with open(path+info_fname, 'a') as f_to:
-                f_to.writelines([line for line in f_from])
-                f_to.write('\n')
+            # copy content of info file into 'global' info file
+            with open(path+this_folder+info_fname, 'r') as f_from:
+                    f_to.write('\n')
+                    f_to.writelines([line for line in f_from])
 
-        # move and rename data files into the data folder
-        for ext in extensions:
-            os.rename(path + this_folder + data_folder + 'bbobexp' + data_fname + ext,
-                      path + data_folder + 'bbobexp-{:02d}'.format(counter) + data_fname + ext)
-        counter += 1
+            # move and rename data files into the data folder
+            for ext in extensions:
+                os.rename(path + this_folder + data_folder + 'bbobexp' + data_fname + ext,
+                          path + data_folder + 'bbobexp-{:02d}'.format(counter) + data_fname + ext)
+            counter += 1
 
     for iid, rep in cases:
         try:  # will fail for 'i0-r0' as they have been moved already
@@ -228,9 +228,11 @@ def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, num_rep
     budget = Config.ES_budget_factor * ndim if budget is None else budget
     runFunction = partial(runCustomizedES, ndim=ndim, fid=fid, budget=budget)
 
-    num_multiplications = len(iids*num_reps)
+    num_multiplications = len(iids)*num_reps
     arguments = list(product(representations, iids, range(num_reps)))
     run_data = runParallelFunction(runFunction, arguments)
+    for rep in representations:
+        reorganiseBBOBOutput(datapath + reprToString(rep) + '/', fid, ndim, iids, num_reps)
 
     targets, results = zip(*run_data)
     fitness_results = []
@@ -269,7 +271,7 @@ def runCustomizedES(representation, iid, rep, ndim, fid, budget):
     """
     # Setup BBOB function + logging
     bbob_opts['algid'] = representation
-    datapath_ext = '{ndim}d-f{fid}/{repr}/i{iid}-r{rep}/'.format(ndim=ndim, fid=fid, repr=reprToString(representation),
+    datapath_ext = '{repr}/{ndim}d-f{fid}/i{iid}-r{rep}/'.format(ndim=ndim, fid=fid, repr=reprToString(representation),
                                                                  iid=iid, rep=rep)
     guaranteeFolderExists(datapath + datapath_ext)
 
