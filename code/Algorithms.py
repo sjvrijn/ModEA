@@ -413,46 +413,6 @@ def GA(n, fitnessFunction, budget, mu, lambda_, population, parameters=None):
     return results
 
 
-def MIES(n, fitnessFunction, budget, mu, lambda_, population, parameters=None):
-    """
-        Defines a Mixed-Integer Evolution Strategy (MIES) that evolves an Evolution Strategy (ES) for a given fitness function
-
-        :param n:               Dimensionality of the search-space for the MIES
-        :param fitnessFunction: Fitness function the MIES should use to evaluate candidate solutions
-        :param budget:          The budget for the MIES
-        :param mu:              Population size of the MIES
-        :param lambda_:         Offpsring size of the MIES
-        :param population:      Initial population of candidates to be used by the MIES
-        :param parameters:      Parameters object to be used by the MIES
-        :returns:               A tuple containing a bunch of optimization results
-    """
-
-    if parameters is None:
-        parameters = Parameters(n=n, budget=budget, mu=mu, lambda_=lambda_)
-
-    # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
-    recombine = Rec.MIES_recombine
-    mutate = partial(Mut.MIES_Mutate, options=options, num_options=num_options_per_module)
-    best = Sel.bestGA
-
-    def select(pop, new_pop, _, params):
-        return best(pop, new_pop, params)
-
-    def mutateParameters(_):
-        pass  # The only actual parameter mutation is the self-adaptive step-size of each individual
-
-    functions = {
-        'recombine': recombine,
-        'mutate': mutate,
-        'select': select,
-        'mutateParameters': mutateParameters,
-    }
-
-    _, results = baseAlgorithm(population, fitnessFunction, budget, functions, parameters,
-                               parallel=Config.GA_evaluate_parallel)
-    return results
-
-
 class EvolutionaryOptimizer(object):
     """
         Skeleton function for all ES algorithms
@@ -666,6 +626,45 @@ class EvolutionaryOptimizer(object):
                 parameter_opts['lambda_'] = self.lambda_[self.regime]
 
 
+class MIESOptimizer(EvolutionaryOptimizer):
+    """
+        Defines a Mixed-Integer Evolution Strategy (MIES) that evolves an Evolution Strategy (ES) 
+        for a given fitness function
+
+        :param n:               Dimensionality of the search-space for the MIES
+        :param fitnessFunction: Fitness function the MIES should use to evaluate candidate solutions
+        :param budget:          The budget for the MIES
+        :param mu:              Population size of the MIES
+        :param lambda_:         Offpsring size of the MIES
+        :param population:      Initial population of candidates to be used by the MIES
+        :param parameters:      Parameters object to be used by the MIES
+    """
+
+    def __init__(self, n, mu, lambda_, population, fitnessFunction, budget, parameters=None):
+        if parameters is None:
+            parameters = Parameters(n=n, budget=budget, mu=mu, lambda_=lambda_)
+
+        # We use functions here to 'hide' the additional passing of parameters that are algorithm specific
+        recombine = Rec.MIES_recombine
+        mutate = partial(Mut.MIES_Mutate, options=options, num_options=num_options_per_module)
+        best = Sel.bestGA
+
+        def select(pop, new_pop, _, params):
+            return best(pop, new_pop, params)
+
+        def mutateParameters(_):
+            pass  # The only actual parameter mutation is the self-adaptive step-size of each individual
+
+        functions = {
+            'recombine': recombine,
+            'mutate': mutate,
+            'select': select,
+            'mutateParameters': mutateParameters,
+        }
+
+        super(MIESOptimizer, self).__init__(population, fitnessFunction, budget, functions, parameters)
+
+
 def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, parallel=False):
     """
         Skeleton function for all ES algorithms
@@ -711,3 +710,24 @@ def localRestartAlgorithm(fitnessFunction, budget, functions, parameter_opts, pa
     baseAlg = EvolutionaryOptimizer(None, fitnessFunction, budget, functions, parameter_opts, parallel)
     baseAlg.runLocalRestartOptimizer()
     return baseAlg.generation_size, baseAlg.sigma_over_time, baseAlg.fitness_over_time, baseAlg.best_individual
+
+
+def MIES(n, fitnessFunction, budget, mu, lambda_, population, parameters=None):
+    """
+        Defines a Mixed-Integer Evolution Strategy (MIES) that evolves an Evolution Strategy (ES)
+        for a given fitness function
+
+        :param n:               Dimensionality of the search-space for the MIES
+        :param fitnessFunction: Fitness function the MIES should use to evaluate candidate solutions
+        :param budget:          The budget for the MIES
+        :param mu:              Population size of the MIES
+        :param lambda_:         Offpsring size of the MIES
+        :param population:      Initial population of candidates to be used by the MIES
+        :param parameters:      Parameters object to be used by the MIES
+        :returns:               A tuple containing a bunch of optimization results
+    """
+
+    mies = MIESOptimizer(n, fitnessFunction, budget, mu, lambda_, population, parameters)
+    mies.runOptimizer()
+    return mies.used_budget, (mies.generation_size, mies.sigma_over_time,
+                              mies.fitness_over_time, mies.best_individual)
