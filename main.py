@@ -15,12 +15,14 @@ from code.Algorithms import MIES
 from EvolvingES import ensureFullLengthRepresentation, evaluateCustomizedESs, _displayDuration
 from code.Individual import MixedIntIndividual
 from code.Parameters import Parameters
-from code.Utils import ESFitness, getOpts, options, num_options_per_module, getBitString, getPrintName, create_bounds
+from code.Utils import ESFitness, getOpts, options, num_options_per_module, \
+    getBitString, getPrintName, create_bounds, guaranteeFolderExists
 from code.local import non_bbob_datapath
 
 # Sets of noise-free and noisy benchmarks
 free_function_ids = bbobbenchmarks.nfreeIDs
 noisy_function_ids = bbobbenchmarks.noisyIDs
+guaranteeFolderExists(non_bbob_datapath)
 
 
 opts = {'algid': None,
@@ -39,7 +41,7 @@ def _testEachOption():
     fid = 1
     ndim = 10
     representation = [0] * n
-    lambda_mu = [2, 0.01]
+    lambda_mu = [None, None]
     representation.extend(lambda_mu)
     ensureFullLengthRepresentation(representation)
     evaluateCustomizedESs(representation, fid=fid, ndim=ndim, iids=range(Config.ES_num_runs))

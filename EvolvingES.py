@@ -25,9 +25,7 @@ except:
     MPI = None
     MPI_available = False
 
-# BBOB parameters: Sets of noise-free and noisy benchmarks
-free_function_ids = bbobbenchmarks.nfreeIDs
-noisy_function_ids = bbobbenchmarks.noisyIDs
+guaranteeFolderExists(datapath)
 
 # Options to be stored in the log file(s)
 bbob_opts = {'algid': None,
