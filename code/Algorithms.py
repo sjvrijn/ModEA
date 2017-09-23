@@ -519,7 +519,7 @@ class CustomizedES(EvolutionaryOptimizer):
         return lambda_, eff_lambda, mu
 
 
-def baseAlgorithm(population, fitnessFunction, budget, functions, parameters, parallel=False):
+def _baseAlgorithm(population, fitnessFunction, budget, functions, parameters, parallel=False):
     """
         Skeleton function for all ES algorithms
         Requires a population, fitness function handle, evaluation budget and the algorithm-specific functions
@@ -550,7 +550,7 @@ population (mu individuals) after (mu+lambda) or (mu,lambda) selection
                                  baseAlg.fitness_over_time, baseAlg.best_individual)
 
 
-def localRestartAlgorithm(fitnessFunction, budget, functions, parameter_opts, parallel=False):
+def _localRestartAlgorithm(fitnessFunction, budget, functions, parameter_opts, parallel=False):
     """
         Run the baseAlgorithm with the given specifications using a local-restart strategy.
 
@@ -568,7 +568,7 @@ def localRestartAlgorithm(fitnessFunction, budget, functions, parameter_opts, pa
     return baseAlg.generation_size, baseAlg.sigma_over_time, baseAlg.fitness_over_time, baseAlg.best_individual
 
 
-def onePlusOneES(n, fitnessFunction, budget):
+def _onePlusOneES(n, fitnessFunction, budget):
     """
         Implementation of the default (1+1)-ES
         Requires the length of the vector to be optimized, the handle of a fitness function to use and the budget
@@ -585,7 +585,7 @@ def onePlusOneES(n, fitnessFunction, budget):
            one_plus_one.fitness_over_time, one_plus_one.best_individual
 
 
-def CMA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
+def _CMA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
     """
         Implementation of a default (mu +/, lambda)-CMA-ES
         Requires the length of the vector to be optimized, the handle of a fitness function to use and the budget
@@ -604,7 +604,7 @@ def CMA_ES(n, fitnessFunction, budget, mu=None, lambda_=None, elitist=False):
     return cma_es.generation_size, cma_es.sigma_over_time, cma_es.fitness_over_time, cma_es.best_individual
 
 
-def GA(n, fitnessFunction, budget, mu, lambda_, population, parameters=None):
+def _GA(n, fitnessFunction, budget, mu, lambda_, population, parameters=None):
     """
         Defines a Genetic Algorithm (GA) that evolves an Evolution Strategy (ES) for a given fitness function
 
@@ -624,7 +624,7 @@ def GA(n, fitnessFunction, budget, mu, lambda_, population, parameters=None):
                             ga.fitness_over_time, ga.best_individual)
 
 
-def MIES(n, fitnessFunction, budget, mu, lambda_, population, parameters=None):
+def _MIES(n, fitnessFunction, budget, mu, lambda_, population, parameters=None):
     """
         Defines a Mixed-Integer Evolution Strategy (MIES) that evolves an Evolution Strategy (ES)
         for a given fitness function
@@ -645,7 +645,7 @@ def MIES(n, fitnessFunction, budget, mu, lambda_, population, parameters=None):
                               mies.fitness_over_time, mies.best_individual)
 
 
-def customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None, values=None):
+def _customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None, values=None):
     custom_es = CustomizedES(n, fitnessFunction, budget, mu, lambda_, opts, values)
 
     if opts is not None and opts['ipop']:

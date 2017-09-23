@@ -5,7 +5,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import unittest
 import numpy as np
 import random
-from code.Algorithms import onePlusOneES, customizedES
+from code.Algorithms import _onePlusOneES, _customizedES
 from code import Config
 
 
@@ -20,7 +20,7 @@ class OnePlusOneTest(unittest.TestCase):
         random.seed(42)
 
     def test_onePlusOne(self):
-        gensize, sigmas, fitness, best_ind = onePlusOneES(5, sphere, 250)
+        gensize, sigmas, fitness, best_ind = _onePlusOneES(5, sphere, 250)
 
         self.assertListEqual([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                               1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -98,7 +98,7 @@ class CMATest(unittest.TestCase):
     def test_CMA(self):
         np.random.seed(42)
         random.seed(42)
-        gensize, sigmas, fitness, best_ind = customizedES(5, sphere, 250)
+        gensize, sigmas, fitness, best_ind = _customizedES(5, sphere, 250)
 
         self.assertListEqual([8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
                               8, 8], gensize)
@@ -116,7 +116,7 @@ class restartCMATest(unittest.TestCase):
         random.seed(42)
 
     def test_CMA(self):
-        gensize, sigmas, fitness, best_ind = customizedES(2, sphere, 5000, opts={'ipop': 'BIPOP'})
+        gensize, sigmas, fitness, best_ind = _customizedES(2, sphere, 5000, opts={'ipop': 'BIPOP'})
 
         exp_gensize = [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
                        6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,

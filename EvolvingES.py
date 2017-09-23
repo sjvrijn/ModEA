@@ -13,7 +13,7 @@ from multiprocessing import Pool
 
 from bbob import bbobbenchmarks, fgeneric
 from code import Config
-from code.Algorithms import customizedES
+from code.Algorithms import _customizedES
 from code.Utils import getOpts, getVals, options, initializable_parameters, \
     chunkListByLength, guaranteeFolderExists, reprToString, ESFitness
 from code.local import datapath
@@ -283,7 +283,7 @@ def runCustomizedES(representation, iid, rep, ndim, fid, budget):
     values = getVals(representation[len(options)+2:])
 
     # Run the ES defined by opts once with the given budget
-    results = customizedES(ndim, f.evalfun, budget, lambda_=lambda_, mu=mu, opts=opts, values=values)
+    results = _customizedES(ndim, f.evalfun, budget, lambda_=lambda_, mu=mu, opts=opts, values=values)
     f.finalizerun()
     return f_target, results
 

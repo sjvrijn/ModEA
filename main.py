@@ -11,7 +11,7 @@ from functools import partial
 from copy import copy
 from bbob import bbobbenchmarks
 from code import Config
-from code.Algorithms import MIES
+from code.Algorithms import _MIES
 from EvolvingES import ensureFullLengthRepresentation, evaluateCustomizedESs, _displayDuration
 from code.Individual import MixedIntIndividual
 from code.Parameters import Parameters
@@ -245,9 +245,9 @@ def _runGA(ndim=5, fid=1, run=1):
     parameters.u_bound[len(options) + 1:] = np.array(u_bound)
     parameters.l_bound[len(options) + 1:] = np.array(l_bound)
 
-    gen_sizes, sigmas, fitness, best = MIES(n=ndim, fitnessFunction=fitnessFunction, budget=Config.GA_budget,
-                                            mu=Config.GA_mu, lambda_=Config.GA_lambda, parameters=parameters,
-                                            population=population)  # This line does all the work!
+    gen_sizes, sigmas, fitness, best = _MIES(n=ndim, fitnessFunction=fitnessFunction, budget=Config.GA_budget,
+                                             mu=Config.GA_mu, lambda_=Config.GA_lambda, parameters=parameters,
+                                             population=population)  # This line does all the work!
     y = datetime.now()
     print()
     print("Best Individual:     {}\n"
@@ -299,9 +299,9 @@ def _runExperiments():
 
             print("Optimizing for function ID {} in {}-dimensional space:".format(fid, ndim))
             x = datetime.now()
-            gen_sizes, sigmas, fitness, best = MIES(n=ndim, fitnessFunction=fid, budget=Config.GA_budget,
-                                                    mu=Config.GA_mu, lambda_=Config.GA_lambda, parameters=parameters,
-                                                    population=population)
+            gen_sizes, sigmas, fitness, best = _MIES(n=ndim, fitnessFunction=fid, budget=Config.GA_budget,
+                                                     mu=Config.GA_mu, lambda_=Config.GA_lambda, parameters=parameters,
+                                                     population=population)
             y = datetime.now()
 
             z = y - x
