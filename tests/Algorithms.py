@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import unittest
 import numpy as np
 import random
@@ -16,8 +20,6 @@ class OnePlusOneTest(unittest.TestCase):
         random.seed(42)
 
     def test_onePlusOne(self):
-        np.random.seed(42)
-        random.seed(42)
         gensize, sigmas, fitness, best_ind = onePlusOneES(5, sphere, 250)
 
         self.assertListEqual([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
