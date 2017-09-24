@@ -50,7 +50,6 @@ class EvolutionaryOptimizer(object):
         # Initialization
         self.parameters = self.instantiateParameters(parameters)
         self.seq_cutoff = self.parameters.mu_int * self.parameters.seq_cutoff
-        self.used_budget = 0
         self.recombine = functions['recombine']
         self.mutate = functions['mutate']
         self.select = functions['select']
@@ -61,8 +60,12 @@ class EvolutionaryOptimizer(object):
             self.initializePopulation()
         self.new_population = self.recombine(self.population, self.parameters)
         self.fitnessFunction = fitnessFunction
-        self.budget = budget
         self.parallel = parallel
+
+        self.budget = budget
+        self.used_budget = 0
+        self.total_budget = budget
+        self.total_used_budget = 0
 
         # Parameter tracking
         self.sigma_over_time = []
@@ -151,6 +154,7 @@ class EvolutionaryOptimizer(object):
         self.population = self.select(self.population, self.new_population, self.used_budget, self.parameters)
         self.new_population = self.recombine(self.population, self.parameters)
 
+        self.parameters.updateThreshold(self.used_budget)
         if self.parameters.tpa:  # Two-Point step-size Adaptation
             self.tpaUpdate()
 
@@ -179,8 +183,6 @@ class EvolutionaryOptimizer(object):
 
         parameter_opts = self.parameters.getParameterOpts()
 
-        local_budget = self.budget
-
         if parameter_opts['lambda_']:
             lambda_init = parameter_opts['lambda_']
         elif parameter_opts['local_restart'] in ['IPOP', 'BIPOP']:
@@ -194,7 +196,7 @@ class EvolutionaryOptimizer(object):
         self.budgets = {'small': None, 'large': None}
         self.regime = 'first'  # Later alternates between 'large' and 'small'
 
-        while local_budget > 0:
+        while self.total_used_budget < self.total_budget:
 
             # Every local restart needs its own parameters, so parameter update/mutation must also be linked every time
             self.parameters = Parameters(**parameter_opts)
@@ -206,10 +208,8 @@ class EvolutionaryOptimizer(object):
             self.new_population = self.recombine(self.population, self.parameters)
 
             # Run the actual algorithm
-            prev_budget = self.used_budget
             self.runOptimizer()
-            used_budget = self.used_budget - prev_budget
-            local_budget -= used_budget
+            self.total_used_budget += self.used_budget
 
             # Increasing Population Strategies
             if parameter_opts['local_restart'] == 'IPOP':
@@ -218,11 +218,11 @@ class EvolutionaryOptimizer(object):
             elif parameter_opts['local_restart'] == 'BIPOP':
 
                 try:
-                    self.budgets[self.regime] -= used_budget
+                    self.budgets[self.regime] -= self.used_budget
                     self.regime = 'small' if self.budgets['small'] > self.budgets['large'] > 0 else 'large'
                 except KeyError:  # Setup of the two regimes after running regularily for the first time
-                    self.budgets['small'] = local_budget // 2
-                    self.budgets['large'] = local_budget - self.budgets['small']
+                    self.budgets['small'] = self.total_budget // 2
+                    self.budgets['large'] = self.total_budget - self.budgets['small']
                     self.regime = 'large'
 
                 if self.regime == 'large':
@@ -230,9 +230,12 @@ class EvolutionaryOptimizer(object):
                     parameter_opts['sigma'] = 2
                 elif self.regime == 'small':
                     rand_val = np.random.random() ** 2
-                    self.lambda_['small'] = int(floor(lambda_init * (.5 * self.lambda_['large'] / lambda_init) ** rand_val))
+                    self.lambda_['small'] = int(floor(lambda_init * (.5*self.lambda_['large'] / lambda_init)**rand_val))
                     parameter_opts['sigma'] = 2e-2 * np.random.random()
 
+                self.budget = self.budgets[self.regime]
+                self.used_budget = 0
+                parameter_opts['budget'] = self.budget
                 parameter_opts['lambda_'] = self.lambda_[self.regime]
 
 
