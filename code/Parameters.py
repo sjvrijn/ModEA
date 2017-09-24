@@ -179,35 +179,6 @@ class Parameters(BaseParameters):
         self.tolx = 1e-12 * self.sigma
         self.tolupx = 1e3 * self.sigma
 
-
-        ###
-        # All parameters below this comment are currently NOT in use by any (CMA-)ES variants
-        # that are included in the optimization of ES-structures
-        ###
-
-        ### CMSA-ES ###
-        self.tau = 1 / sqrt(2*n)
-        self.tau_c = 1 + ((n**2 + n) / (2*self.mu_int))
-        self.sigma_mean = self.sigma
-
-        ### (1+1)-Cholesky ES ###
-        self.A = eye(n)
-        self.d = 1 + n/2
-        self.p_success = self.p_target
-        self.c_cov = 2 / (n**2 + 6)
-        self.c_a = sqrt(1 - self.c_cov)
-        self.lambda_success = False
-        self.last_z = zeros((1,n))  # To be recorded by the mutation
-
-        ### Active (1+1)CMA-ES ###
-        self.A_inv = eye(n)
-        self.s = zeros((1,n))
-        self.fitness_history = []  # 'Filler' data
-        self.best_fitness = np.inf
-        self.c_act = 2/(n+2)
-        self.c_cov_pos = 2/(n**2 + 6)
-        self.c_cov_neg = 0.4/(n**1.6 + 1)
-
         self.values = values
         if values:  # Now we've had the default values, we change all values that were passed along
             self.__init_values(values)
@@ -361,90 +332,6 @@ class Parameters(BaseParameters):
             self.restart()
 
 
-    def selfAdaptCovarianceMatrix(self):
-        """
-            Adapt the covariance matrix according to the CMSA-ES
-        """
-
-        tau_c_inv = 1/self.tau_c
-        self.C *= (1 - tau_c_inv)
-        self.C += tau_c_inv * (self.s_mean.T * self.s_mean)
-
-        self.checkDegenerated()
-
-
-    def adaptCholeskyCovarianceMatrix(self):
-        """
-            Adapt the covariance matrix according to the Cholesky CMA-ES
-        """
-        # Local variables
-        c_a, c_p, d, lambda_success, p_success, p_target = self.c_a, self.c_p, self.d, self.lambda_success, self.p_success, self.p_target
-
-        self.p_success = (1 - c_p)*p_success + c_p*int(lambda_success)
-        self.sigma *= exp((p_success - (p_target/(1-p_target))*(1-p_success))/d)
-        self.sigma_mean = self.sigma
-
-        if lambda_success and p_success < self.p_thresh:
-            # Helper variables
-            z_squared = norm(self.last_z) ** 2
-            c_a_squared = c_a ** 2
-
-            part_1 = c_a / z_squared
-            part_2 = sqrt(1 + (((1 - c_a_squared)*z_squared) / c_a_squared)) - 1
-            part_3 = dot(dot(self.A, self.last_z.T), self.last_z)
-
-            # Actual matrix update
-            self.A = c_a*self.A + part_1*part_2*part_3
-
-        self.checkCholeskyDegenerated()
-
-
-    def adaptActiveCovarianceMatrix(self):
-        """
-            Adapt the covariance matrix according to the (1+1) Active-Cholesky CMA-ES
-        """
-        # Local variables
-        c, c_cov_pos, c_p, p_target = self.c, self.c_cov_pos, self.c_p, self.p_target
-
-        # Positive Cholesky update
-        if self.lambda_success:
-            self.p_success = (1 - c_p)*self.p_success + c_p
-            self.s = (1-c)*self.s + sqrt(c * (2-c)) * dot(self.A, self.last_z.T)
-
-            w = dot(self.A_inv, self.s.T)
-            w_norm_squared = norm(w)**2
-            a = sqrt(1 - c_cov_pos)
-            b = (a/w_norm_squared) * (sqrt(1 + w_norm_squared*(c_cov_pos / (1-c_cov_pos))) - 1)
-
-            self.A = a*self.A + b*dot(dot(self.A, w), w.T)
-            self.A_inv = (1/a)*self.A_inv - b/(a**2 + a*b*w_norm_squared) * dot(w, dot(w.T, self.A_inv))
-
-        else:
-            self.p_success *= (1-c_p)
-
-        self.sigma *= exp((1/self.d) * ((self.p_success-p_target) / (1-p_target)))
-        self.sigma_mean = self.sigma
-
-        # Negative Cholesky update
-        if len(self.fitness_history) > 4 and self.fitness_history[-1] < self.best_fitness:
-            # Helper variables
-            z_squared = norm(self.last_z) ** 2
-
-            if self.c_cov_neg*(2*z_squared - 1) > 1:
-                self.c_cov_neg = 1/(2*z_squared - 1)
-            else:
-                self.c_cov_neg = 0.4/(self.n**1.6 + 1)  # TODO: currently hardcoded copy of default value
-
-            c_cov_neg = self.c_cov_neg
-            w = dot(self.A_inv, self.s.T)
-            a = sqrt(1+c_cov_neg)
-            b = (a/z_squared) * (sqrt(1 + (c_cov_neg*z_squared) / (1+c_cov_neg)) - 1)
-            self.A = a*self.A + b*dot(dot(self.A, w), w.T)
-            self.A_inv = (1/a)*self.A_inv - b/(a**2 + a*b*(norm(w)**2) * dot(w, dot(w.T, self.A_inv)))
-
-        self.checkCholeskyDegenerated()
-
-
     def checkDegenerated(self):
         """
             Check if the parameters (C, s_mean, etc) have degenerated and need to be reset.
@@ -468,53 +355,6 @@ class Parameters(BaseParameters):
 
         if degenerated:
             self.restart()
-
-
-    def checkCholeskyDegenerated(self):
-        """
-            Check if the parameters (C, s_mean, etc) have degenerated and need to be reset.
-            Designed for use by a Cholesky-decomposition ES
-        """
-
-        degenerated = False
-
-        if np.min(isfinite(self.A)) == 0:
-            degenerated = True
-        elif not ((10 ** (-16)) < cond(self.A) < (10 ** 16)):
-            degenerated = True
-        elif not ((10 ** (-16)) < self.sigma_mean < (10 ** 16)):
-            degenerated = True
-
-        if degenerated:
-            n = self.n
-            self.sigma_mean = 1  # TODO: make this depend on any input default sigma value
-            self.p_success = self.p_target
-            self.A = eye(n)
-            self.p_c = zeros((1, n))
-
-
-    def checkActiveDegenerated(self):
-        """
-            Check if the parameters (C, s_mean, etc) have degenerated and need to be reset.
-            Designed for use by an Active Cholesky-decomposition ES
-        """
-
-        degenerated = False
-
-        if cond(dot(self.A, self.A.T)) > (10 ** 14):
-            degenerated = True
-
-        elif not ((10 ** (-16)) < self.sigma_mean < (10 ** 16)):
-            degenerated = True
-
-        if degenerated:
-            n = self.n
-            self.A = eye(n)
-            self.A_inv = eye(n)
-            self.sigma_mean = 1
-            self.p_success = 0
-            self.s = zeros((1,n))
-            self.fitness_history = self.best_fitness * ones((5,1))
 
 
     def getWeights(self, weights_option=None):
