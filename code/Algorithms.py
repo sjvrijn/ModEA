@@ -68,6 +68,7 @@ class EvolutionaryOptimizer(object):
         self.total_used_budget = 0
 
         # Parameter tracking
+        self.gen_size = 0
         self.sigma_over_time = []
         self.fitness_over_time = []
         self.generation_size = []
@@ -89,15 +90,18 @@ class EvolutionaryOptimizer(object):
             ind.fitness = fit
 
         self.used_budget += self.parameters.lambda_
+        self.gen_size = self.parameters.lambda_
 
 
     def evalPopulationSequentially(self):
         improvement_found = False
+        self.gen_size = 0
         for i, individual in enumerate(self.new_population):
             self.mutate(individual, self.parameters)  # Mutation
             # Evaluation
             individual.fitness = self.fitnessFunction(individual.genotype)[0]
-            self.used_budget += 1  # evaluation of >1 individuals in 1 call
+            self.used_budget += 1
+            self.gen_size += 1
 
             # Sequential Evaluation
             if self.parameters.sequential:  # We interrupt once a better individual has been found
@@ -129,9 +133,9 @@ class EvolutionaryOptimizer(object):
 
 
     def recordStatistics(self):
-        gen_size = int(self.used_budget - len(self.fitness_over_time))
+        gen_size = self.gen_size
         self.generation_size.append(gen_size)
-        self.sigma_over_time.extend([self.parameters.sigma_mean] * gen_size)
+        self.sigma_over_time.extend([self.parameters.sigma] * gen_size)
         self.fitness_over_time.extend([self.population[0].fitness] * gen_size)
         if self.population[0].fitness < self.best_individual.fitness:
             self.best_individual = copy(self.population[0])
