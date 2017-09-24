@@ -6,6 +6,7 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import os
 import numpy as np
+import re
 import sys
 from functools import partial
 from itertools import product
@@ -170,15 +171,19 @@ def reorganiseBBOBOutput(path, fid, ndim, iids, num_reps):
     info_fname = 'bbobexp_f{}.info'.format(fid)
     data_folder = 'data_f{}/'.format(fid)
     data_fname = '_f{}_DIM{}'.format(fid, ndim)
-    counter = 1
+    counter = start_at = 1
     cases = list(product(iids, range(num_reps)))
 
-    iid, rep = cases[0]
-    os.rename(subfolder.format(iid=iid, rep=rep)+info_fname, info_fname)
-    os.rename(subfolder.format(iid=iid, rep=rep)+data_folder, data_folder)
+    try:
+        iid, rep = cases[0]
+        os.rename(subfolder.format(iid=iid, rep=rep)+info_fname, info_fname)
+        os.rename(subfolder.format(iid=iid, rep=rep)+data_folder, data_folder)
+    except:
+        counter = getMaxFileNumber(data_folder) + 1
+        start_at = 0
 
     with open(info_fname, 'a') as f_to:
-        for iid, rep in cases[1:]:
+        for iid, rep in cases[start_at:]:
             this_folder = subfolder.format(iid=iid, rep=rep)
 
             # copy content of info file into 'global' info file
@@ -202,6 +207,14 @@ def reorganiseBBOBOutput(path, fid, ndim, iids, num_reps):
         os.rmdir(this_folder)
 
     os.chdir(cwd)  # Switch back to the previous current working directory
+
+
+def getMaxFileNumber(data_folder):
+    regexp = re.compile('bbobexp-(\d*)_f.*')
+    files = os.listdir(data_folder)
+    matches = [regexp.match(f) for f in files]
+    counter = max((int(match.group(1)) if match else 0 for match in matches))
+    return counter
 
 
 '''-----------------------------------------------------------------------------
