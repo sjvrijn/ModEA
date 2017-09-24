@@ -162,7 +162,9 @@ def ensureFullLengthRepresentation(representation):
 
 
 def reorganiseBBOBOutput(path, fid, ndim, iids, num_reps):
-    path += '{ndim}d-f{fid}/'.format(ndim=ndim, fid=fid)
+    cwd = os.getcwd()  # Remember the current working directory
+    os.chdir(path + '{ndim}d-f{fid}/'.format(ndim=ndim, fid=fid))
+
     subfolder = 'i{iid}-r{rep}/'
     extensions = ['.dat', '.rdat', '.tdat']
     info_fname = 'bbobexp_f{}.info'.format(fid)
@@ -170,33 +172,36 @@ def reorganiseBBOBOutput(path, fid, ndim, iids, num_reps):
     data_fname = '_f{}_DIM{}'.format(fid, ndim)
     counter = 1
     cases = list(product(iids, range(num_reps)))
+
     iid, rep = cases[0]
+    os.rename(subfolder.format(iid=iid, rep=rep)+info_fname, info_fname)
+    os.rename(subfolder.format(iid=iid, rep=rep)+data_folder, data_folder)
 
-    os.rename(path+subfolder.format(iid=iid, rep=rep)+info_fname, path+info_fname)
-    os.rename(path+subfolder.format(iid=iid, rep=rep)+data_folder, path+data_folder)
-
-    with open(path + info_fname, 'a') as f_to:
+    with open(info_fname, 'a') as f_to:
         for iid, rep in cases[1:]:
             this_folder = subfolder.format(iid=iid, rep=rep)
 
             # copy content of info file into 'global' info file
-            with open(path+this_folder+info_fname, 'r') as f_from:
-                    f_to.write('\n')
-                    f_to.writelines([line for line in f_from])
+            with open(this_folder+info_fname, 'r') as f_from:
+                f_to.write('\n')
+                f_to.writelines([line for line in f_from])
 
             # move and rename data files into the data folder
             for ext in extensions:
-                os.rename(path + this_folder + data_folder + 'bbobexp' + data_fname + ext,
-                          path + data_folder + 'bbobexp-{:02d}'.format(counter) + data_fname + ext)
+                os.rename(this_folder + data_folder + 'bbobexp' + data_fname + ext,
+                          data_folder + 'bbobexp-{:02d}'.format(counter) + data_fname + ext)
             counter += 1
 
     for iid, rep in cases:
+        this_folder = subfolder.format(iid=iid, rep=rep)
         try:  # will fail for 'i0-r0' as they have been moved already
-            os.remove(path + subfolder.format(iid=iid, rep=rep) + info_fname)
-            os.rmdir(path + subfolder.format(iid=iid, rep=rep) + data_folder)
+            os.remove(this_folder + info_fname)
+            os.rmdir(this_folder + data_folder)
         except:
             pass
-        os.rmdir(path + subfolder.format(iid=iid, rep=rep))
+        os.rmdir(this_folder)
+
+    os.chdir(cwd)  # Switch back to the previous current working directory
 
 
 '''-----------------------------------------------------------------------------
