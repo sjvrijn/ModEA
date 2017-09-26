@@ -220,13 +220,13 @@ class EvolutionaryOptimizer(object):
                 parameter_opts['lambda_'] *= 2
 
             elif parameter_opts['local_restart'] == 'BIPOP':
-
                 try:
                     self.budgets[self.regime] -= self.used_budget
-                    self.regime = 'small' if self.budgets['small'] > self.budgets['large'] > 0 else 'large'
+                    self.determineRegime()
                 except KeyError:  # Setup of the two regimes after running regularily for the first time
-                    self.budgets['small'] = self.total_budget // 2
-                    self.budgets['large'] = self.total_budget - self.budgets['small']
+                    remaining_budget = self.total_budget-self.used_budget
+                    self.budgets['small'] = remaining_budget // 2
+                    self.budgets['large'] = remaining_budget - self.budgets['small']
                     self.regime = 'large'
 
                 if self.regime == 'large':
@@ -241,6 +241,18 @@ class EvolutionaryOptimizer(object):
                 self.used_budget = 0
                 parameter_opts['budget'] = self.budget
                 parameter_opts['lambda_'] = self.lambda_[self.regime]
+
+    def determineRegime(self):
+        large = self.budgets['large']
+        small = self.budgets['small']
+        if large <= 0:
+            self.regime = 'small'
+        elif small <= 0:
+            self.regime = 'large'
+        elif large > small:
+            self.regime = 'large'
+        else:
+            self.regime = 'small'
 
 
 class OnePlusOneOptimizer(EvolutionaryOptimizer):
