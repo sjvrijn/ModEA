@@ -122,7 +122,7 @@ def _exampleRuns():
 
 def _bruteForce(ndim, fid, parallel=1, part=0):
     # Exhaustive/brute-force search over *all* possible combinations
-    # NB: THIS ASSUMES OPTIONS ARE SORTED ASCENDING BY NUMBER OF VALUES
+    # NB: This assumes options are sorted ascending by number of possible values per option
     num_combinations = np.product(num_options_per_module)
     print("F{} in {} dimensions:".format(fid, ndim))
     print("Brute-force exhaustive search of *all* available ES-combinations.")
@@ -131,24 +131,22 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
     from itertools import product
     from datetime import datetime
     import cPickle
-    import os
 
     best_ES = None
     best_result = ESFitness()
 
-    progress_log = '{}_f{}.prog'.format(ndim, fid)
-    progress_fname = non_bbob_datapath + progress_log
-    if progress_log not in os.listdir(non_bbob_datapath):
-        start_at = 0
-    else:
+    progress_fname = non_bbob_datapath + '{}_f{}.prog'.format(ndim, fid)
+    try:
         with open(progress_fname) as progress_file:
             start_at = cPickle.load(progress_file)
-        if start_at >= np.product(num_options_per_module):
-            return  # Done.
+    except:
+        start_at = 0
 
+    if start_at >= np.product(num_options_per_module):
+        return
     if part == 1 and start_at >= num_combinations // 2:  # Been there, done that
         return
-    elif part == 2 and start_at < num_combinations // 2:  # THIS SHOULD NOT HAPPEN!!!
+    elif part == 2 and start_at < num_combinations // 2:
         raise ValueError("Unexpected value for 'start_at' in part 2: {}".format(start_at))
 
     products = []
