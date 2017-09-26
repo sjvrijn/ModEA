@@ -16,7 +16,7 @@ from EvolvingES import ensureFullLengthRepresentation, evaluateCustomizedESs, _d
 from code.Individual import MixedIntIndividual
 from code.Parameters import Parameters
 from code.Utils import ESFitness, getOpts, options, num_options_per_module, \
-    getBitString, getPrintName, create_bounds, guaranteeFolderExists
+    getBitString, getPrintName, create_bounds, guaranteeFolderExists, chunkListByLength
 from code.local import non_bbob_datapath
 
 # Sets of noise-free and noisy benchmarks
@@ -159,7 +159,6 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
         storage_file = '{}bruteforce_{}_f{}.tdat'.format(non_bbob_datapath, ndim, fid)
     else:
         storage_file = None
-    x = datetime.now()
 
     all_combos = []
     for combo in list(product(*products)):
@@ -175,21 +174,23 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
         return  # invalid 'part' value
 
     num_iters = num_cases // parallel
-    num_iters += 0 if num_cases % parallel == 0 else 1
+    if num_cases % parallel != 0:
+        num_iters += 1
 
-    for i in range(num_iters):
-        bitstrings = all_combos[(start_at + i * parallel):(start_at + (i + 1) * parallel)]
-        bitstrings = [ensureFullLengthRepresentation(bitstring) for bitstring in bitstrings]
-        result = evaluateCustomizedESs(bitstrings, fid=fid, ndim=ndim, num_reps=10,
-                                       iids=range(Config.ES_num_runs), storage_file=storage_file)
+    x = datetime.now()
+    for combinations in chunkListByLength(all_combos, parallel):
+        bitstrings = [ensureFullLengthRepresentation(bitstring) for bitstring in combinations]
+        results = evaluateCustomizedESs(bitstrings, fid=fid, ndim=ndim, num_reps=10,
+                                        iids=range(Config.ES_num_runs), storage_file=storage_file)
+        start_at += parallel
 
         with open(progress_fname, 'w') as progress_file:
-            cPickle.dump((start_at + (i + 1) * parallel), progress_file)
+            cPickle.dump(start_at, progress_file)
 
-        for j, res in enumerate(result):
-            if res < best_result:
-                best_result = res
-                best_ES = bitstrings[j]
+        for result, bitstring in zip(results, bitstrings):
+            if result < best_result:
+                best_result = result
+                best_ES = bitstring
 
     y = datetime.now()
 
