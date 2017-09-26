@@ -149,8 +149,7 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
     if part == 1 and start_at >= num_combinations // 2:  # Been there, done that
         return
     elif part == 2 and start_at < num_combinations // 2:  # THIS SHOULD NOT HAPPEN!!!
-        print("{}\nWeird Error!\nstart_at smaller than intended!\n{}".format('-' * 32, '-' * 32))
-        return
+        raise ValueError("Unexpected value for 'start_at' in part 2: {}".format(start_at))
 
     products = []
     # count how often there is a choice of x options
