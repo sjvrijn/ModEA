@@ -7,7 +7,11 @@
 
 from codes import Config
 from functools import partial
-from EvolvingES import runCustomizedES,evaluateCustomizedESs
+from itertools import product
+from bbob import bbobbenchmarks, fgeneric
+from EvolvingES import runCustomizedES,evaluateCustomizedESs,_ensureListOfLists,_trimListOfListsByLength,runParallelFunction,ESFitness,\
+    displayRepresentation,reorganiseBBOBOutput,reprToString
+from codes.local import datapath
 
 def _evaluateESSpace(iid,ndim,fid,rep,budget):
     storage_file = 'Result'
@@ -30,7 +34,6 @@ def _evaluateESSpace(iid,ndim,fid,rep,budget):
                     count = count + 1
                 else:
                     rtarget[i][j] = False
-            else:
                 if rtarget[i][j-1] == True:
                     rtarget[i][j] = True
                     count = count + 1
@@ -56,6 +59,49 @@ def _runES(representation, iid, rep, ndim, fid, budget,runtimes=10):
         results.append(r)
         count = count + 1
     return target, results
+
+def evaluateCustomizedEsswithAllFunctions(representations, iids,ndim, budget = None, num_reps=1, storage_file=None):
+    """
+            Function to evaluate customizedES instances using the BBOB framework. Can be passed one or more representations
+            at once, will run them in parallel as much as possible if instructed to do so in Config.
+
+            :param representations: The genotype to be translated into customizedES-ready options.
+            :param iids:            The BBOB instance ID's to run the representation on (for statistical significance)
+            :param ndim:            The dimensionality to test the BBOB function with
+            :param fid:             The BBOB function ID to use in the evaluation
+            :param budget:          The allowed number of BBOB function evaluations
+            :param num_reps:        Number of times each (ndim, fid, iid) combination has to be repeated
+            :param storage_file:    Filename to use when storing fitness information
+            :returns:               A list containing one instance of ESFitness representing the fitness of the defined ES
+        """
+    representations = _ensureListOfLists(representations)
+    for rep in representations:
+        displayRepresentation(rep)
+
+    budget = Config.ES_budget_factor * ndim if budget is None else budget
+    num_multiplications = len(iids)*num_reps
+    arguments = list(product(representations, iids, range(num_reps)))
+
+    for fid in Config.experiment_funcs:
+        runFunction = partial(runCustomizedES, fid = fid, ndim=ndim, budget = budget)
+        run_data = runParallelFunction(runFunction=runFunction,arguments=arguments)
+        for rep in representations:
+            reorganiseBBOBOutput(datapath+reprToString(rep)+'/',fid,ndim,iids,num_reps)
+
+        targets, results = zip(*run_data)
+        fitness_results = []
+
+        for i, rep in enumerate(representations):
+
+            # Preprocess/unpack results
+            _,_, fitnesses, _ = (list(x) for x in zip(*results[i*num_multiplications:(i+1)*num_multiplications]))
+            fitnesses = _trimListOfListsByLength(fitnesses)
+            fitness = ESFitness(fitnesses)
+            fitness_results.append(fitness)
+
+            if not isinstance(rep, list):
+                rep = rep.tolist()
+
 
 def testEva():
     representations = [[0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 20, 0.25, 1, 1, 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2],
