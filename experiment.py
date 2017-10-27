@@ -4,6 +4,13 @@
 # This file is written by F.Ye
 # To do test
 
+import urllib
+import tarfile
+import glob
+from pylab import *
+import bbob.bbob_pproc as bb
+#import bbob.bbob_pproc.pprldistr as pprldistr
+
 
 from codes import Config
 from functools import partial
@@ -103,16 +110,30 @@ def evaluateCustomizedEsswithAllFunctions(representations, iids,ndim, budget = N
                 rep = rep.tolist()
 
 
-def testEva():
-    representations = [[0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 20, 0.25, 1, 1, 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2],
-                      [1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 20, 0.25, 1, 1, 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2],
-                      [0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 20, 0.25, 1, 1, 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2]]
 
-    results = evaluateCustomizedESs(representations, iids=[1,2,3], ndim=Config.experiment_dims[1], fid=1, budget=Config.GA_budget, num_reps=1, storage_file=None)
+def testEva():
+    '''representations = [[0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 20, 0.25, 1, 1, 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2],
+                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 20, 0.25, 1, 1, 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2],
+                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 20, 0.25, 1, 1, 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2],
+                       [0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 20, 0.25, 1, 1, 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2],
+                       [0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 2, 20, 0.25, 1, 1, 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2],
+                       [0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 2, 20, 0.25, 1, 1, 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2],
+                       [0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 20, 0.25, 1, 1, 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2]]'''
+
+    representations = [[0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 20, 0.25, 1, 1, 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2]]
+    '''for i in Config.experiment_dims:
+        for j in Config.experiment_funcs:
+            results = evaluateCustomizedESs(representations, iids=range(Config.ES_num_runs), ndim=i, fid=j, budget=Config.GA_budget, num_reps=1, storage_file=None)
+    '''
+
+    results = evaluateCustomizedESs(representations, iids=range(Config.ES_num_runs), ndim=5, fid=1,
+                                    budget=Config.GA_budget, num_reps=1, storage_file=None)
     return results
+
 
 def main():
     #result = _runES(1,10,1,100,Config.GA_budget)
+
     testEva()
     print("1\n")
 
