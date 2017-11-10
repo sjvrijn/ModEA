@@ -17,7 +17,7 @@ from functools import partial
 from itertools import product
 from bbob import bbobbenchmarks, fgeneric
 from EvolvingES import runCustomizedES,evaluateCustomizedESs,_ensureListOfLists,_trimListOfListsByLength,runParallelFunction,ESFitness,\
-    displayRepresentation,reorganiseBBOBOutput,reprToString
+    displayRepresentation,reorganiseBBOBOutput,reprToString,ensureFullLengthRepresentation
 from codes.local import datapath
 
 def _evaluateESSpace(iid,ndim,fid,rep,budget):
@@ -120,14 +120,21 @@ def testEva():
                        [0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 2, 20, 0.25, 1, 1, 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2],
                        [0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 20, 0.25, 1, 1, 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2]]'''
 
-    representations = [[0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 20, 0.25, 1, 1, 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2]]
-    '''for i in Config.experiment_dims:
+    #representations = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+    representations = [[0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1],
+                       [0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1],
+                       [0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 2],
+                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2]]
+    for rep in representations:
+        ensureFullLengthRepresentation(rep)
+    #    , 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2]]
+    for i in Config.experiment_dims:
         for j in Config.experiment_funcs:
             results = evaluateCustomizedESs(representations, iids=range(Config.ES_num_runs), ndim=i, fid=j, budget=Config.GA_budget, num_reps=1, storage_file=None)
-    '''
 
-    results = evaluateCustomizedESs(representations, iids=range(Config.ES_num_runs), ndim=5, fid=1,
-                                    budget=Config.GA_budget, num_reps=1, storage_file=None)
+
+    #results = evaluateCustomizedESs(representations,fid=2, ndim=2, num_reps=1, budget= Config.GA_budget,iids=range(Config.ES_num_runs), storage_file="21")
     return results
 
 
