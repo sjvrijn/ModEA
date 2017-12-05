@@ -292,7 +292,7 @@ def runCustomizedES(representation, iid, rep, ndim, fid, budget):
     guaranteeFolderExists(datapath + datapath_ext)
 
     f = fgeneric.LoggingFunction(datapath + datapath_ext, **bbob_opts)
-    f_target = f.setfun(*bbobbenchmarks.instantiate(fid, iinstance=iid)).ftarget
+    f_target = f.setfun(*bbobbenchmarks.instantiate(fid, iinstance=iid),dftarget=Config.default_target).ftarget
 
     # Interpret the representation into parameters for the ES
     opts = getOpts(representation[:len(options)])
@@ -322,10 +322,13 @@ def runParallelFunction(runFunction, arguments):
         :return:
     """
     if MPI_available and Config.use_MPI and Config.GA_evaluate_parallel:
-        return runMPI(runFunction, arguments)
+        print("ENTERENETERETERET")
+	return runMPI(runFunction, arguments)
     elif Config.allow_parallel and Config.GA_evaluate_parallel:
-        return runPool(runFunction, arguments)
+        print("POOOLPPOL{PPOL")
+	return runPool(runFunction, arguments)
     else:
+	print("SINGELEAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
         return runSingleThreaded(runFunction, arguments)
 
 

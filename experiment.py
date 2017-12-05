@@ -7,18 +7,18 @@
 import urllib
 import tarfile
 import glob
-from pylab import *
-import bbob.bbob_pproc as bb
+#from pylab import *
+#import bbob.bbob_pproc as bb
 #import bbob.bbob_pproc.pprldistr as pprldistr
 
 
-from codes import Config
+from code import Config
 from functools import partial
 from itertools import product
 from bbob import bbobbenchmarks, fgeneric
 from EvolvingES import runCustomizedES,evaluateCustomizedESs,_ensureListOfLists,_trimListOfListsByLength,runParallelFunction,ESFitness,\
     displayRepresentation,reorganiseBBOBOutput,reprToString,ensureFullLengthRepresentation
-from codes.local import datapath
+from code.local import datapath
 
 def _evaluateESSpace(iid,ndim,fid,rep,budget):
     storage_file = 'Result'
@@ -123,15 +123,18 @@ def testEva():
     #representations = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
     representations = [[0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1],
                        [0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1],
-                       [0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 2],
-                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
-                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2]]
+                       [0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 2]]
     for rep in representations:
         ensureFullLengthRepresentation(rep)
     #    , 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2]]
-    for i in Config.experiment_dims:
-        for j in Config.experiment_funcs:
-            results = evaluateCustomizedESs(representations, iids=range(Config.ES_num_runs), ndim=i, fid=j, budget=Config.GA_budget, num_reps=1, storage_file=None)
+    #import pdb
+    #pdb.set_trace()
+
+    print("I am HERE")
+    #for i in Config.experiment_dims):
+    for j in Config.experiment_funcs:
+	if(j >= 13):
+		results = evaluateCustomizedESs(representations, iids=range(Config.ES_num_runs), ndim=35, fid=j, budget=Config.GA_budget, num_reps=1, storage_file=None)
 
 
     #results = evaluateCustomizedESs(representations,fid=2, ndim=2, num_reps=1, budget= Config.GA_budget,iids=range(Config.ES_num_runs), storage_file="21")

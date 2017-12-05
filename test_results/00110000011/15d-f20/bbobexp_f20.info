@@ -1,0 +1,96 @@
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 0:223644|1.2e+00
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 1:220884|6.7e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 2:167436|8.9e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 3:223728|7.2e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 4:218784|9.6e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 5:146688|1.3e+00
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 6:230748|9.5e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 7:239664|4.5e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 8:240432|7.8e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 9:222060|7.5e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 10:237048|6.4e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 11:233400|7.4e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 12:233940|8.2e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 13:211644|7.8e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 14:232680|9.9e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 15:225600|9.5e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 16:219096|4.6e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 17:225396|1.1e+00
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 18:228432|3.8e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 19:231696|1.1e+00
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 20:214512|9.3e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 21:240444|9.6e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 22:225324|7.8e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 23:232800|1.0e+00
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 24:205380|5.9e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 25:229044|5.8e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 26:224880|9.1e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 27:213360|1.0e+00
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 28:220452|1.0e+00
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 29:226788|4.5e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 30:228624|8.6e-01
+funcId = 20, DIM = 15, Precision = 1.000e-08, algId = '[0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]'
+% <comments>
+data_f20/bbobexp_f20_DIM15.dat, 31:227712|5.3e-01
