@@ -291,7 +291,7 @@ def MIES_MutateDiscrete(individual, begin, end, u, num_options, options):
 
             threshold = np.random.random_sample()
             # change discrete
-            if threshold < individual.stepSizeOffsetMIES[x]:
+            if threshold < individual.stepSizeMIES(x):
                 temparray = []
                 for i in range(num_options[x]):
                     temparray.append(i)
@@ -315,14 +315,16 @@ def MIES_MutateIntegers(individual, begin, end, u, param):
     """
     for x in range(begin, end):
         if individual.genotype[x] is not None:
-            u1 = np.random.random_sample()
-            u2 = np.random.random_sample()
+            # Adapt stepsize
             tau = 1 / sqrt(2 * individual.num_ints)
             tau_prime = 1 / sqrt(2 * sqrt(individual.num_ints))
             individual.stepSizeOffsetMIES[x] = max(1,
                                                    individual.stepSizeOffsetMIES[x] * exp(tau * u + tau_prime * gauss(0.5, 1)))
-            psi = 1 - (individual.stepSizeOffsetMIES[x] / individual.num_ints) / (
-                1 + sqrt(1 + pow(individual.stepSizeOffsetMIES[x] / individual.num_ints, 2)))
+
+            # Mudate integer
+            psi = 1 - (individual.stepSizeMIES(x) / individual.num_ints) / (
+                1 + sqrt(1 + pow(individual.stepSizeMIES(x) / individual.num_ints, 2)))
+            u1, u2 = np.random.random_sample(2)
             G1 = int(floor(np.log(1 - u1) / np.log(1 - psi)))
             G2 = int(floor(np.log(1 - u2) / np.log(1 - psi)))
             individual.genotype[x] = individual.genotype[x] + G1 - G2
@@ -343,12 +345,20 @@ def MIES_MutateFloats(conditional_mask,individual, begin, end, u, param):
     """
     for x in range(begin, end):
         if individual.genotype[x] is not None and conditional_mask[x-(individual.num_discrete+individual.num_ints)]:
+            # Adapt stepsize
             tau = 1 / sqrt(2 * individual.num_floats)
             tau_prime = 1 / sqrt(2 * sqrt(individual.num_floats))
             individual.stepSizeOffsetMIES[x] = individual.stepSizeOffsetMIES[x] * exp(u * tau + gauss(0.5, 1) * tau_prime)
-            # Keep the change within the bounds
-            individual.genotype[x] = _keepInBounds(individual.genotype[x] + individual.stepSizeOffsetMIES[x],
-                                                   param.l_bound[x], param.u_bound[x])
+
+            # Mutate float
+            rand = np.random.randn()
+            old_value = individual.genotype[x]
+            individual.genotype[x] += individual.stepSizeMIES(x) * rand
+            individual.genotype[x] = _keepInBounds(individual.genotype[x], param.l_bound[x], param.u_bound[x])
+
+            # Reverse-engineer the actual stepsize based on the final mutation step
+            actual_stepsize = (individual.genotype[x] - old_value) / rand
+            individual.stepSizeOffsetMIES[x] = actual_stepsize - individual.baseStepSize
 
 
 def MIES_Mutate(individual, param, options, num_options):
