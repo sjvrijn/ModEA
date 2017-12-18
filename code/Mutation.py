@@ -357,7 +357,7 @@ def MIES_MutateFloats(conditional_mask,individual, begin, end, u, param):
             individual.genotype[x] = _keepInBounds(individual.genotype[x], param.l_bound[x], param.u_bound[x])
 
             # Reverse-engineer the actual stepsize based on the final mutation step
-            actual_stepsize = (individual.genotype[x] - old_value) / rand
+            actual_stepsize = abs((individual.genotype[x] - old_value) / rand)
             individual.stepSizeOffsetMIES[x] = actual_stepsize - individual.baseStepSize
 
 
