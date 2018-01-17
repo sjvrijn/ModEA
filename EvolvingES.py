@@ -322,13 +322,10 @@ def runParallelFunction(runFunction, arguments):
         :return:
     """
     if MPI_available and Config.use_MPI and Config.GA_evaluate_parallel:
-        print("ENTERENETERETERET")
-	return runMPI(runFunction, arguments)
+        return runMPI(runFunction, arguments)
     elif Config.allow_parallel and Config.GA_evaluate_parallel:
-        print("POOOLPPOL{PPOL")
-	return runPool(runFunction, arguments)
+        return runPool(runFunction, arguments)
     else:
-	print("SINGELEAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
         return runSingleThreaded(runFunction, arguments)
 
 

@@ -164,26 +164,13 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
     for combo in list(product(*products)):
         all_combos.append(list(sum(combo, ())))
 
-    if part == 0:
-        num_cases = len(all_combos)
-    elif part == 1:
-        num_cases = len(all_combos) // 2 - start_at
-    elif part == 2:
-        num_cases = len(all_combos) - start_at
-    else:
-        return  # invalid 'part' value
-
-    num_iters = num_cases // parallel
-    if num_cases % parallel != 0:
-        num_iters += 1
-
     x = datetime.now()
-    for combinations in chunkListByLength(all_combos, parallel):
+    for combinations in chunkListByLength(all_combos[start_at:], parallel):
         bitstrings = [ensureFullLengthRepresentation(bitstring) for bitstring in combinations]
         results = evaluateCustomizedESs(bitstrings, fid=fid, ndim=ndim, num_reps=10,
                                         iids=range(Config.ES_num_runs), storage_file=storage_file)
-        start_at += parallel
 
+        start_at += parallel
         with open(progress_fname, 'w') as progress_file:
             cPickle.dump(start_at, progress_file)
 
