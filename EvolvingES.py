@@ -282,10 +282,9 @@ def MPIpool_evaluate(representations, ndim, fid, iids, num_reps, budget=None):
     func = partial(helper, func=run_es)
     tasks = product(representations, iids, range(num_reps))
 
-    pool = MPIPool()
+    with MPIPool() as pool:
+        results = pool.map(func, tasks)
 
-    results = pool.map(func, tasks)
-    pool.close()
     return results
 
 
