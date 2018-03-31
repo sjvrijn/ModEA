@@ -132,9 +132,6 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
     from datetime import datetime
     import cPickle
 
-    best_ES = None
-    best_result = ESFitness()
-
     progress_fname = non_bbob_datapath + '{}_f{}.prog'.format(ndim, fid)
     try:
         with open(progress_fname) as progress_file:
@@ -155,41 +152,15 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
     for num, count in sorted(counts.items(), key=lambda x: x[0]):
         products.append(product(range(num), repeat=count))
 
-    if Config.write_output:
-        storage_file = '{}bruteforce_{}_f{}.tdat'.format(non_bbob_datapath, ndim, fid)
-    else:
-        storage_file = None
-
     all_combos = []
     for combo in list(product(*products)):
         all_combos.append(list(sum(combo, ())))
 
-
     bitstrings = [ensureFullLengthRepresentation(bitstring) for bitstring in all_combos[start_at:]]
 
     x = datetime.now()
-
-    MPIpool_evaluate(bitstrings, ndim=ndim, fid=fid, iids=range(Config.ES_num_runs), num_reps=2)
-
-
-    # for combinations in chunkListByLength(all_combos[start_at:], parallel):
-    #     bitstrings = [ensureFullLengthRepresentation(bitstring) for bitstring in combinations]
-    #     results = evaluateCustomizedESs(bitstrings, fid=fid, ndim=ndim, num_reps=1,
-    #                                     iids=range(Config.ES_num_runs), storage_file=storage_file)
-    #
-    #     start_at += parallel
-    #     with open(progress_fname, 'w') as progress_file:
-    #         cPickle.dump(start_at, progress_file)
-    #
-    #     for result, bitstring in zip(results, bitstrings):
-    #         if result < best_result:
-    #             best_result = result
-    #             best_ES = bitstring
-
+    MPIpool_evaluate(bitstrings, ndim=ndim, fid=fid, iids=range(Config.ES_num_runs), num_reps=5)
     y = datetime.now()
-
-    # print("Best ES found:       {}\n"
-    #       "With fitness: {}\n".format(best_ES, best_result))
 
     _displayDuration(x, y)
 

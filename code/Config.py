@@ -31,7 +31,7 @@ write_output = True
 
 ### ES Settings ###
 ES_budget_factor = 1e3  # budget = ndim * ES_budget_factor
-ES_num_runs = 3
+ES_num_runs = 5
 ES_evaluate_parallel = True
 
 ### GA Settings ###
