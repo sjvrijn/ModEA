@@ -12,7 +12,7 @@ from copy import copy
 from bbob import bbobbenchmarks
 from code import Config
 from code.Algorithms import _MIES
-from EvolvingES import ensureFullLengthRepresentation, evaluateCustomizedESs, _displayDuration
+from EvolvingES import ensureFullLengthRepresentation, evaluateCustomizedESs, _displayDuration, MPIpool_evaluate
 from code.Individual import MixedIntIndividual
 from code.Parameters import Parameters
 from code.Utils import ESFitness, getOpts, options, num_options_per_module, \
@@ -164,25 +164,32 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
     for combo in list(product(*products)):
         all_combos.append(list(sum(combo, ())))
 
+
+    bitstrings = [ensureFullLengthRepresentation(bitstring) for bitstring in all_combos[start_at:]]
+
     x = datetime.now()
-    for combinations in chunkListByLength(all_combos[start_at:], parallel):
-        bitstrings = [ensureFullLengthRepresentation(bitstring) for bitstring in combinations]
-        results = evaluateCustomizedESs(bitstrings, fid=fid, ndim=ndim, num_reps=10,
-                                        iids=range(Config.ES_num_runs), storage_file=storage_file)
 
-        start_at += parallel
-        with open(progress_fname, 'w') as progress_file:
-            cPickle.dump(start_at, progress_file)
+    MPIpool_evaluate(bitstrings, ndim=ndim, fid=fid, iids=range(Config.ES_num_runs), num_reps=2)
 
-        for result, bitstring in zip(results, bitstrings):
-            if result < best_result:
-                best_result = result
-                best_ES = bitstring
+
+    # for combinations in chunkListByLength(all_combos[start_at:], parallel):
+    #     bitstrings = [ensureFullLengthRepresentation(bitstring) for bitstring in combinations]
+    #     results = evaluateCustomizedESs(bitstrings, fid=fid, ndim=ndim, num_reps=1,
+    #                                     iids=range(Config.ES_num_runs), storage_file=storage_file)
+    #
+    #     start_at += parallel
+    #     with open(progress_fname, 'w') as progress_file:
+    #         cPickle.dump(start_at, progress_file)
+    #
+    #     for result, bitstring in zip(results, bitstrings):
+    #         if result < best_result:
+    #             best_result = result
+    #             best_ES = bitstring
 
     y = datetime.now()
 
-    print("Best ES found:       {}\n"
-          "With fitness: {}\n".format(best_ES, best_result))
+    # print("Best ES found:       {}\n"
+    #       "With fitness: {}\n".format(best_ES, best_result))
 
     _displayDuration(x, y)
 
@@ -296,11 +303,11 @@ def _runExperiments():
 
 
 def runDefault():
-    _runGA()
+    # _runGA()
     # _testEachOption()
     # _problemCases()
     # _exampleRuns()
-    # _bruteForce(ndim=10, fid=1)
+    _bruteForce(ndim=5, fid=1)
     # _runExperiments()
     pass
 

@@ -271,6 +271,17 @@ def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, num_rep
     return fitness_results
 
 
+def MPIpool_evaluate(representations, ndim, fid, iids, num_reps, budget=None):
+    from schwimmbad import MPIPool
+
+    budget = Config.ES_budget_factor * ndim if budget is None else budget
+    func = partial(runCustomizedES, ndim=ndim, fid=fid, budget=budget)
+
+    tasks = product(representations, iids, range(num_reps))
+
+    return MPIPool().map(func, tasks)
+
+
 def runCustomizedES(representation, iid, rep, ndim, fid, budget):
     """
         Runs a customized ES on a particular instance of a BBOB function in some dimensionality with given budget.
@@ -285,6 +296,9 @@ def runCustomizedES(representation, iid, rep, ndim, fid, budget):
         :param budget:          Evaluation budget for the ES
         :return:                Tuple(target optimum value of the evaluated function, list of fitness-values over time)
     """
+
+    print(reprToString(representation), iid, rep)
+
     # Setup BBOB function + logging
     bbob_opts['algid'] = representation
     datapath_ext = '{repr}/{ndim}d-f{fid}/i{iid}-r{rep}/'.format(ndim=ndim, fid=fid, repr=reprToString(representation),

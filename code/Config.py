@@ -30,8 +30,8 @@ MPI_num_total_threads = MPI_num_host_threads * MPI_num_hosts
 write_output = True
 
 ### ES Settings ###
-ES_budget_factor = 1e4  # budget = ndim * ES_budget_factor
-ES_num_runs = 32
+ES_budget_factor = 1e3  # budget = ndim * ES_budget_factor
+ES_num_runs = 3
 ES_evaluate_parallel = True
 
 ### GA Settings ###
