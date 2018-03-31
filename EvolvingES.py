@@ -271,15 +271,22 @@ def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, num_rep
     return fitness_results
 
 
+def helper(args, func):
+    return func(*args)
+
 def MPIpool_evaluate(representations, ndim, fid, iids, num_reps, budget=None):
     from schwimmbad import MPIPool
 
     budget = Config.ES_budget_factor * ndim if budget is None else budget
-    func = partial(runCustomizedES, ndim=ndim, fid=fid, budget=budget)
-
+    run_es = partial(runCustomizedES, ndim=ndim, fid=fid, budget=budget)
+    func = partial(helper, func=run_es)
     tasks = product(representations, iids, range(num_reps))
 
-    return MPIPool().map(func, tasks)
+    pool = MPIPool()
+
+    results = pool.map(func, tasks)
+    pool.close()
+    return results
 
 
 def runCustomizedES(representation, iid, rep, ndim, fid, budget):
