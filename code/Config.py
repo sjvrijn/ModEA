@@ -13,8 +13,8 @@ from math import floor
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 ### General Settings ###
-use_MPI = False
-MPI_num_host_threads = 16  # Number of available threads per host
+use_MPI = True
+MPI_num_host_threads = 32  # Number of available threads per host
 MPI_num_hosts = 12         # Number of available hosts
 MPI_num_total_threads = MPI_num_host_threads * MPI_num_hosts
 write_output = True
