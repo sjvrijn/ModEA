@@ -120,7 +120,7 @@ def _exampleRuns():
     evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
 
 
-def _bruteForce(ndim, fid, parallel=1, part=0):
+def _bruteForce(ndim, fid, parallel=1, part=None):
     # Exhaustive/brute-force search over *all* possible combinations
     # NB: This assumes options are sorted ascending by number of possible values per option
     num_combinations = np.product(num_options_per_module)
@@ -132,19 +132,32 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
     from datetime import datetime
     import cPickle
 
+    '''
     progress_fname = non_bbob_datapath + '{}_f{}.prog'.format(ndim, fid)
     try:
         with open(progress_fname) as progress_file:
             start_at = cPickle.load(progress_file)
     except:
         start_at = 0
+    end = num_combinations
 
-    if start_at >= np.product(num_options_per_module):
+    if start_at >= num_combinations:
         return
-    if part == 1 and start_at >= num_combinations // 2:  # Been there, done that
-        return
+    if part == 1:
+        end = num_combinations // 2
+        if start_at >= num_combinations // 2:  # Been there, done that
+            return
     elif part == 2 and start_at < num_combinations // 2:
-        raise ValueError("Unexpected value for 'start_at' in part 2: {}".format(start_at))
+        start = num_combinations // 2
+        #raise ValueError("Unexpected value for 'start_at' in part 2: {}".format(start_at))
+    '''
+    if part is None:
+        start, end = 0, num_combinations
+    else:
+        part_size = num_combinations // 4
+        start = part * part_size
+        end = (part+1) * part_size
+
 
     products = []
     # count how often there is a choice of x options
@@ -156,11 +169,14 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
     for combo in list(product(*products)):
         all_combos.append(list(sum(combo, ())))
 
-    bitstrings = [ensureFullLengthRepresentation(bitstring) for bitstring in all_combos[start_at:]]
+    bitstrings = reversed([ensureFullLengthRepresentation(bitstring) for bitstring in all_combos[start:end]])
 
     x = datetime.now()
     MPIpool_evaluate(bitstrings, ndim=ndim, fid=fid, iids=range(Config.ES_num_runs), num_reps=5)
     y = datetime.now()
+
+    #with open(progress_fname, 'w') as progress_file:
+    #    cPickle.dump(end, progress_file)
 
     _displayDuration(x, y)
 
