@@ -18,8 +18,9 @@ from code.local import brute_location, ga_location, raw_bfname, raw_ganame
 
 np.set_printoptions(linewidth=156)
 
-dimensions = [2, 3, 5, 10, 20]
-functions = range(1, 25)
+dimensions = [2]#,3,5], 10, 20]
+functions = range(1,2)
+runs=range(8,9)
 subgroups = [
     [1,  2,  3,  4,  5],
     [6,  7,  8,  9],
@@ -84,11 +85,13 @@ def getBestEs():
         results[dim] = {func: {} for func in functions}
         # for file in final_files:
         for fid in functions:
-            filename = 'final_stats\\final_GA_results_{}dim_f{}.npz'.format(dim, fid)
-            x = np.load(filename)
-            # for data in ['time_spent', 'best_result']:
-            for data in x.files:  # ['time_spent', 'generation_sizes', 'sigma', 'best_result', 'best_fitness']
-                results[dim][fid][data] = x[data]
+            results[dim][fid] = {run: {} for run in runs}
+            for run in runs:
+                filename = 'C:\\Users\\jelle laptop\\Desktop\\good_results_2_3\\final_GA_results_{}dim_f{}_run{}.npz'.format(dim, fid,run)
+                x = np.load(filename)
+                # for data in ['time_spent', 'best_result']:
+                for data in x.files:  # ['time_spent', 'generation_sizes', 'sigma', 'best_result', 'best_fitness']
+                    results[dim][fid][run][data] = x[data]
     return results
 
 
@@ -121,18 +124,61 @@ def createGARunPlots():
 
         plt.clf()
         for dim in dimensions:
-            best_per_generation = results[dim][func]['best_fitness'][::12]
-            best_found_ever = []
-            for i, fit in enumerate(best_per_generation):
-                if fit <= min(best_per_generation[:i+1]):
-                    best_found_ever.append(fit)
-                else:
-                    best_found_ever.append(best_found_ever[i-1])
+            # best_found_ever_FCE
+            best_found_ever_FCE=[0]*30
+            best_found_ever_ERT=[0]*30
+            for run in runs:
+                best_per_generation = results[dim][func][run]['best_fitness'][::12]
+                best_found_ever_inrun = []
+                for i, fit in enumerate(best_per_generation):
+                    if fit <= min(best_per_generation[:i+1]):
+                        best_found_ever_inrun.append(fit)
+                    else:
+                        best_found_ever_inrun.append(best_found_ever_inrun[i-1])
+                temp_num=0
+                for p, x in enumerate(best_found_ever_inrun):
+                    # best_found_ever[x]+=best_found_ever_inrun[x]
+                    # print("Dit is duidelijk x",x)
+                    # print("p,x::",p,x.FCE, x.ERT)
+                    best_found_ever_FCE[p]+=x.FCE
+                    if x.ERT is not None:
+                        best_found_ever_ERT[p]+=x.ERT
+                    else:
+                        best_found_ever_ERT[p]+= 32 * 1e3 * dim
+                        # print("x.ERT is None")
+                        # temp_num=temp_num+1
+                    # best_found_ever[p].FCE=
+                    # print("FCE!!!::::",p , x.FCE)
+                    # print("ERT!!!::::",p , x.ERT)
+                    # print(best_found_ever_inrun[x])
+                    # print("/n")
+
+            # print("FCE!:", best_found_ever_FCE)
+            # print("ERT!:", best_found_ever_ERT)
+            # aggregate_fitnesses = []
+            # ggregate_fitnesses = []
+
+            # for index in len(runs*dim):
+            #     default_ERT = 32 * 1e3 * dim
+            #     ERT = 0
+            #     FCE = 0
+            #     for run in runs:
+            #         x = best_found_ever[run][index]
+            #         FCE += fit.FCE
+            #         ERT += fit.ERT if fit.ERT is not None else default_ERT
+            #     aggregate_fitnesses.append(ESFitness(ERT=ERT/runs, FCE=FCE/runs))
+
+            # print("temp_num",temp_num)
+            best_found_ever_FCE[:] = [x / len(runs) for x in best_found_ever_FCE]
+            best_found_ever_ERT[:] = [x / len(runs)-temp_num for x in best_found_ever_ERT]
+            # print("FCE2!:", best_found_ever_FCE)
+            # print("ERT2!:", best_found_ever_ERT)
+
 
             plt.subplot(1, 2, 1)
-            plt.plot([x.FCE for x in best_found_ever], label='{}-dim'.format(dim))
+            plt.plot(best_found_ever_FCE, label='{}-dim'.format(dim))
             plt.subplot(1, 2, 2)
-            plt.plot([x.ERT for x in best_found_ever], label='{}-dim'.format(dim))
+            plt.plot(best_found_ever_ERT, label='{}-dim'.format(dim))
 
         plt.suptitle("Convergence for F{}".format(func), y=.99)
 
@@ -150,24 +196,96 @@ def createGARunPlots():
 
         plt.tight_layout()
 
-        # plt.savefig('img/F{}_log.png'.format(func), bbox_inches='tight')
-        plt.savefig('img/F{}_log.pdf'.format(func), bbox_inches='tight')
+        plt.savefig('img/F{}_log.png'.format(func), bbox_inches='tight')
+        # plt.savefig('img/F{}_log.pdf'.format(func), bbox_inches='tight')
 
+def createGARunPlots_v2():
+        os.chdir(ga_location)
+        x = np.load('final_GA_results.npz')
+        results = x['results'].item()
+
+        matplotlib.rcParams.update({'font.size': 14})
+        plt.figure(figsize=(8, 4.5))
+
+        for func in functions:
+            print("F{}:".format(func))
+
+
+            for dim in dimensions:
+                for run in runs:
+                    best_per_generation = results[dim][func][run]['best_fitness'][::12]
+                    best_found_ever = []
+                    for i, fit in enumerate(best_per_generation):
+                        if fit <= min(best_per_generation[:i + 1]):
+                            best_found_ever.append(fit)
+                        else:
+                            best_found_ever.append(best_found_ever[i - 1])
+                    plt.clf()
+
+                    plt.subplot(1, 2, 1)
+                    plt.plot([x.FCE for x in best_found_ever], label='{}-dim'.format(dim))
+                    plt.subplot(1, 2, 2)
+                    plt.plot([x.ERT for x in best_found_ever], label='{}-dim'.format(dim))
+
+                    plt.suptitle("Convergence for F{}".format(func), y=.99)
+
+                    plt.subplot(1, 2, 1)
+                    plt.yscale('log')
+                    plt.xlabel('Generation')
+                    plt.ylabel('FCE')
+                    plt.legend(loc=0, prop={'size': 11}, labelspacing=0.15)
+
+                    plt.subplot(1, 2, 2)
+                    plt.yscale('log')
+                    plt.xlabel('Generation')
+                    plt.ylabel('ERT')
+                    plt.legend(loc=0, prop={'size': 11}, labelspacing=0.15)
+
+                    plt.tight_layout()
+
+                    plt.savefig('img/F{}_R{}_log.png'.format(func, run), bbox_inches='tight')
+                    # plt.savefig('img/F{}_log.pdf'.format(func), bbox_inches='tight')
 
 def printTable(results):
+    print(results[2][1][8]['alpha_mu'])
     print('\\hline')
     print('F-ID & N & GA & FCE & ERT \\\\')
     print('\\hline')
     print('\\hline')
     for fid in functions:
         for dim in dimensions:
-            result, fit = results[dim][fid]
-            string = ''
-            # for i in range(len(result)):
-            for i in range(11):
-                string += str(result[i])
+            for run in runs:
+                result, fit = results[dim][fid][run]
+                # print("fit:",fit)
+                string = ''
+                # for i in range(len(result)):
+                for i in range(26):
+                    a = round(float(result[i]),3)
+                    string += ' '
+                    string += str(a)
+                # for i in range (12,26):
+                #     a = round(int(result[i]), 3)
+                #     string += ' '
+                #     string += str(a)
 
-            print('F{0} & {1} & {2} & {3:.3g} & {4}\\\\'.format(fid, dim, string, fit.FCE, fit.ERT))
+                print('F{0} & {1} & {2} & {3:.3g} & {4}\\\\'.format(fid, dim, string, fit.FCE, fit.ERT))
+        print('\\hline')
+
+def printTable_v2(results):
+    print('\\hline')
+    print('F-ID & N & GA & FCE & ERT \\\\')
+    print('\\hline')
+    print('\\hline')
+    for fid in functions:
+        for dim in dimensions:
+            for run in runs:
+                result, fit = results[dim][fid][run]
+                string = ''
+                # for i in range(len(result)):
+                for i in range(11):
+                    string += str(result[i])
+
+                print('F{0} & {1} & {2} & {3:.3g} & {4}\\\\'.format(fid, dim, string, fit.FCE, fit.ERT))
         print('\\hline')
 
 
@@ -176,7 +294,12 @@ def printGATable():
     os.chdir(ga_location)
     x = np.load('final_GA_results.npz')
     results = x['results'].item()
-    ga_results = {dim: {fid: (results[dim][fid]['best_result'], min(results[dim][fid]['best_fitness'])) for fid in functions} for dim in dimensions}
+    ga_results = {dim:
+                      {fid:
+                           {run:
+                                (results[dim][fid][run]['best_result'], min(results[dim][fid][run]['best_fitness']))for run in runs} for fid in functions} for dim in dimensions}
+    # print(round((results[2][1][5]['best_result'])
+
     printTable(ga_results)
 
 
@@ -716,11 +839,11 @@ if __name__ == '__main__':
 
     ### GA STUFF ###
     # storeBestFromGA()
-    # storeResults()
+    storeResults()
     # printResults()
 
     # createGARunPlots()
-    # printGATable()
+    printGATable()
     # printGAcount()
     # storeRepresentation()
     # GAtimeSpent()

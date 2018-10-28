@@ -90,8 +90,6 @@ class MixedIntIndividual(object):
             self.baseStepSize = 1 / n
         else:
             self.baseStepSize = 0.175  # Random guess value, may need to be updated
-        # The actual stepSize is the base + offset, so final starting stepSize = initStepSize
-        self.stepSizeOffset = self.initStepSize - self.baseStepSize
 
         for x in range(self.n):
             # self.baseStepSizeMIES[x] = 1/(3 * num_options[x])
@@ -100,8 +98,7 @@ class MixedIntIndividual(object):
 
     @property
     def stepsizeMIES(self):
-        return self.stepSizeOffset + self.baseStepSize
-
+        return self.stepSizeOffsetMIES + self.baseStepSize
 
     def __copy__(self):
         """
@@ -113,13 +110,11 @@ class MixedIntIndividual(object):
         """
         return_copy = MixedIntIndividual(self.n, self.num_discrete, self.num_ints)
         return_copy.genotype = copy(self.genotype)
-        # return_copy.genotype_temp = copy(self.genotype_temp)
         return_copy.fitness = self.fitness
         return_copy.sigma = self.sigma
 
         return_copy.maxStepSize = self.maxStepSize
         return_copy.baseStepSize = self.baseStepSize
         return_copy.initStepSize = self.initStepSize
-        return_copy.stepSizeOffset = self.stepSizeOffset
         return_copy.stepSizeOffsetMIES=copy(self.stepSizeOffsetMIES)
         return return_copy
