@@ -8,16 +8,21 @@ import numpy as np
 import sys
 from datetime import datetime
 from functools import partial
+from copy import copy
 from bbob import bbobbenchmarks
-from code import getOpts, options, num_options_per_module, getBitString, getPrintName, Config
-from code.Algorithms import GA, MIES
-from code.EvolvingES import ensureFullLengthRepresentation, evaluateCustomizedESs, _displayDuration
-from code.Utils import ESFitness
+from code import Config
+from code.Algorithms import _MIES
+from EvolvingES import ensureFullLengthRepresentation, evaluateCustomizedESs, _displayDuration, MPIpool_evaluate
+from code.Individual import MixedIntIndividual
+from code.Parameters import Parameters
+from code.Utils import ESFitness, getOpts, options, num_options_per_module, \
+    getBitString, getPrintName, create_bounds, guaranteeFolderExists, chunkListByLength
 from code.local import non_bbob_datapath
 
 # Sets of noise-free and noisy benchmarks
 free_function_ids = bbobbenchmarks.nfreeIDs
 noisy_function_ids = bbobbenchmarks.noisyIDs
+guaranteeFolderExists(non_bbob_datapath)
 
 
 opts = {'algid': None,
@@ -36,7 +41,7 @@ def _testEachOption():
     fid = 1
     ndim = 10
     representation = [0] * n
-    lambda_mu = [2, 0.01]
+    lambda_mu = [None, None]
     representation.extend(lambda_mu)
     ensureFullLengthRepresentation(representation)
     evaluateCustomizedESs(representation, fid=fid, ndim=ndim, iids=range(Config.ES_num_runs))
@@ -115,9 +120,9 @@ def _exampleRuns():
     evaluateCustomizedESs(rep, iids=iids, fid=fid, ndim=ndim)
 
 
-def _bruteForce(ndim, fid, parallel=1, part=0):
+def _bruteForce(ndim, fid, parallel=1, part=None):
     # Exhaustive/brute-force search over *all* possible combinations
-    # NB: THIS ASSUMES OPTIONS ARE SORTED ASCENDING BY NUMBER OF VALUES
+    # NB: This assumes options are sorted ascending by number of possible values per option
     num_combinations = np.product(num_options_per_module)
     print("F{} in {} dimensions:".format(fid, ndim))
     print("Brute-force exhaustive search of *all* available ES-combinations.")
@@ -126,26 +131,33 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
     from itertools import product
     from datetime import datetime
     import cPickle
-    import os
 
-    best_ES = None
-    best_result = ESFitness()
-
-    progress_log = '{}_f{}.prog'.format(ndim, fid)
-    progress_fname = non_bbob_datapath + progress_log
-    if progress_log not in os.listdir(non_bbob_datapath):
-        start_at = 0
-    else:
+    '''
+    progress_fname = non_bbob_datapath + '{}_f{}.prog'.format(ndim, fid)
+    try:
         with open(progress_fname) as progress_file:
             start_at = cPickle.load(progress_file)
-        if start_at >= np.product(num_options_per_module):
-            return  # Done.
+    except:
+        start_at = 0
+    end = num_combinations
 
-    if part == 1 and start_at >= num_combinations // 2:  # Been there, done that
+    if start_at >= num_combinations:
         return
-    elif part == 2 and start_at < num_combinations // 2:  # THIS SHOULD NOT HAPPEN!!!
-        print("{}\nWeird Error!\nstart_at smaller than intended!\n{}".format('-' * 32, '-' * 32))
-        return
+    if part == 1:
+        end = num_combinations // 2
+        if start_at >= num_combinations // 2:  # Been there, done that
+            return
+    elif part == 2 and start_at < num_combinations // 2:
+        start = num_combinations // 2
+        #raise ValueError("Unexpected value for 'start_at' in part 2: {}".format(start_at))
+    '''
+    if part is None:
+        start, end = 0, num_combinations
+    else:
+        part_size = num_combinations // 4
+        start = part * part_size
+        end = (part+1) * part_size
+
 
     products = []
     # count how often there is a choice of x options
@@ -153,46 +165,18 @@ def _bruteForce(ndim, fid, parallel=1, part=0):
     for num, count in sorted(counts.items(), key=lambda x: x[0]):
         products.append(product(range(num), repeat=count))
 
-    if Config.write_output:
-        storage_file = '{}bruteforce_{}_f{}.tdat'.format(non_bbob_datapath, ndim, fid)
-    else:
-        storage_file = None
-    x = datetime.now()
-
     all_combos = []
     for combo in list(product(*products)):
         all_combos.append(list(sum(combo, ())))
 
-    if part == 0:
-        num_cases = len(all_combos)
-    elif part == 1:
-        num_cases = len(all_combos) // 2 - start_at
-    elif part == 2:
-        num_cases = len(all_combos) - start_at
-    else:
-        return  # invalid 'part' value
+    bitstrings = reversed([ensureFullLengthRepresentation(bitstring) for bitstring in all_combos[start:end]])
 
-    num_iters = num_cases // parallel
-    num_iters += 0 if num_cases % parallel == 0 else 1
-
-    for i in range(num_iters):
-        bitstrings = all_combos[(start_at + i * parallel):(start_at + (i + 1) * parallel)]
-        bitstrings = [ensureFullLengthRepresentation(bitstring) for bitstring in bitstrings]
-        result = evaluateCustomizedESs(bitstrings, fid=fid, ndim=ndim,
-                                       iids=range(Config.ES_num_runs), storage_file=storage_file)
-
-        with open(progress_fname, 'w') as progress_file:
-            cPickle.dump((start_at + (i + 1) * parallel), progress_file)
-
-        for j, res in enumerate(result):
-            if res < best_result:
-                best_result = res
-                best_ES = bitstrings[j]
-
+    x = datetime.now()
+    MPIpool_evaluate(bitstrings, ndim=ndim, fid=fid, iids=range(Config.ES_num_runs), num_reps=5)
     y = datetime.now()
 
-    print("Best ES found:       {}\n"
-          "With fitness: {}\n".format(best_ES, best_result))
+    #with open(progress_fname, 'w') as progress_file:
+    #    cPickle.dump(end, progress_file)
 
     _displayDuration(x, y)
 
@@ -208,9 +192,41 @@ def _runGA(ndim=5, fid=1, run=1):
     fitnessFunction = partial(evaluateCustomizedESs, fid=fid, ndim=ndim,
                               iids=range(Config.ES_num_runs), storage_file=storage_file)
 
-    budget = Config.GA_budget
+    parameters = Parameters(len(options) + 15, Config.GA_budget, mu=Config.GA_mu, lambda_=Config.GA_lambda)
+    parameters.l_bound[len(options):] = np.array([  2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15)
+    parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15)
 
-    gen_sizes, sigmas, fitness, best = MIES(n=ndim, fitnessFunction=fitnessFunction, budget=budget)  # This line does all the work!
+    # Initialize the first individual in the population
+    discrete_part = [np.random.randint(len(x[1])) for x in options]
+    lamb = int(4 + np.floor(3 * np.log(parameters.n)))
+    int_part = [lamb]
+    float_part = [
+        parameters.mu,
+        parameters.alpha_mu, parameters.c_sigma, parameters.damps, parameters.c_c, parameters.c_1,
+        parameters.c_mu,
+        0.2, 0.955,
+        0.5, 0, 0.3, 0.5,
+        2
+    ]
+
+    population = [
+        MixedIntIndividual(len(discrete_part) + len(int_part) + len(float_part),
+                           num_discrete=len(num_options_per_module),
+                           num_ints=len(int_part))
+    ]
+    population[0].genotype = np.array(discrete_part + int_part + float_part)
+    population[0].fitness = ESFitness()
+
+    while len(population) < Config.GA_mu:
+        population.append(copy(population[0]))
+
+    u_bound, l_bound = create_bounds(float_part, 0.3)
+    parameters.u_bound[len(options) + 1:] = np.array(u_bound)
+    parameters.l_bound[len(options) + 1:] = np.array(l_bound)
+
+    gen_sizes, sigmas, fitness, best = _MIES(n=ndim, fitnessFunction=fitnessFunction, budget=Config.GA_budget,
+                                             mu=Config.GA_mu, lambda_=Config.GA_lambda, parameters=parameters,
+                                             population=population)  # This line does all the work!
     y = datetime.now()
     print()
     print("Best Individual:     {}\n"
@@ -228,9 +244,43 @@ def _runGA(ndim=5, fid=1, run=1):
 def _runExperiments():
     for ndim in Config.experiment_dims:
         for fid in Config.experiment_funcs:
+
+            # Initialize the first individual in the population
+            discrete_part = [np.random.randint(len(x[1])) for x in options]
+            lamb = int(4 + np.floor(3 * np.log(parameters.n)))
+            int_part = [lamb]
+            float_part = [
+                parameters.mu,
+                parameters.alpha_mu, parameters.c_sigma, parameters.damps, parameters.c_c, parameters.c_1,
+                parameters.c_mu,
+                0.2, 0.955,
+                0.5, 0, 0.3, 0.5,
+                2
+            ]
+
+            population = [
+                MixedIntIndividual(len(discrete_part) + len(int_part) + len(float_part),
+                                   num_discrete=len(num_options_per_module),
+                                   num_ints=len(int_part))
+            ]
+            population[0].genotype = np.array(discrete_part + int_part + float_part)
+            population[0].fitness = ESFitness()
+
+            while len(population) < Config.GA_mu:
+                population.append(copy(population[0]))
+
+            parameters = Parameters(len(options) + 15, Config.GA_budget, mu=Config.GA_mu, lambda_=Config.GA_lambda)
+            parameters.l_bound[len(options):] = np.array([  2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]).reshape(15)
+            parameters.u_bound[len(options):] = np.array([200, 1, 5, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5]).reshape(15)
+            u_bound, l_bound = create_bounds(float_part, 0.3)
+            parameters.u_bound[len(options) + 1:] = np.array(u_bound)
+            parameters.l_bound[len(options) + 1:] = np.array(l_bound)
+
             print("Optimizing for function ID {} in {}-dimensional space:".format(fid, ndim))
             x = datetime.now()
-            gen_sizes, sigmas, fitness, best = MIES(ndim=ndim, fid=fid)
+            gen_sizes, sigmas, fitness, best = _MIES(n=ndim, fitnessFunction=fid, budget=Config.GA_budget,
+                                                     mu=Config.GA_mu, lambda_=Config.GA_lambda, parameters=parameters,
+                                                     population=population)
             y = datetime.now()
 
             z = y - x
@@ -240,11 +290,11 @@ def _runExperiments():
 
 
 def runDefault():
-    _runGA()
+    # _runGA()
     # _testEachOption()
     # _problemCases()
     # _exampleRuns()
-    # _bruteForce(ndim=10, fid=1)
+    _bruteForce(ndim=5, fid=1)
     # _runExperiments()
     pass
 

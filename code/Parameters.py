@@ -8,7 +8,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
-from code import initializable_parameters
+from code.Utils import initializable_parameters
 import numpy as np
 from numpy import abs, all, any, append, arange, ceil, diag, dot, exp, eye, floor, isfinite, isinf, isreal,\
                   ones, log, max, mean, median, mod, newaxis, outer, real, sqrt, square, sum, triu, zeros
@@ -59,7 +59,7 @@ class Parameters(BaseParameters):
         :param sequential:      Boolean switch on using sequential evaluation. Default: False
         :param tpa:             Boolean switch on using two-point step-size adaptation. Default: False
         :param values:          Dictionary in the form of ``{'name': value}`` of initial values for allowed parameters.
-                                Any values for names not in :data:`code.initializable_parameters` are ignored.
+                                Any values for names not in :data:`code.Utils.initializable_parameters` are ignored.
     """
 
     def __init__(self, n, budget, sigma=None,
@@ -105,12 +105,12 @@ class Parameters(BaseParameters):
         self.sequential = sequential
         self.seq_cutoff = seq_cutoff
         self.tpa = tpa
+        self.weights_option = weights_option
         self.weights = self.getWeights(weights_option)
         self.mu_eff = 1 / sum(square(self.weights))
 
         ### Meta-parameters ###
         self.N = 10 * self.n
-        self.count_degenerations = 0
 
         ### (1+1)-ES ###
         self.success_history = zeros((self.N, ), dtype=np.int)
@@ -172,43 +172,24 @@ class Parameters(BaseParameters):
         self.histfunevals = zeros(self.nbin)
 
         self.recent_best_fitnesses = []  # Contains the most recent best fitnesses of the 20 most recent generations
-        self.stagnation_list = []  # Contains median fitness of some recent generations (formula: see local_restart())
+        self.stagnation_list = []        # Contains median fitness of some recent generations
+        self.is_fitness_flat = False  # (effectively) are all fitness values this generation equal?
 
         self.max_iter = 100 + 50*(n+3)**2 / sqrt(lambda_)
         self.tolx = 1e-12 * self.sigma
         self.tolupx = 1e3 * self.sigma
 
-
-        ###
-        # All parameters below this comment are currently NOT in use by any (CMA-)ES variants
-        # that are included in the optimization of ES-structures
-        ###
-
-        ### CMSA-ES ###
-        self.tau = 1 / sqrt(2*n)
-        self.tau_c = 1 + ((n**2 + n) / (2*self.mu_int))
-        self.sigma_mean = self.sigma
-
-        ### (1+1)-Cholesky ES ###
-        self.A = eye(n)
-        self.d = 1 + n/2
-        self.p_success = self.p_target
-        self.c_cov = 2 / (n**2 + 6)
-        self.c_a = sqrt(1 - self.c_cov)
-        self.lambda_success = False
-        self.last_z = zeros((1,n))  # To be recorded by the mutation
-
-        ### Active (1+1)CMA-ES ###
-        self.A_inv = eye(n)
-        self.s = zeros((1,n))
-        self.fitness_history = []  # 'Filler' data
-        self.best_fitness = np.inf
-        self.c_act = 2/(n+2)
-        self.c_cov_pos = 2/(n**2 + 6)
-        self.c_cov_neg = 0.4/(n**1.6 + 1)
-
+        self.values = values
         if values:  # Now we've had the default values, we change all values that were passed along
             self.__init_values(values)
+
+
+    def getParameterOpts(self):
+        return {'n': self.n, 'budget': self.budget, 'sigma': self.sigma,
+                'mu': self.mu, 'lambda_': self.lambda_, 'weights_option': self.weights_option, 'l_bound': self.l_bound,
+                'u_bound': self.u_bound, 'seq_cutoff': self.seq_cutoff, 'wcm': self.wcm,
+                'active': self.active, 'elitist': self.elitist, 'local_restart': self.local_restart,
+                'sequential': self.sequential, 'tpa': self.tpa, 'values': self.values}
 
 
     def __init_values(self, values):
@@ -351,90 +332,6 @@ class Parameters(BaseParameters):
             self.restart()
 
 
-    def selfAdaptCovarianceMatrix(self):
-        """
-            Adapt the covariance matrix according to the CMSA-ES
-        """
-
-        tau_c_inv = 1/self.tau_c
-        self.C *= (1 - tau_c_inv)
-        self.C += tau_c_inv * (self.s_mean.T * self.s_mean)
-
-        self.checkDegenerated()
-
-
-    def adaptCholeskyCovarianceMatrix(self):
-        """
-            Adapt the covariance matrix according to the Cholesky CMA-ES
-        """
-        # Local variables
-        c_a, c_p, d, lambda_success, p_success, p_target = self.c_a, self.c_p, self.d, self.lambda_success, self.p_success, self.p_target
-
-        self.p_success = (1 - c_p)*p_success + c_p*int(lambda_success)
-        self.sigma *= exp((p_success - (p_target/(1-p_target))*(1-p_success))/d)
-        self.sigma_mean = self.sigma
-
-        if lambda_success and p_success < self.p_thresh:
-            # Helper variables
-            z_squared = norm(self.last_z) ** 2
-            c_a_squared = c_a ** 2
-
-            part_1 = c_a / z_squared
-            part_2 = sqrt(1 + (((1 - c_a_squared)*z_squared) / c_a_squared)) - 1
-            part_3 = dot(dot(self.A, self.last_z.T), self.last_z)
-
-            # Actual matrix update
-            self.A = c_a*self.A + part_1*part_2*part_3
-
-        self.checkCholeskyDegenerated()
-
-
-    def adaptActiveCovarianceMatrix(self):
-        """
-            Adapt the covariance matrix according to the (1+1) Active-Cholesky CMA-ES
-        """
-        # Local variables
-        c, c_cov_pos, c_p, p_target = self.c, self.c_cov_pos, self.c_p, self.p_target
-
-        # Positive Cholesky update
-        if self.lambda_success:
-            self.p_success = (1 - c_p)*self.p_success + c_p
-            self.s = (1-c)*self.s + sqrt(c * (2-c)) * dot(self.A, self.last_z.T)
-
-            w = dot(self.A_inv, self.s.T)
-            w_norm_squared = norm(w)**2
-            a = sqrt(1 - c_cov_pos)
-            b = (a/w_norm_squared) * (sqrt(1 + w_norm_squared*(c_cov_pos / (1-c_cov_pos))) - 1)
-
-            self.A = a*self.A + b*dot(dot(self.A, w), w.T)
-            self.A_inv = (1/a)*self.A_inv - b/(a**2 + a*b*w_norm_squared) * dot(w, dot(w.T, self.A_inv))
-
-        else:
-            self.p_success *= (1-c_p)
-
-        self.sigma *= exp((1/self.d) * ((self.p_success-p_target) / (1-p_target)))
-        self.sigma_mean = self.sigma
-
-        # Negative Cholesky update
-        if len(self.fitness_history) > 4 and self.fitness_history[-1] < self.best_fitness:
-            # Helper variables
-            z_squared = norm(self.last_z) ** 2
-
-            if self.c_cov_neg*(2*z_squared - 1) > 1:
-                self.c_cov_neg = 1/(2*z_squared - 1)
-            else:
-                self.c_cov_neg = 0.4/(self.n**1.6 + 1)  # TODO: currently hardcoded copy of default value
-
-            c_cov_neg = self.c_cov_neg
-            w = dot(self.A_inv, self.s.T)
-            a = sqrt(1+c_cov_neg)
-            b = (a/z_squared) * (sqrt(1 + (c_cov_neg*z_squared) / (1+c_cov_neg)) - 1)
-            self.A = a*self.A + b*dot(dot(self.A, w), w.T)
-            self.A_inv = (1/a)*self.A_inv - b/(a**2 + a*b*(norm(w)**2) * dot(w, dot(w.T, self.A_inv)))
-
-        self.checkCholeskyDegenerated()
-
-
     def checkDegenerated(self):
         """
             Check if the parameters (C, s_mean, etc) have degenerated and need to be reset.
@@ -460,58 +357,11 @@ class Parameters(BaseParameters):
             self.restart()
 
 
-    def checkCholeskyDegenerated(self):
-        """
-            Check if the parameters (C, s_mean, etc) have degenerated and need to be reset.
-            Designed for use by a Cholesky-decomposition ES
-        """
-
-        degenerated = False
-
-        if np.min(isfinite(self.A)) == 0:
-            degenerated = True
-        elif not ((10 ** (-16)) < cond(self.A) < (10 ** 16)):
-            degenerated = True
-        elif not ((10 ** (-16)) < self.sigma_mean < (10 ** 16)):
-            degenerated = True
-
-        if degenerated:
-            n = self.n
-            self.sigma_mean = 1  # TODO: make this depend on any input default sigma value
-            self.p_success = self.p_target
-            self.A = eye(n)
-            self.p_c = zeros((1, n))
-
-
-    def checkActiveDegenerated(self):
-        """
-            Check if the parameters (C, s_mean, etc) have degenerated and need to be reset.
-            Designed for use by an Active Cholesky-decomposition ES
-        """
-
-        degenerated = False
-
-        if cond(dot(self.A, self.A.T)) > (10 ** 14):
-            degenerated = True
-
-        elif not ((10 ** (-16)) < self.sigma_mean < (10 ** 16)):
-            degenerated = True
-
-        if degenerated:
-            n = self.n
-            self.A = eye(n)
-            self.A_inv = eye(n)
-            self.sigma_mean = 1
-            self.p_success = 0
-            self.s = zeros((1,n))
-            self.fitness_history = self.best_fitness * ones((5,1))
-
-
     def getWeights(self, weights_option=None):
         """
             Defines a list of weights to be used in weighted recombination. Available options are:
 * ``1/n``: Each weight is set to 1/n
-* ``1/2^n``: Each weight is set to 1/2^n + (1/2^n)/mu
+* ``1/2^n``: Each weight is set to 1/2^i + (1/2^n)/mu
 * ``default``: Each weight is set to log((lambda-1)/2) - log(i)
 
             :param weights_option:  String to indicate which weights should be used.
@@ -560,13 +410,27 @@ class Parameters(BaseParameters):
         self.sigma_mean = self.sigma = 1          # TODO: make this depend on any input default sigma value
         # TODO: add feedback of resetting sigma to the sigma per individual
 
+    def recordRecentFitnessValues(self, evalcount, fitnesses):
+        """
+            Record recent fitness values at current budget
+        """
+        self.histfunevals[int(mod(evalcount/self.lambda_-1, self.nbin))] = min(fitnesses)
 
-    def localRestart(self, evalcount, fitnesses):
+        self.recent_best_fitnesses.append(min(fitnesses))
+        self.recent_best_fitnesses = self.recent_best_fitnesses[-20:]
+
+        self.stagnation_list.append(median(fitnesses))
+        self.stagnation_list = self.stagnation_list[-int(ceil(0.2*evalcount + 120 + 30*self.n/self.lambda_)):]
+
+        flat_fitness_index = min(len(fitnesses)-1, self.flat_fitness_index)
+        self.is_fitness_flat = min(fitnesses) == sorted(fitnesses)[flat_fitness_index]
+
+
+    def checkLocalRestartConditions(self, evalcount):
         """
             Check for local restart conditions according to (B)IPOP
 
             :param evalcount:   Counter for the current generation
-            :param fitnesses:   Fitness values of the most recent generation, used to detect stagnation
             :returns:           Boolean value ``restart_required``, True if a restart should be performed
         """
 
@@ -579,13 +443,6 @@ class Parameters(BaseParameters):
         diagC = diag(self.C).reshape(-1, 1)
         tmp = append(abs(self.p_c), sqrt(diagC), axis=1)
         a = int(mod(evalcount/self.lambda_-1, self.n))
-        self.histfunevals[int(mod(evalcount/self.lambda_-1, self.nbin))] = fitnesses[0]
-
-        self.recent_best_fitnesses.append(fitnesses[0])
-        self.recent_best_fitnesses = self.recent_best_fitnesses[-20:]
-
-        self.stagnation_list.append(median(fitnesses))
-        self.stagnation_list = self.stagnation_list[-int(ceil(0.2*evalcount + 120 + 30*self.n/self.lambda_)):]
 
         # TolX
         if all(self.sigma*(max(tmp, axis=1)) < self.tolx):
@@ -618,13 +475,13 @@ class Parameters(BaseParameters):
             restart_required = True
 
         elif mod(evalcount, self.lambda_) == self.nbin and \
-                                max(self.histfunevals) - min(self.histfunevals) < self.tolfun:
+                max(self.histfunevals) - min(self.histfunevals) < self.tolfun:
             if debug:
                 print('tolfun')
             restart_required = True
 
         # Adjust step size in case of equal function values
-        elif fitnesses[0] == fitnesses[self.flat_fitness_index]:
+        elif self.is_fitness_flat:
             if debug:
                 print('flatfitness')
             restart_required = True
@@ -637,7 +494,7 @@ class Parameters(BaseParameters):
 
         # Stagnation, median of most recent 20 best values is no better than that of the oldest 20 medians/generation
         elif len(self.stagnation_list) > 20 and len(self.recent_best_fitnesses) > 20 and \
-                                                median(self.stagnation_list[:20]) > median(self.recent_best_fitnesses):
+                median(self.stagnation_list[:20]) > median(self.recent_best_fitnesses):
             if debug:
                 print('stagnation')
             restart_required = True

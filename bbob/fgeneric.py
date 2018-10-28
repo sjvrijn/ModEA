@@ -45,7 +45,7 @@ nb_evaluations_always_written = '1' # '100 + 10 * dim'  # 100 + dim;10*dim add a
 nb_triggers_per_delta_f_decade = 5 # using 10 should be perfectly fine
 fileprefix = 'bbobexp'
 
-write_output = False
+write_output = True
 
 class LoggingFunction( object ):
     """Class for a function that records data from experiments with a given

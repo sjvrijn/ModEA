@@ -13,6 +13,7 @@ import numpy as np
 import random
 from numpy import add, bitwise_and, dot, exp, floor, mod, shape, zeros
 from numpy.linalg import norm
+from numpy.random import random_sample
 from random import gauss
 from math import sqrt
 
@@ -36,7 +37,6 @@ def _keepInBounds(x, l_bound, u_bound):
         :returns:       An in-bounds kept version of the column vector ``x``
     """
 
-    # TODO: Move this check (or a similar one) to Parameters.py ?
     y = (x - l_bound) / (u_bound - l_bound)
     floor_y = floor(y)                              # Local storage to prevent double calls
     I = mod(floor_y, 2) == 0
@@ -149,21 +149,6 @@ def CMAMutation(individual, param, sampler, threshold_convergence=False):
     individual.genotype = _keepInBounds(add(individual.genotype, mutation_vector), param.l_bound, param.u_bound)
 
 
-def choleskyCMAMutation(individual, param, sampler):
-    """
-        Cholesky CMA based mutation
-
-        :param individual:  :class:`~code.Individual.FloatIndividual` to be mutated
-        :param param:       :class:`~code.Parameters.Parameters` object to store settings
-        :param sampler:     :mod:`~code.Sampling` module from which the random values should be drawn
-    """
-
-    param.last_z = sampler.next()
-    mutation_vector = np.dot(param.A, param.last_z.T)
-
-    individual.genotype += param.sigma * mutation_vector
-
-
 '''-----------------------------------------------------------------------------
 #                                GA Mutations                                  #
 -----------------------------------------------------------------------------'''
@@ -227,18 +212,17 @@ def mutateFloatList(individual, param, options):
     l_bound = param.l_bound[individual.num_ints:].flatten()
     u_bound = param.u_bound[individual.num_ints:].flatten()
     search_space = u_bound - l_bound
-    random_values = [np.random.random_sample(float_part.shape),  # TODO reduce to a single call
-                     np.random.random_sample(float_part.shape)]  # Generate all random values in one go
 
     # Create the mask: which float values will actually be mutated?
     cond_mask = [True,True,True,True,True,True,True]  # TODO FIXME: these are default CMA parameters, make this dynamic!
     for i, val in enumerate(options):
         cond_mask.extend([bool(int_part[i] * 1)] * val[2])
-    mutate_mask = random_values[0] < p
+    mutate_mask = random_sample(float_part.shape) < p
     combined_mask = bitwise_and(cond_mask, mutate_mask)
 
     # Scale the random values to the search space, then start at the lower bound
-    float_part[combined_mask] = (random_values[1][combined_mask] * search_space[combined_mask]) + l_bound[combined_mask]
+    float_part[combined_mask] = random_sample(float_part.shape)[combined_mask] * search_space[combined_mask]
+    float_part[combined_mask] += l_bound[combined_mask]
 
 
 def mutateMixedInteger(individual, param, options, num_options_per_module):
@@ -332,7 +316,7 @@ def MIES_MutateIntegers(individual, begin, end, u, param):
             individual.genotype[x] = int(_keepInBounds(individual.genotype[x], param.l_bound[x], param.u_bound[x]))
 
 
-def MIES_MutateFloats(conditional_mask,individual, begin, end, u, param):
+def MIES_MutateFloats(conditional_mask, individual, begin, end, u, param):
     """
         Mutate the floating point part of a Mixed-Integer representation
 

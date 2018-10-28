@@ -8,7 +8,6 @@ Submodules
 
    code.Algorithms
    code.Config
-   code.GA
    code.Individual
    code.Mutation
    code.Parameters

@@ -108,7 +108,7 @@ def roulette(population, new_population, param, force_unique=False):
 
     # TODO: warning with negative fitness values?
     # Use normalized 1/fitness as probability for picking a certain individual
-    norm_inverses = [1/abs(ind.fitness) for ind in new_population]  # We take the absolute just to be sure it works
+    norm_inverses = np.array([1/abs(ind.fitness) for ind in new_population])  # We take the absolute just to be sure it works
     norm_inverses /= sum(norm_inverses)
 
     # Create a discrete sampler using the normalized 1/fitness values as probabilities
@@ -148,55 +148,5 @@ def onePlusOneSelection(population, new_population, t, param):
     else:
         result = population
         param.addToSuccessHistory(t, False)
-
-    return result
-
-
-def onePlusOneCholeskySelection(population, new_population, param):
-    """
-        (1+1)-selection (with success history)
-
-        :param population:      List of :class:`~code.Individual.FloatIndividual` objects containing the previous generation
-        :param new_population:  List of :class:`~code.Individual.FloatIndividual` objects containing the new generation
-        :param param:           :class:`~code.Parameters.Parameters` object for storing all parameters, options, etc.
-        :returns:               A slice of the sorted new_population list.
-    """
-
-    new_individual = new_population[0]
-    individual = population[0]
-
-    if new_individual.fitness < individual.fitness:
-        param.best_fitness = new_individual.fitness
-        result = new_population
-        param.lambda_success = True
-    else:
-        result = population
-        param.lambda_success = False
-
-    return result
-
-
-def onePlusOneActiveSelection(population, new_population, param):
-    """
-        (1+1)-selection (with success history)
-
-        :param population:      List of :class:`~code.Individual.FloatIndividual` objects containing the previous generation
-        :param new_population:  List of :class:`~code.Individual.FloatIndividual` objects containing the new generation
-        :param param:           :class:`~code.Parameters.Parameters` object for storing all parameters, options, etc.
-        :returns:               A slice of the sorted new_population list.
-    """
-
-    new_fitness = new_population[0].fitness
-    individual = population[0]
-
-    if new_fitness < individual.fitness:
-        param.best_fitness = new_fitness
-        result = new_population
-        param.lambda_success = True
-    else:
-        result = population
-        param.lambda_success = False
-
-    param.addToFitnessHistory(new_fitness)
 
     return result

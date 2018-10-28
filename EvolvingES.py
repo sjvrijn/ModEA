@@ -4,25 +4,29 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
+import os
 import numpy as np
+import re
 import sys
-from datetime import datetime
 from functools import partial
 from itertools import product
 from multiprocessing import Pool
 
-
 from bbob import bbobbenchmarks, fgeneric
-from code import getBitString, getOpts, getPrintName, getVals, options, initializable_parameters, num_options_per_module, num_threads
 from code import Config
-from code import allow_parallel, MPI_available, MPI
-from code.Algorithms import GA, MIES, customizedES
-from code.Utils import ESFitness
-from code.local import datapath, non_bbob_datapath
+from code.Algorithms import _customizedES
+from code.Utils import getOpts, getVals, options, initializable_parameters, \
+    chunkListByLength, guaranteeFolderExists, reprToString, ESFitness
+from code.local import datapath
 
-# BBOB parameters: Sets of noise-free and noisy benchmarks
-free_function_ids = bbobbenchmarks.nfreeIDs
-noisy_function_ids = bbobbenchmarks.noisyIDs
+try:
+    from mpi4py import MPI
+    MPI_available = True
+except:
+    MPI = None
+    MPI_available = False
+
+guaranteeFolderExists(datapath)
 
 # Options to be stored in the log file(s)
 bbob_opts = {'algid': None,
@@ -81,8 +85,8 @@ def _trimListOfListsByLength(lists):
         Given a list of lists of varying sizes, trim them to make the overall shape rectangular:
 
         >>> _trimListOfListsByLength([
-        ...     [1, 2, 3, 4, 5],
-        ...     [10, 20, 30],
+        ...     [1,   2,   3,   4,   5],
+        ...     [10,  20,  30],
         ...     ['a', 'b', 'c', 'd']
         ... ])
         [[1, 2, 3], [10, 20, 30], ['a', 'b', 'c']]
@@ -126,17 +130,19 @@ def _ensureListOfLists(iterable):
 def displayRepresentation(representation):
     """
         Displays a representation of a customizedES instance in a more human-readable format:
-        >>> displayRepresentation([0,0,0,0,0,0,0,0,0,0,0, 20, 0.25, 1, 1, 1, 1, 1, 1, 0.2, 0.955, 0.5, 0, 0.3, 0.5, 2])
+
+        >>> displayRepresentation([0,0,0,0,0,0,0,0,0,0,0,
+        ...     20,0.25,1,1,1,1,1,1,0.2,0.955,0.5,0,0.3,0.5,2])
         [0,0,0,0,0,0,0,0,0,0,0] (0.25, 20) with [1,1,1,1,1,1,0.2,0.955,0.5,0,0.3,0.5,2]
 
         :param representation:  Representation of a customizedES instance to display
     """
     disc_part = representation[:len(options)]
     lambda_ = representation[len(options)]
-    mu = representation[len(options)+1]
+    mu = '{:.3f}'.format(representation[len(options)+1]) if representation[len(options)+1] is not None else 'None'
     float_part = representation[len(options)+2:]
 
-    print("{}({:.3f}, {}) with {}".format([int(x) for x in disc_part], mu, lambda_, float_part))
+    print("{}({}, {}) with {}".format([int(x) for x in disc_part], mu, lambda_, float_part))
 
 
 def ensureFullLengthRepresentation(representation):
@@ -156,42 +162,93 @@ def ensureFullLengthRepresentation(representation):
     return representation
 
 
+def reorganiseBBOBOutput(path, fid, ndim, iids, num_reps):
+    cwd = os.getcwd()  # Remember the current working directory
+    os.chdir(path + '{ndim}d-f{fid}/'.format(ndim=ndim, fid=fid))
+
+    subfolder = 'i{iid}-r{rep}/'
+    extensions = ['.dat', '.rdat', '.tdat']
+    info_fname = 'bbobexp_f{}.info'.format(fid)
+    data_folder = 'data_f{}/'.format(fid)
+    data_fname = '_f{}_DIM{}'.format(fid, ndim)
+    counter = start_at = 1
+    cases = list(product(iids, range(num_reps)))
+
+    try:
+        iid, rep = cases[0]
+        os.rename(subfolder.format(iid=iid, rep=rep)+info_fname, info_fname)
+        os.rename(subfolder.format(iid=iid, rep=rep)+data_folder, data_folder)
+    except:
+        counter = getMaxFileNumber(data_folder) + 1
+        start_at = 0
+
+    with open(info_fname, 'a') as f_to:
+        for iid, rep in cases[start_at:]:
+            this_folder = subfolder.format(iid=iid, rep=rep)
+
+            # copy content of info file into 'global' info file
+            with open(this_folder+info_fname, 'r') as f_from:
+                f_to.write('\n')
+                f_to.writelines([line for line in f_from])
+
+            # move and rename data files into the data folder
+            for ext in extensions:
+                os.rename(this_folder + data_folder + 'bbobexp' + data_fname + ext,
+                          data_folder + 'bbobexp-{:02d}'.format(counter) + data_fname + ext)
+            counter += 1
+
+    for iid, rep in cases:
+        this_folder = subfolder.format(iid=iid, rep=rep)
+        try:  # will fail for 'i0-r0' as they have been moved already
+            os.remove(this_folder + info_fname)
+            os.rmdir(this_folder + data_folder)
+        except:
+            pass
+        os.rmdir(this_folder)
+
+    os.chdir(cwd)  # Switch back to the previous current working directory
+
+
+def getMaxFileNumber(data_folder):
+    regexp = re.compile('bbobexp-(\d*)_f.*')
+    files = os.listdir(data_folder)
+    matches = [regexp.match(f) for f in files]
+    counter = max((int(match.group(1)) if match else 0 for match in matches))
+    return counter
+
+
 '''-----------------------------------------------------------------------------
 #                             ES-Evaluation Functions                          #
 -----------------------------------------------------------------------------'''
 
 
-def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, storage_file=None):
+def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, num_reps=1, storage_file=None):
     """
         Function to evaluate customizedES instances using the BBOB framework. Can be passed one or more representations
         at once, will run them in parallel as much as possible if instructed to do so in Config.
 
-        :param representations: The genotype to be translated into customizedES-ready options. Must manually be set to
-                                None if options are given as opts
+        :param representations: The genotype to be translated into customizedES-ready options.
         :param iids:            The BBOB instance ID's to run the representation on (for statistical significance)
         :param ndim:            The dimensionality to test the BBOB function with
         :param fid:             The BBOB function ID to use in the evaluation
         :param budget:          The allowed number of BBOB function evaluations
+        :param num_reps:        Number of times each (ndim, fid, iid) combination has to be repeated
         :param storage_file:    Filename to use when storing fitness information
         :returns:               A list containing one instance of ESFitness representing the fitness of the defined ES
     """
 
-    # TODO: Expand this function to include number of repetitions per (ndim, fid, iid) combination?
-
     representations = _ensureListOfLists(representations)
+    for rep in representations:
+        displayRepresentation(rep)
 
     budget = Config.ES_budget_factor * ndim if budget is None else budget
     runFunction = partial(runCustomizedES, ndim=ndim, fid=fid, budget=budget)
-    for rep in representations:
-        displayRepresentation(rep)
-    arguments = product(representations, iids)
 
-    if MPI_available and Config.use_MPI and Config.GA_evaluate_parallel:
-        run_data = runMPI(runFunction, list(arguments))
-    elif allow_parallel and Config.GA_evaluate_parallel:
-        run_data = runPool(runFunction, list(arguments))
-    else:
-        run_data = runSingleThreaded(runFunction, list(arguments))
+    num_multiplications = len(iids)*num_reps
+    arguments = list(product(representations, iids, range(num_reps)))
+    run_data = runParallelFunction(runFunction, arguments)
+    for rep in representations:
+        reorganiseBBOBOutput(datapath + reprToString(rep) + '/', fid, ndim, iids, num_reps)
 
     targets, results = zip(*run_data)
     fitness_results = []
@@ -199,11 +256,11 @@ def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, storage
     for i, rep in enumerate(representations):
 
         # Preprocess/unpack results
-        _, _, fitnesses, _ = (list(x) for x in zip(*results[i*len(iids):(i+1)*len(iids)]))
+        _, _, fitnesses, _ = (list(x) for x in zip(*results[i*num_multiplications:(i+1)*num_multiplications]))
         fitnesses = _trimListOfListsByLength(fitnesses)
 
         # Subtract the target fitness value from all returned fitnesses to only get the absolute distance
-        fitnesses = np.subtract(np.array(fitnesses), np.array(targets[i*len(iids):(i+1)*len(iids)]).T[:, np.newaxis])
+        fitnesses = np.subtract(np.array(fitnesses), np.array(targets[i*num_multiplications:(i+1)*num_multiplications]).T[:, np.newaxis])
         fitness = ESFitness(fitnesses)
         fitness_results.append(fitness)
 
@@ -214,7 +271,24 @@ def evaluateCustomizedESs(representations, iids, ndim, fid, budget=None, storage
     return fitness_results
 
 
-def runCustomizedES(representation, iid, ndim, fid, budget):
+def helper(args, func):
+    return func(*args)
+
+def MPIpool_evaluate(representations, ndim, fid, iids, num_reps, budget=None):
+    from schwimmbad import MPIPool
+
+    budget = Config.ES_budget_factor * ndim if budget is None else budget
+    run_es = partial(runCustomizedES, ndim=ndim, fid=fid, budget=budget)
+    func = partial(helper, func=run_es)
+    tasks = product(representations, iids, range(num_reps))
+
+    with MPIPool() as pool:
+        results = pool.map(func, tasks)
+
+    return results
+
+
+def runCustomizedES(representation, iid, rep, ndim, fid, budget):
     """
         Runs a customized ES on a particular instance of a BBOB function in some dimensionality with given budget.
         This function takes care of the BBOB setup and the translation of the representation to input arguments for
@@ -222,15 +296,23 @@ def runCustomizedES(representation, iid, ndim, fid, budget):
 
         :param representation:  Representation of a customized ES (structure and parameter initialization)
         :param iid:             Instance ID for the BBOB function
+        :param rep:             Repetition number (for output storage purposes only)
         :param ndim:            Dimensionality to run the ES in
         :param fid:             BBOB function ID
         :param budget:          Evaluation budget for the ES
         :return:                Tuple(target optimum value of the evaluated function, list of fitness-values over time)
     """
+
+    print(reprToString(representation), iid, rep)
+
     # Setup BBOB function + logging
     bbob_opts['algid'] = representation
-    f = fgeneric.LoggingFunction(datapath, **bbob_opts)
-    f_target = f.setfun(*bbobbenchmarks.instantiate(fid, iinstance=iid)).ftarget
+    datapath_ext = '{repr}/{ndim}d-f{fid}/i{iid}-r{rep}/'.format(ndim=ndim, fid=fid, repr=reprToString(representation),
+                                                                 iid=iid, rep=rep)
+    guaranteeFolderExists(datapath + datapath_ext)
+
+    f = fgeneric.LoggingFunction(datapath + datapath_ext, **bbob_opts)
+    f_target = f.setfun(*bbobbenchmarks.instantiate(fid, iinstance=iid),dftarget=Config.default_target).ftarget
 
     # Interpret the representation into parameters for the ES
     opts = getOpts(representation[:len(options)])
@@ -239,7 +321,8 @@ def runCustomizedES(representation, iid, ndim, fid, budget):
     values = getVals(representation[len(options)+2:])
 
     # Run the ES defined by opts once with the given budget
-    results = customizedES(ndim, f.evalfun, budget, lambda_=lambda_, mu=mu, opts=opts, values=values)
+    results = _customizedES(ndim, f.evalfun, budget, lambda_=lambda_, mu=mu, opts=opts, values=values)
+    f.finalizerun()
     return f_target, results
 
 
@@ -248,25 +331,54 @@ def runCustomizedES(representation, iid, ndim, fid, budget):
 -----------------------------------------------------------------------------'''
 
 
+def runParallelFunction(runFunction, arguments):
+    """
+        Return the output of runFunction for each set of arguments,
+        making use of as much parallelization as possible on this system
+
+        :param runFunction: The function that can be executed in parallel
+        :param arguments:   List of tuples, where each tuple are the arguments
+                            to pass to the function
+        :return:
+    """
+    if MPI_available and Config.use_MPI and Config.GA_evaluate_parallel:
+        return runMPI(runFunction, arguments)
+    elif Config.allow_parallel and Config.GA_evaluate_parallel:
+        return runPool(runFunction, arguments)
+    else:
+        return runSingleThreaded(runFunction, arguments)
+
+
 def runMPI(runFunction, arguments):
     """
         Small overhead-function to handle multi-processing using MPI
 
-        :param runFunction: The (``partial``) function to run in parallel, accepting ``arguments``
+        :param runFunction: The function to run in parallel, accepting ``arguments``
         :param arguments:   The arguments to passed distributedly to ``runFunction``
         :return:            List of any results produced by ``runFunction``
     """
-    results = None  # Required pre-initialization of the variable that will receive the data from comm.gather()
+    results = []
+    num_parallel = Config.MPI_num_total_threads
 
-    comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'],
-                               maxprocs=(min(Config.MPI_num_total_threads, len(arguments))))  # Initialize
-    comm.bcast(runFunction, root=MPI.ROOT)          # Equal for all processes
-    comm.scatter(arguments, root=MPI.ROOT)          # Different for each process
-    comm.Barrier()                                  # Wait for everything to finish...
-    results = comm.gather(results, root=MPI.ROOT)   # And gather everything up
-    comm.Disconnect()
+    for args in chunkListByLength(arguments, num_parallel):
+        res = None  # Required pre-initialization of the variable that will receive the data from comm.gather()
+
+        comm = MPI.COMM_SELF.Spawn(sys.executable, args=['MPI_slave.py'], maxprocs=len(args))  # Initialize
+        comm.bcast(runFunction, root=MPI.ROOT)    # Equal for all processes
+        comm.scatter(args, root=MPI.ROOT)         # Different for each process
+        comm.Barrier()                            # Wait for everything to finish...
+        res = comm.gather(res, root=MPI.ROOT)     # And gather everything up
+        comm.Disconnect()
+
+        results.extend(res)
 
     return results
+
+
+# Inline function definition to allow the passing of multiple arguments to 'runFunction' through 'Pool.map'
+def func_star(a_b, func):
+    """Convert `f([1,2])` to `f(1,2)` call."""
+    return func(*a_b)
 
 
 def runPool(runFunction, arguments):
@@ -277,8 +389,10 @@ def runPool(runFunction, arguments):
         :param arguments:   The arguments to passed distributedly to ``runFunction``
         :return:            List of any results produced by ``runFunction``
     """
-    p = Pool(min(num_threads, len(arguments)))
-    results = p.map(runFunction, arguments)
+    p = Pool(min(Config.num_threads, len(arguments)))
+
+    local_func = partial(func_star, func=runFunction)
+    results = p.map(local_func, arguments)
     return results
 
 

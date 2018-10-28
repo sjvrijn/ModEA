@@ -75,14 +75,13 @@ class MixedIntIndividual(object):
             raise MixedIntIndividualError("Number of discrete, integer or floating point values not specified")
 
         self.n = n
-        self.num_discrete = num_discrete  #if num_discrete is not None else n - num_floats  # num_discrete + num_floats = n
+        self.num_discrete = num_discrete
         self.num_ints = num_ints
         self.num_floats = n - (num_discrete + num_ints)
         self.genotype = np.ones((n, 1))                                       # Column vector
-        # self.genotype_temp=[np.ones(num_floats)]
         self.fitness = np.inf                                                 # Default 'unset' value
         self.sigma = 1
-        self.stepSizeOffsetMIES=np.ones(n)
+        self.stepSizeOffsetMIES = np.ones(n)
         # Self-adaptive step size parameters
         self.maxStepSize = 0.5
         self.initStepSize = 0.2
@@ -97,9 +96,9 @@ class MixedIntIndividual(object):
             self.stepSizeOffsetMIES[x] = self.initStepSize - self.baseStepSize
 
 
-    def stepSizeMIES(self,x):
-        # The actual stepSize is the base + offset, so final starting stepSize = initStepSize
-        return self.stepSizeOffsetMIES[x] + self.baseStepSize
+    @property
+    def stepsizeMIES(self):
+        return self.stepSizeOffsetMIES + self.baseStepSize
 
     def __copy__(self):
         """
@@ -111,13 +110,11 @@ class MixedIntIndividual(object):
         """
         return_copy = MixedIntIndividual(self.n, self.num_discrete, self.num_ints)
         return_copy.genotype = copy(self.genotype)
-        # return_copy.genotype_temp = copy(self.genotype_temp)
         return_copy.fitness = self.fitness
         return_copy.sigma = self.sigma
 
         return_copy.maxStepSize = self.maxStepSize
         return_copy.baseStepSize = self.baseStepSize
         return_copy.initStepSize = self.initStepSize
-        # return_copy.stepSizeOffset = self.stepSizeOffset
         return_copy.stepSizeOffsetMIES=copy(self.stepSizeOffsetMIES)
         return return_copy

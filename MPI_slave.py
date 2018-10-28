@@ -6,10 +6,9 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 ### NOTE: Do not remove these 'unused' imports! ###
 # The following are imports that are required by the functions that are passed to this MPI slave in order to run
-from code.EvolvingES import runCustomizedES  # Required for the MPI calls for the GA
 
 import numpy as np
-from code import MPI
+from EvolvingES import MPI
 comm = MPI.COMM_SELF.Get_parent()
 size = comm.Get_size()
 rank = comm.Get_rank()
@@ -32,7 +31,6 @@ def runSlaveRun():
         >>> comm.Disconnect()
     """
 
-
     np.set_printoptions(linewidth=1000)
     function = None
     options = None
@@ -50,5 +48,4 @@ def runSlaveRun():
 
 
 if __name__ == '__main__':
-
     runSlaveRun()

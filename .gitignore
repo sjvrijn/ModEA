@@ -6,3 +6,4 @@ docs/build/
 *.pyc
 *.dat
 *.tdat
+local.py
