@@ -12,8 +12,6 @@ import os
 import numpy as np
 from functools import total_ordering
 
-from modea import Config
-
 
 # The following list contains all possible options from which the Evolving ES can choose.
 # To give this list a 'constant' property, it is defined as a tuple (i.e. immutable)
@@ -294,7 +292,7 @@ class ESFitness(object):
         :param std_dev_ERT:     Standard deviation corresponding to the ERT value
         :param std_dev_FCE:     Standard deviation corresponding to the FCE value
     """
-    def __init__(self, fitnesses=None, target=Config.default_target,               # Original values
+    def __init__(self, fitnesses=None, target=1e-8,                                # Original values
                  min_fitnesses=None, min_indices=None, num_successful=None,        # Summary values
                  ERT=None, FCE=float('inf'), std_dev_ERT=None, std_dev_FCE=None):  # Human-readable values
 

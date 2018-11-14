@@ -6,7 +6,6 @@ import unittest
 import numpy as np
 import random
 from modea.Algorithms import _onePlusOneES, _customizedES
-from modea import Config
 
 
 def sphere(X):
@@ -15,7 +14,6 @@ def sphere(X):
 
 class OnePlusOneTest(unittest.TestCase):
     def setUp(self):
-        Config.write_output = False
         np.random.seed(42)
         random.seed(42)
 
@@ -111,7 +109,6 @@ class CMATest(unittest.TestCase):
 
 class restartCMATest(unittest.TestCase):
     def setUp(self):
-        Config.write_output = False
         np.random.seed(42)
         random.seed(42)
 
