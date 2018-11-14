@@ -37,7 +37,7 @@ def random(pop, param):
         To be used when no actual recombination occurs
 
         :param pop:     The population to be recombined
-        :param param:   :class:`~code.Parameters.Parameters` object
+        :param param:   :class:`~modea.Parameters.Parameters` object
         :returns:       A list of lambda individuals, each a copy of a randomly chosen individual from the population
     """
 
@@ -50,7 +50,7 @@ def onePlusOne(pop, param):
         Utility function for 1+1 ES strategies where the recombination is merely a copy
 
         :param pop:     The population to be recombined
-        :param param:   :class:`~code.Parameters.Parameters` object
+        :param param:   :class:`~modea.Parameters.Parameters` object
         :returns:       A copy of the first individual in the given population
     """
     return [copy(pop[0])]
@@ -59,11 +59,11 @@ def onePlusOne(pop, param):
 def weighted(pop, param):
     """
         Returns a new set of individuals whose genotype is initialized to the weighted average of that
-        of the given population, using the weights stored in the :class:`~code.Parameters.Parameters` object.
+        of the given population, using the weights stored in the :class:`~modea.Parameters.Parameters` object.
         Set weights to 1/n to simply use the arithmetic mean
 
         :param pop:     The population to be recombined
-        :param param:   :class:`~code.Parameters.Parameters` object, of which ``param.weights``
+        :param param:   :class:`~modea.Parameters.Parameters` object, of which ``param.weights``
                         will be used to calculate the weighted average
         :returns:       A list of lambda individuals, with as genotype the weighted average of the given population.
     """
@@ -88,7 +88,7 @@ def MIES_recombine(pop, param):
         the Mixed-Integer ES by Rui Li.
 
         :param pop:     The population to be recombined
-        :param param:   :class:`~code.Parameters.Parameters` object
+        :param param:   :class:`~modea.Parameters.Parameters` object
         :returns:       A list of lambda individuals, with as genotype the weighted average of the given population.
     """
     new_ind = copy(pop[0])

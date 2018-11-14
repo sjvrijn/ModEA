@@ -5,7 +5,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import unittest
 import copy
 import numpy as np
-from code.Individual import FloatIndividual, MixedIntIndividual, MixedIntIndividualError
+from modea.Individual import FloatIndividual, MixedIntIndividual, MixedIntIndividualError
 
 class FloatIndividualTest(unittest.TestCase):
     def setUp(self):

@@ -5,8 +5,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import unittest
 import numpy as np
 import random
-from code.Algorithms import _onePlusOneES, _customizedES
-from code import Config
+from modea.Algorithms import _onePlusOneES, _customizedES
+from modea import Config
 
 
 def sphere(X):

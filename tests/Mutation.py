@@ -6,8 +6,8 @@ import unittest
 import random
 import numpy as np
 from mock import Mock, patch
-from code.Utils import num_options_per_module
-from code.Mutation import _keepInBounds, adaptStepSize, _scaleWithThreshold, _adaptSigma, _getXi, \
+from modea.Utils import num_options_per_module
+from modea.Mutation import _keepInBounds, adaptStepSize, _scaleWithThreshold, _adaptSigma, _getXi, \
     addRandomOffset, CMAMutation, \
     mutateBitstring, mutateIntList, mutateFloatList, mutateMixedInteger, \
     MIES_MutateDiscrete,  MIES_MutateIntegers, MIES_MutateFloats, MIES_Mutate
@@ -161,9 +161,9 @@ class mutateMixedIntegerTest(unittest.TestCase):
         param = object()
         opts = object()
         nopm = object()
-        with patch('code.Mutation.adaptStepSize') as adaptStepSize:
-            with patch('code.Mutation.mutateIntList') as mutateIntList:
-                with patch('code.Mutation.mutateFloatList') as mutateFloatList:
+        with patch('modea.Mutation.adaptStepSize') as adaptStepSize:
+            with patch('modea.Mutation.mutateIntList') as mutateIntList:
+                with patch('modea.Mutation.mutateFloatList') as mutateFloatList:
                     mutateMixedInteger(ind, param, opts, nopm)
 
                     adaptStepSize.assert_called_with(ind)

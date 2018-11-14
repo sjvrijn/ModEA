@@ -10,14 +10,14 @@ from datetime import datetime
 from functools import partial
 from copy import copy
 from bbob import bbobbenchmarks
-from code import Config
-from code.Algorithms import _MIES
+from modea import Config
+from modea.Algorithms import _MIES
 from EvolvingES import ensureFullLengthRepresentation, evaluateCustomizedESs, _displayDuration, MPIpool_evaluate
-from code.Individual import MixedIntIndividual
-from code.Parameters import Parameters
-from code.Utils import ESFitness, getOpts, options, num_options_per_module, \
+from modea.Individual import MixedIntIndividual
+from modea.Parameters import Parameters
+from modea.Utils import ESFitness, getOpts, options, num_options_per_module, \
     getBitString, getPrintName, create_bounds, guaranteeFolderExists, chunkListByLength
-from code.local import non_bbob_datapath
+from modea.local import non_bbob_datapath
 
 # Sets of noise-free and noisy benchmarks
 free_function_ids = bbobbenchmarks.nfreeIDs

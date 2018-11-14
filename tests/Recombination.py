@@ -6,7 +6,7 @@ import unittest
 import random as rand
 import mock
 import numpy as np
-from code.Recombination import onePointCrossover, random, onePlusOne, weighted, MIES_recombine
+from modea.Recombination import onePointCrossover, random, onePlusOne, weighted, MIES_recombine
 
 
 class OnePointCrossoverTest(unittest.TestCase):

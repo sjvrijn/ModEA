@@ -5,8 +5,8 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import unittest
 import numpy as np
 from mock import Mock
-from code.Selection import bestGA, best, pairwise, roulette, onePlusOneSelection
-from code.Utils import chunkListByLength, getFitness
+from modea.Selection import bestGA, best, pairwise, roulette, onePlusOneSelection
+from modea.Utils import chunkListByLength, getFitness
 
 
 

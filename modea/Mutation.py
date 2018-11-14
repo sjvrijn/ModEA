@@ -53,7 +53,7 @@ def adaptStepSize(individual):
         Given the current individual, randomly determine a new step size offset
         that can be no greater than maxStepSize - baseStepSize
 
-        :param individual:  The :class:`~code.Individual.FloatIndividual` object whose step size should be adapted
+        :param individual:  The :class:`~modea.Individual.FloatIndividual` object whose step size should be adapted
     """
     # Empirically determined, see paper
     gamma = 0.22
@@ -121,9 +121,9 @@ def addRandomOffset(individual, param, sampler):
     """
         Mutation 1: x = x + sigma*N(0,I)
 
-        :param individual:  :class:`~code.Individual.FloatIndividual` to be mutated
-        :param param:       :class:`~code.Parameters.Parameters` object to store settings
-        :param sampler:     :mod:`~code.Sampling` module from which the random values should be drawn
+        :param individual:  :class:`~modea.Individual.FloatIndividual` to be mutated
+        :param param:       :class:`~modea.Parameters.Parameters` object to store settings
+        :param sampler:     :mod:`~modea.Sampling` module from which the random values should be drawn
     """
     individual.genotype += param.sigma * sampler.next()
 
@@ -132,9 +132,9 @@ def CMAMutation(individual, param, sampler, threshold_convergence=False):
     """
         CMA mutation: x = x + (sigma * B*D*N(0,I))
 
-        :param individual:              :class:`~code.Individual.FloatIndividual` to be mutated
-        :param param:                   :class:`~code.Parameters.Parameters` object to store settings
-        :param sampler:                 :mod:`~code.Sampling` module from which the random values should be drawn
+        :param individual:              :class:`~modea.Individual.FloatIndividual` to be mutated
+        :param param:                   :class:`~modea.Parameters.Parameters` object to store settings
+        :param sampler:                 :mod:`~modea.Sampling` module from which the random values should be drawn
         :param threshold_convergence:   Boolean: Should threshold convergence be applied. Default: False
     """
 
@@ -158,7 +158,7 @@ def mutateBitstring(individual):
     """
         Simple 1/n bit-flip mutation
 
-        :param individual:  :mod:`~code.Individual` with a bit-string as genotype to undergo p=1/n mutation
+        :param individual:  :mod:`~modea.Individual` with a bit-string as genotype to undergo p=1/n mutation
     """
     bitstring = individual.genotype
     n = len(bitstring)
@@ -172,9 +172,9 @@ def mutateIntList(individual, param, num_options_per_module):
     """
         Self-adaptive random integer mutation to mutate the structure of an ES
 
-        :param individual:              :class:`~code.Individual.MixedIntegerIndividual` whose integer-part will be mutated
-        :param param:                   :class:`~code.Parameters.Parameters` object
-        :param num_options_per_module:  List :data:`~code.num_options` with the number of available modules per module
+        :param individual:              :class:`~modea.Individual.MixedIntegerIndividual` whose integer-part will be mutated
+        :param param:                   :class:`~modea.Parameters.Parameters` object
+        :param num_options_per_module:  List :data:`~modea.num_options` with the number of available modules per module
                                         position that are available to choose from
     """
 
@@ -200,9 +200,9 @@ def mutateFloatList(individual, param, options):
     """
         Self-adaptive, uniformly random floating point mutation on the tunable parameters of an ES
 
-        :param individual:  :class:`~code.Individual.MixedIntegerIndividual` whose integer-part will be mutated
-        :param param:       :class:`~code.Parameters.Parameters` object
-        :param options:     List of tuples :data:`~code.options` with the number of tunable parameters per module
+        :param individual:  :class:`~modea.Individual.MixedIntegerIndividual` whose integer-part will be mutated
+        :param param:       :class:`~modea.Parameters.Parameters` object
+        :param options:     List of tuples :data:`~modea.options` with the number of tunable parameters per module
     """
 
     # Setup of values
@@ -229,10 +229,10 @@ def mutateMixedInteger(individual, param, options, num_options_per_module):
     """
         Self-adaptive mixed-integer mutation of the structure of an ES
 
-        :param individual:              :class:`~code.Individual.MixedIntegerIndividual` whose integer-part will be mutated
-        :param param:                   :class:`~code.Parameters.Parameters` object
-        :param options:                 List of tuples :data:`~code.options` with the number of tunable parameters per module
-        :param num_options_per_module:  List :data:`~code.num_options` with the number of available modules per module position
+        :param individual:              :class:`~modea.Individual.MixedIntegerIndividual` whose integer-part will be mutated
+        :param param:                   :class:`~modea.Parameters.Parameters` object
+        :param options:                 List of tuples :data:`~modea.options` with the number of tunable parameters per module
+        :param num_options_per_module:  List :data:`~modea.num_options` with the number of available modules per module position
                                         that are available to choose from
     """
     adaptStepSize(individual)
@@ -253,9 +253,9 @@ def MIES_MutateDiscrete(individual, begin, end, u, num_options, options):
         :param begin:           Start index of the discrete part of the individual's representation
         :param end:             End index of the discrete part of the individual's representation
         :param u:               A pre-determined random value from a Gaussian distribution
-        :param num_options:     List :data:`~code.num_options` with the number of available modules per module position
+        :param num_options:     List :data:`~modea.num_options` with the number of available modules per module position
                                 that are available to choose from
-        :param options:         List of tuples :data:`~code.options` with the number of tunable parameters per module
+        :param options:         List of tuples :data:`~modea.options` with the number of tunable parameters per module
         :return:                A boolean mask array to be used for further conditional mutations based on which modules
                                 are active
     """
@@ -295,7 +295,7 @@ def MIES_MutateIntegers(individual, begin, end, u, param):
         :param begin:           Start index of the integer part of the individual's representation
         :param end:             End index of the integer part of the individual's representation
         :param u:               A pre-determined random value from a Gaussian distribution
-        :param param:           :class:`~code.Parameters.Parameters` object
+        :param param:           :class:`~modea.Parameters.Parameters` object
     """
     for x in range(begin, end):
         if individual.genotype[x] is not None:
@@ -325,7 +325,7 @@ def MIES_MutateFloats(conditional_mask, individual, begin, end, u, param):
         :param begin:               Start index of the integer part of the individual's representation
         :param end:                 End index of the integer part of the individual's representation
         :param u:                   A pre-determined random value from a Gaussian distribution
-        :param param:               :class:`~code.Parameters.Parameters` object
+        :param param:               :class:`~modea.Parameters.Parameters` object
     """
     for x in range(begin, end):
         if individual.genotype[x] is not None and conditional_mask[x-(individual.num_discrete+individual.num_ints)]:
@@ -349,10 +349,10 @@ def MIES_Mutate(individual, param, options, num_options):
     """
         Self-adaptive mixed-integer mutation of the structure of an ES
 
-        :param individual:  :class:`~code.Individual.MixedIntegerIndividual` whose integer-part will be mutated
-        :param param:       :class:`~code.Parameters.Parameters` object
-        :param options:     List of tuples :data:`~code.options` with the number of tunable parameters per module
-        :param num_options: List :data:`~code.num_options` with the number of available modules per module position
+        :param individual:  :class:`~modea.Individual.MixedIntegerIndividual` whose integer-part will be mutated
+        :param param:       :class:`~modea.Parameters.Parameters` object
+        :param options:     List of tuples :data:`~modea.options` with the number of tunable parameters per module
+        :param num_options: List :data:`~modea.num_options` with the number of available modules per module position
                             that are available to choose from
     """
 

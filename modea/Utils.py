@@ -12,7 +12,7 @@ import os
 import numpy as np
 from functools import total_ordering
 
-from code import Config
+from modea import Config
 
 
 # The following list contains all possible options from which the Evolving ES can choose.
@@ -147,7 +147,7 @@ def getFitness(individual):
     """
         Function that can be used as key when sorting
 
-        :param individual:  Some object of one of the classes from the :class:`~code.Individual` module
+        :param individual:  Some object of one of the classes from the :class:`~modea.Individual` module
         :returns:           Fitness attribute of the given individual object
     """
     return individual.fitness
@@ -285,7 +285,7 @@ class ESFitness(object):
         (together with their corresponding ``std_dev_`` values if specified)
 
         :param fitnesses:       Nested lists: A list of the fitness progression for each run
-        :param target:          What value to use as target for calculating ERT. Default set in :mod:`~code.Config`
+        :param target:          What value to use as target for calculating ERT. Default set in :mod:`~modea.Config`
         :param min_fitnesses:   Single list containing the minimum value of the ``fitnesses`` list (if given instead)
         :param min_indices:     Single list containing the index in the ``fitnesses`` list where the minimum was found
         :param num_successful:  Integer to simply track how many of the runs reached the target

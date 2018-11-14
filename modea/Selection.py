@@ -13,16 +13,16 @@ __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
 import numpy as np
 from scipy import stats
-from code import Utils
+from modea import Utils
 
 
 def bestGA(population, new_population, param):
     """
         Given the population, return the (mu) best
 
-        :param population:      List of :class:`~code.Individual.MixedIntIndividual` objects containing the previous generation
-        :param new_population:  List of :class:`~code.Individual.MixedIntIndividual` objects containing the new generation
-        :param param:           :class:`~code.Parameters.Parameters` object for storing all parameters, options, etc.
+        :param population:      List of :class:`~modea.Individual.MixedIntIndividual` objects containing the previous generation
+        :param new_population:  List of :class:`~modea.Individual.MixedIntIndividual` objects containing the new generation
+        :param param:           :class:`~modea.Parameters.Parameters` object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
     if param.elitist:
@@ -37,9 +37,9 @@ def best(population, new_population, param):
         Given the population, return the (mu) best. Also performs some 'housekeeping' for the CMA-ES by collecting
         all genotypes and most recent mutation vectors and storing them in the ``param`` object.
 
-        :param population:      List of :class:`~code.Individual.FloatIndividual` objects containing the previous generation
-        :param new_population:  List of :class:`~code.Individual.FloatIndividual` objects containing the new generation
-        :param param:           :class:`~code.Parameters.Parameters` object for storing all parameters, options, etc.
+        :param population:      List of :class:`~modea.Individual.FloatIndividual` objects containing the previous generation
+        :param new_population:  List of :class:`~modea.Individual.FloatIndividual` objects containing the new generation
+        :param param:           :class:`~modea.Parameters.Parameters` object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
     if param.elitist:
@@ -59,14 +59,14 @@ def best(population, new_population, param):
 def pairwise(population, new_population, param):
     """
         Perform a selection on individuals in a population per pair, before letting :func:`~best`
-        make the final selection. Intended for use with a :class:`~code.Sampling.MirroredSampling`
+        make the final selection. Intended for use with a :class:`~modea.Sampling.MirroredSampling`
         sampler to prevent step-size bias.
 
         Assumes that new_population contains pairs as [P1_a, P1_b, P2_a, P2_b, etc ... ]
 
-        :param population:      List of :class:`~code.Individual.FloatIndividual` objects containing the previous generation
-        :param new_population:  List of :class:`~code.Individual.FloatIndividual` objects containing the new generation
-        :param param:           :class:`~code.Parameters.Parameters` object for storing all parameters, options, etc.
+        :param population:      List of :class:`~modea.Individual.FloatIndividual` objects containing the previous generation
+        :param new_population:  List of :class:`~modea.Individual.FloatIndividual` objects containing the new generation
+        :param param:           :class:`~modea.Parameters.Parameters` object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
     pairwise_filtered = []
@@ -93,9 +93,9 @@ def roulette(population, new_population, param, force_unique=False):
     """
         Given the population, return mu individuals, selected by roulette, using 1/fitness as probability
 
-        :param population:      List of :class:`~code.Individual.FloatIndividual` objects containing the previous generation
-        :param new_population:  List of :class:`~code.Individual.FloatIndividual` objects containing the new generation
-        :param param:           :class:`~code.Parameters.Parameters` object for storing all parameters, options, etc.
+        :param population:      List of :class:`~modea.Individual.FloatIndividual` objects containing the previous generation
+        :param new_population:  List of :class:`~modea.Individual.FloatIndividual` objects containing the new generation
+        :param param:           :class:`~modea.Parameters.Parameters` object for storing all parameters, options, etc.
         :param force_unique:    Determine if an individual from the original population may be selected multiple times
         :returns:               A slice of the sorted new_population list.
     """
@@ -131,10 +131,10 @@ def onePlusOneSelection(population, new_population, t, param):
     """
         (1+1)-selection (with success history)
 
-        :param population:      List of :class:`~code.Individual.FloatIndividual` objects containing the previous generation
-        :param new_population:  List of :class:`~code.Individual.FloatIndividual` objects containing the new generation
+        :param population:      List of :class:`~modea.Individual.FloatIndividual` objects containing the previous generation
+        :param new_population:  List of :class:`~modea.Individual.FloatIndividual` objects containing the new generation
         :param t:               Timestamp of the current generation being evaluated
-        :param param:           :class:`~code.Parameters.Parameters` object for storing all parameters, options, etc.
+        :param param:           :class:`~modea.Parameters.Parameters` object for storing all parameters, options, etc.
         :returns:               A slice of the sorted new_population list.
     """
 

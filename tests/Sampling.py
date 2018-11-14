@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import unittest
 import numpy as np
-from code.Sampling import GaussianSampling, \
+from modea.Sampling import GaussianSampling, \
                           QuasiGaussianHaltonSampling, \
                           QuasiGaussianSobolSampling, \
                           MirroredSampling, \

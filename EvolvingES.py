@@ -13,11 +13,11 @@ from itertools import product
 from multiprocessing import Pool
 
 from bbob import bbobbenchmarks, fgeneric
-from code import Config
-from code.Algorithms import _customizedES
-from code.Utils import getOpts, getVals, options, initializable_parameters, \
+from modea import Config
+from modea.Algorithms import _customizedES
+from modea.Utils import getOpts, getVals, options, initializable_parameters, \
     chunkListByLength, guaranteeFolderExists, reprToString, ESFitness
-from code.local import datapath
+from modea.local import datapath
 
 try:
     from mpi4py import MPI

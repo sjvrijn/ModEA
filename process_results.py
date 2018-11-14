@@ -13,8 +13,8 @@ import pprint
 import cPickle
 from collections import Counter, namedtuple
 from datetime import timedelta
-from code.Utils import getPrintName, getOpts, intToRepr, reprToInt, reprToString
-from code.local import brute_location, ga_location, raw_bfname, raw_ganame
+from modea.Utils import getPrintName, getOpts, intToRepr, reprToInt, reprToString
+from modea.local import brute_location, ga_location, raw_bfname, raw_ganame
 
 np.set_printoptions(linewidth=156)
 

@@ -4,7 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import unittest
 from collections import namedtuple
-from code.Utils import options, initializable_parameters, num_options_per_module, \
+from modea.Utils import options, initializable_parameters, num_options_per_module, \
     getVals, getOpts, getBitString, getFullOpts, getPrintName, \
     getFitness, reprToString, reprToInt, intToRepr, \
     create_bounds, chunkListByLength, guaranteeFolderExists, ESFitness

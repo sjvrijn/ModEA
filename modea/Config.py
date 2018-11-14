@@ -10,7 +10,7 @@ Nothing else to see here, move along...
 from __future__ import absolute_import, division, print_function, unicode_literals
 from math import floor
 from multiprocessing import cpu_count
-from code.local import MPI_num_host_threads, MPI_num_hosts
+from modea.local import MPI_num_host_threads, MPI_num_hosts
 
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
 
