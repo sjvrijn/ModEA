@@ -35,7 +35,6 @@ class MixedIntIndividualTest(unittest.TestCase):
 
     def test_init(self):
         ones_vec = np.ones((self.n, 1))
-        zeros_vec = np.zeros((self.n, 1))
 
         self.assertEqual(self.individual.n, self.n)
         self.assertEqual(self.individual.fitness, np.inf)
@@ -48,14 +47,14 @@ class MixedIntIndividualTest(unittest.TestCase):
 
     def test_n_too_small(self):
         with self.assertRaises(MixedIntIndividualError):
-            individual = MixedIntIndividual(1, 0, 0)
+            _ = MixedIntIndividual(1, 0, 0)
 
     def test_nums_dont_add_up(self):
         with self.assertRaises(MixedIntIndividualError):
-            individual = MixedIntIndividual(5, None, None, None)
+            _ = MixedIntIndividual(5, None, None, None)
 
     def test_stepsize(self):
-        self.assertAlmostEqual(self.individual.stepsizeMIES, 0.2)
+        np.testing.assert_array_almost_equal(self.individual.stepsizeMIES, 0.2)
 
 
 if __name__ == '__main__':
