@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/sjvrijn/ModEA.svg?branch=master)](https://travis-ci.org/sjvrijn/ModEA)
+[![Coverage Status](https://coveralls.io/repos/github/sjvrijn/ModEA/badge.svg?branch=master)](https://coveralls.io/github/sjvrijn/ModEA?branch=master)
 
 # Summary #
 This repository contains the code for the Modular EA framework by Sander van Rijn.
