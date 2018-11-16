@@ -8,7 +8,14 @@ setup(
     version='0.3.0',
     description='A modular evolutionary algorithm framework, mostly tailored to a modular implementation of the CMA-ES',
     long_description=long_description,
+    long_description_content_type="text/markdown",
     author='Sander van Rijn',
-    author_email='s.j.van.rijn@liacs.leidenuniv.nl',
+    author_email='svr003@gmail.com',
+    url="https://github.com/sjvrijn/ModEA",
     packages=['modea'],
+    classifiers=[
+        "Programming Language :: Python :: 2",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ],
 )
