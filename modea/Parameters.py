@@ -206,11 +206,7 @@ class Parameters(BaseParameters):
 
     @property
     def mu_int(self):
-        """
-            Adapts sigma based on the 1/5-th success rule
-
-            :returns:   Integer value for mu, based on ``eff_lambda``
-        """
+        """Integer value of mu"""
         if self.eff_lambda < 1:
             raise Exception("Effective lambda ({}) should be at least 1!".format(self.eff_lambda))
         return int(1 + floor((self.eff_lambda-1) * self.mu))

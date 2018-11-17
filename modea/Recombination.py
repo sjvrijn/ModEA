@@ -82,6 +82,7 @@ def weighted(pop, param):
 
     return new_population
 
+
 def MIES_recombine(pop, param):
     """
         Returns a new set of individuals whose genotype is determined according to
@@ -111,11 +112,8 @@ def MIES_recombine(pop, param):
         elif reco > 1:
             x = (choice(range(1, 10000))/10000)
             if x > 0.5:
-                print("c1 won")
                 new_population.append(copy(pop[c1]))
             else:
-                print("c2 won")
                 new_population.append(copy(pop[c2]))
 
     return new_population
-

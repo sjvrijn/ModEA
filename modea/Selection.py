@@ -75,7 +75,6 @@ def pairwise(population, new_population, param):
     if len(new_population) % 2 != 0:
         # raise Exception("Error: attempting to perform pairwise selection on an odd number of individuals")
         pairwise_filtered.append(new_population[-1])  # TODO FIXME: TEMP FIX, OFTEN INCORRECT
-        num_pairs -= 1
 
     # Select the best (=lowest) fitness for each consecutive pair of individuals
     for i in range(0, num_pairs):

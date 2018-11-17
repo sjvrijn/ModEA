@@ -61,13 +61,14 @@ class MixedIntIndividual(object):
         Stores the genotype column vector and all individual-specific parameters.
         Default genotype is np.ones((n,1))
 
-        :param n:           Dimensionality of the problem to be solved, consisting of num_ints integers and
-                            num_floats (= n - num_ints) floating point values
-        :param num_discrete:Number of discrete values in the genotype.
-        :param num_floats:  Number of floating point values in the genotype. Must be given if num_ints is omitted
+        :param n:            Dimensionality of the problem to be solved, consisting of discrete, integers and
+                             floating point values
+        :param num_discrete: Number of discrete values in the genotype.
+        :param num_ints:     Number of integer values in the genotype.
+        :param num_floats:   Number of floating point values in the genotype.
     """
 
-    def __init__(self, n, num_discrete,num_ints , num_floats=None):
+    def __init__(self, n, num_discrete, num_ints, num_floats=None):
 
         if n < 2:
             raise MixedIntIndividualError("Cannot define a mixed-integer representation in < 2 dimensions")

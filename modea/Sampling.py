@@ -59,7 +59,7 @@ class GaussianSampling(object):
 
 class QuasiGaussianSobolSampling(object):
     """
-        A quasi-Gaussian sampler
+        A quasi-Gaussian sampler based on a Sobol sequence
 
         :param n:       Dimensionality of the vectors to be sampled
         :param shape:   String to select between whether column (``'col'``) or row (``'row'``) vectors should be
@@ -77,7 +77,7 @@ class QuasiGaussianSobolSampling(object):
         """
             Draw the next sample from the Sampler
 
-            :return:    A new vector sampled from a Gaussian distribution with mean 0 and standard deviation 1
+            :return:    A new vector sampled from a Sobol sequence with mean 0 and standard deviation 1
         """
         vec, seed = i4_sobol(self.n, self.seed)
         self.seed = seed if seed > 1 else 2
@@ -89,7 +89,7 @@ class QuasiGaussianSobolSampling(object):
 
 class QuasiGaussianHaltonSampling(object):
     """
-        A quasi-Gaussian sampler
+        A quasi-Gaussian sampler based on a Halton sequence
 
         :param n:       Dimensionality of the vectors to be sampled
         :param shape:   String to select between whether column (``'col'``) or row (``'row'``) vectors should be
@@ -108,7 +108,7 @@ class QuasiGaussianHaltonSampling(object):
         """
             Draw the next sample from the Sampler
 
-            :return:    A new vector sampled from a Gaussian distribution with mean 0 and standard deviation 1
+            :return:    A new vector sampled from a Halton sequence with mean 0 and standard deviation 1
         """
         vec = self.halton.get(1)[0]
 
@@ -131,7 +131,7 @@ class OrthogonalSampling(object):
     """
     def __init__(self, n, lambda_, shape='col', base_sampler=None):
         if n == 0 or lambda_ == 0:
-            raise Exception("Invalid value(s)! n={}, lambda={}".format(n, lambda_))
+            raise ValueError("'n' ({}) and 'lambda_' ({}) cannot be zero".format(n, lambda_))
 
         self.n = n
         self.shape = (n,1) if shape == 'col' else (1,n)
@@ -209,7 +209,7 @@ class OrthogonalSampling(object):
 
 class MirroredSampling(object):
     """
-        A sampler to create mirrored samples using some base sampler (Gaussian as default)
+        A sampler to create mirrored samples using some base sampler (Gaussian by default)
         Returns a single vector each time, while remembering the internal state of whether the ``next()`` should return
         a new sample, or the mirror of the previous one.
 
