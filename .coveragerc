@@ -1,7 +1,6 @@
 [run]
-omit =
-    */tests*
-    */travis*
+source =
+    modea
 
 [report]
 exclude_lines =
