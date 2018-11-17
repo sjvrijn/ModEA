@@ -1,7 +1,7 @@
-code.Selection module
-=====================
+modea.Selection module
+======================
 
-.. automodule:: code.Selection
+.. automodule:: modea.Selection
     :members:
     :undoc-members:
     :show-inheritance:

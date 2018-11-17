@@ -1,7 +1,7 @@
-code.Mutation module
-====================
+modea.Mutation module
+=====================
 
-.. automodule:: code.Mutation
+.. automodule:: modea.Mutation
     :members:
     :undoc-members:
     :show-inheritance:

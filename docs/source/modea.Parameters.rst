@@ -1,7 +1,7 @@
-code.Parameters module
-======================
+modea.Parameters module
+=======================
 
-.. automodule:: code.Parameters
+.. automodule:: modea.Parameters
     :members:
     :undoc-members:
     :show-inheritance:

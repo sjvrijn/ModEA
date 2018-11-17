@@ -1,7 +1,7 @@
-code.Sampling module
-====================
+modea.Sampling module
+=====================
 
-.. automodule:: code.Sampling
+.. automodule:: modea.Sampling
     :members:
     :undoc-members:
     :show-inheritance:

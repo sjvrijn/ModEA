@@ -1,5 +1,5 @@
-code
-====
+modea
+=====
 
 .. toctree::
    :maxdepth: 4

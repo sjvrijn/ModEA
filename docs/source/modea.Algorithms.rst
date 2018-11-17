@@ -1,7 +1,7 @@
-code.Algorithms module
-======================
+modea.Algorithms module
+=======================
 
-.. automodule:: code.Algorithms
+.. automodule:: modea.Algorithms
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,7 +1,7 @@
-code.Individual module
-======================
+modea.Individual module
+=======================
 
-.. automodule:: code.Individual
+.. automodule:: modea.Individual
     :members:
     :undoc-members:
     :show-inheritance:

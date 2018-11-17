@@ -1,25 +1,24 @@
-code package
-============
+modea package
+=============
 
 Submodules
 ----------
 
 .. toctree::
 
-   code.Algorithms
-   code.Config
-   code.Individual
-   code.Mutation
-   code.Parameters
-   code.Recombination
-   code.Sampling
-   code.Selection
-   code.Utils
+   modea.Algorithms
+   modea.Individual
+   modea.Mutation
+   modea.Parameters
+   modea.Recombination
+   modea.Sampling
+   modea.Selection
+   modea.Utils
 
 Module contents
 ---------------
 
-.. automodule:: code
+.. automodule:: modea
     :members:
     :undoc-members:
     :show-inheritance:

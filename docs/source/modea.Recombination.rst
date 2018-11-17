@@ -1,7 +1,7 @@
-code.Recombination module
-=========================
+modea.Recombination module
+==========================
 
-.. automodule:: code.Recombination
+.. automodule:: modea.Recombination
     :members:
     :undoc-members:
     :show-inheritance:

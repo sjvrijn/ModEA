@@ -1,7 +1,7 @@
-code.Utils module
-=================
+modea.Utils module
+==================
 
-.. automodule:: code.Utils
+.. automodule:: modea.Utils
     :members:
     :undoc-members:
     :show-inheritance:

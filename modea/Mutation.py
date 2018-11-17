@@ -13,7 +13,6 @@ import numpy as np
 import random
 from numpy import add, bitwise_and, dot, exp, floor, mod, shape, zeros
 from numpy.linalg import norm
-from numpy.random import random_sample
 from random import gauss
 from math import sqrt
 
@@ -217,11 +216,11 @@ def mutateFloatList(individual, param, options):
     cond_mask = [True,True,True,True,True,True,True]  # TODO FIXME: these are default CMA parameters, make this dynamic!
     for i, val in enumerate(options):
         cond_mask.extend([bool(int_part[i] * 1)] * val[2])
-    mutate_mask = random_sample(float_part.shape) < p
+    mutate_mask =np.random.random_sample(float_part.shape) < p
     combined_mask = bitwise_and(cond_mask, mutate_mask)
 
     # Scale the random values to the search space, then start at the lower bound
-    float_part[combined_mask] = random_sample(float_part.shape)[combined_mask] * search_space[combined_mask]
+    float_part[combined_mask] =np.random.random_sample(float_part.shape)[combined_mask] * search_space[combined_mask]
     float_part[combined_mask] += l_bound[combined_mask]
 
 
