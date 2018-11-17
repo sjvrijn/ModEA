@@ -1,6 +1,7 @@
 [run]
 omit =
     */tests*
+    */travis*
 
 [report]
 exclude_lines =
