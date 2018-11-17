@@ -1,8 +1,11 @@
 language: python
 python:
   - "2.7"
-# command to install dependencies
 install:
   - pip install -r requirements.txt
+  - pip install coverage
+  - pip install python-coveralls
 script:
-  - python -m tests
+  - coverage run -m tests
+after_success:
+  - coveralls
