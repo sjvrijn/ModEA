@@ -165,11 +165,18 @@ class EvolutionaryOptimizer(object):
         self.mutateParameters(self.used_budget)
 
 
-    def runOptimizer(self):
+    def runOptimizer(self, target=None, threshold=1e-8):
         # The main evaluation loop
-        while self.used_budget < self.budget and not self.parameters.checkLocalRestartConditions(self.used_budget):
-            self.runOneGeneration()
-            self.recordStatistics()
+        if target is not None:
+            while self.used_budget < self.budget \
+                    and self.best_individual.fitness - target > threshold \
+                    and not self.parameters.checkLocalRestartConditions(self.used_budget):
+                self.runOneGeneration()
+                self.recordStatistics()
+        else:
+            while self.used_budget < self.budget and not self.parameters.checkLocalRestartConditions(self.used_budget):
+                self.runOneGeneration()
+                self.recordStatistics()
 
 
     def initializePopulation(self):
@@ -180,7 +187,7 @@ class EvolutionaryOptimizer(object):
             individual.genotype = copy(wcm)
 
 
-    def runLocalRestartOptimizer(self):
+    def runLocalRestartOptimizer(self,target=None, threshold=None):
         """
             Run the baseAlgorithm with the given specifications using a local-restart strategy.
         """
@@ -212,9 +219,11 @@ class EvolutionaryOptimizer(object):
             self.new_population = self.recombine(self.population, self.parameters)
 
             # Run the actual algorithm
-            self.runOptimizer()
+            self.runOptimizer(target=target,threshold=threshold)
             self.total_used_budget += self.used_budget
 
+            if target is not None and self.best_individual.fitness - target < threshold:
+                break
             # Increasing Population Strategies
             if parameter_opts['local_restart'] == 'IPOP':
                 parameter_opts['lambda_'] *= 2
@@ -663,13 +672,16 @@ def _MIES(n, fitnessFunction, budget, mu, lambda_, population, parameters=None):
                               mies.fitness_over_time, mies.best_individual)
 
 
-def _customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None, values=None):
+def _customizedES(n, fitnessFunction, budget, mu=None, lambda_=None, opts=None, values=None,
+                  target=None, threshold=None, seed=None):
+    if seed is not None:
+        np.random.seed(seed)
     custom_es = CustomizedES(n, fitnessFunction, budget, mu, lambda_, opts, values)
 
     if opts is not None and opts['ipop']:
-        custom_es.runLocalRestartOptimizer()
+        custom_es.runLocalRestartOptimizer(target=target, threshold=threshold)
     else:
         custom_es.mutateParameters = custom_es.parameters.adaptCovarianceMatrix
-        custom_es.runOptimizer()
+        custom_es.runOptimizer(target=target, threshold=threshold)
 
     return custom_es.generation_size, custom_es.sigma_over_time, custom_es.fitness_over_time, custom_es.best_individual

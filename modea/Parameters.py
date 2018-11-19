@@ -99,6 +99,7 @@ class Parameters(BaseParameters):
         self.u_bound = u_bound
         self.search_space_size = u_bound - l_bound
         self.sigma = sigma
+        self.sigma_mean = sigma
         self.active = active
         self.elitist = elitist
         self.local_restart = local_restart
@@ -273,7 +274,12 @@ class Parameters(BaseParameters):
 
         self.p_sigma = (1-cs) * self.p_sigma + \
                        sqrt(cs*(2-cs)*mueff) * dot(invsqrt_C, (wcm - wcm_old) / self.sigma)
-        hsig = sum(self.p_sigma**2)/(1-(1-cs)**(2*evalcount/lambda_))/n < 2 + 4/(n+1)
+        power = (2*evalcount/lambda_)
+        if power < 1000:  #TODO: Solve more neatly
+            hsig = sum(self.p_sigma**2)/(1-(1-cs)**power)/n < 2 + 4/(n+1)
+        else:
+            #Prevent underflow error,
+            hsig = sum(self.p_sigma**2)/n < 2 + 4/(n+1)
         self.p_c = (1-cc) * self.p_c + hsig * sqrt(cc*(2-cc)*mueff) * (wcm - wcm_old) / self.sigma
         offset = self.offset[:, :self.mu_int]
 
@@ -292,7 +298,11 @@ class Parameters(BaseParameters):
             self.alpha_s += self.c_alpha * (alpha_act - self.alpha_s)
             self.sigma *= exp(self.alpha_s)
         else:
-            self.sigma = self.sigma * exp((norm(self.p_sigma)/self.chiN - 1) * self.c_sigma/self.damps)
+            exponent = (norm(self.p_sigma) / self.chiN - 1) * self.c_sigma / self.damps
+            if exponent < 1000:  #TODO: Solve more neatly
+                self.sigma = self.sigma * exp(exponent)
+            else:
+                self.sigma = self.sigma_mean
         self.sigma_mean = self.sigma
 
         ### Update BD ###
