@@ -15,6 +15,7 @@ from numpy import abs, all, any, append, arange, ceil, diag, dot, exp, eye, floo
 from numpy.linalg import cond, eig, eigh, norm, LinAlgError
 
 
+
 class BaseParameters(object):
     """
         Data holder class for all hardcoded values that are independent of problem dimensionality

@@ -51,9 +51,9 @@ class FloatIndividual(object):
         return return_copy
 
     def __repr__(self):
-        return "FloatIndividual [{}]:{}".format(
-            str(self.genotype.flatten()),
-            str(self.fitness)
+        return "<FloatIndividual [{}]: {}>".format(
+            str(np.round_(self.fitness,2)),
+            str(np.round_(self.genotype.flatten(), 2)),
         )
 
     def __str__(self):
