@@ -50,6 +50,15 @@ class FloatIndividual(object):
 
         return return_copy
 
+    def __repr__(self):
+        return "FloatIndividual [{}]:{}".format(
+            str(self.genotype.flatten()),
+            str(self.fitness)
+        )
+
+    def __str__(self):
+        return self.__repr__()
+
 
 class MixedIntIndividualError(Exception):
     pass
