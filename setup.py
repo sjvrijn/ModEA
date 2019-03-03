@@ -5,7 +5,7 @@ with open('README.md') as f:
 
 setup(
     name='ModEA',
-    version='0.3.0',
+    version='0.3.1',
     description='A modular evolutionary algorithm framework, mostly tailored to a modular implementation of the CMA-ES',
     long_description=long_description,
     long_description_content_type="text/markdown",

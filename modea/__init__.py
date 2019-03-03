@@ -4,4 +4,4 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 name = 'modea'
 __author__ = 'Sander van Rijn <svr003@gmail.com>'
-__version__ = '0.3.0'
+__version__ = '0.3.1'
