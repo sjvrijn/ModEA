@@ -4,10 +4,10 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import unittest
 from collections import namedtuple
-from modea.Utils import options, initializable_parameters, num_options_per_module, \
+from modea.Utils import options, initializable_parameters, \
     getVals, getOpts, getBitString, getFullOpts, getPrintName, \
     getFitness, reprToString, reprToInt, intToRepr, \
-    create_bounds, chunkListByLength, guaranteeFolderExists, ESFitness
+    create_bounds, guaranteeFolderExists, ESFitness
 import numpy as np
 import os
 
@@ -160,24 +160,6 @@ class BoundsTest(unittest.TestCase):
     def test_incorrect_percentage(self):
         with self.assertRaises(ValueError):
             create_bounds(self.values, percentage=3.0)
-
-
-class ChunkListTest(unittest.TestCase):
-
-    def setUp(self):
-        self.values = list(range(10))
-
-    def test_chunk_empty_list(self):
-        self.assertListEqual(list(chunkListByLength([], 3)),
-                             [])
-
-    def test_chunk_square_list(self):
-        self.assertListEqual(list(chunkListByLength(range(6), 3)),
-                             [[0, 1, 2], [3, 4, 5]])
-
-    def test_chunk_ragged_list(self):
-        self.assertListEqual(list(chunkListByLength(range(7), 3)),
-                             [[0, 1, 2], [3, 4, 5], [6]])
 
 
 class GuaranteedFolderTest(unittest.TestCase):

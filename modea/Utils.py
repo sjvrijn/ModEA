@@ -12,7 +12,6 @@ import os
 import numpy as np
 from functools import total_ordering
 
-
 # The following list contains all possible options from which the Evolving ES can choose.
 # To give this list a 'constant' property, it is defined as a tuple (i.e. immutable)
 options = (
@@ -234,25 +233,6 @@ def create_bounds(values, percentage):
 
     u_bound, l_bound = zip(*bounds)
     return list(u_bound), list(l_bound)
-
-
-def chunkListByLength(iterable, length):
-    """
-        Given a list, defines a generator that slices it into 'chunks'
-
-        >>> chunkListByLength(range(10), 3)
-        <generator object chunkListByLength at 0x...>
-        >>> list(chunkListByLength(range(10), 3))
-        [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
-
-        :param iterable:    The list to be split into chunks
-        :param length:      The maximum length of each chunk
-        :return:            Returns each chunk in order of the original list
-    """
-    start, end = 0, length
-    while start < len(iterable):
-        yield iterable[start:end]
-        start, end = end, end+length
 
 
 def guaranteeFolderExists(path_name):
