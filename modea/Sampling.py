@@ -185,7 +185,8 @@ class OrthogonalSampling(object):
             for j in range(i):
                 vec_i = vectors[i]
                 vec_j = vectors[j]
-                vectors[i] = vec_i - vec_j * (dot(vec_i.T, vec_j) / lengths[j] ** 2)
+                if lengths[j]: # This will prevent Runtimewarning (Division over zero) 
+                    vectors[i] = vec_i - vec_j * (dot(vec_i.T, vec_j) / lengths[j] ** 2)
             lengths[i] = norm(vectors[i])
 
         for i, vec in enumerate(vectors):

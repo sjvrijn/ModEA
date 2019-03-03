@@ -15,6 +15,7 @@ from numpy import abs, all, any, append, arange, ceil, diag, dot, exp, eye, floo
 from numpy.linalg import cond, eig, eigh, norm, LinAlgError
 
 
+
 class BaseParameters(object):
     """
         Data holder class for all hardcoded values that are independent of problem dimensionality
@@ -299,10 +300,12 @@ class Parameters(BaseParameters):
             self.sigma *= exp(self.alpha_s)
         else:
             exponent = (norm(self.p_sigma) / self.chiN - 1) * self.c_sigma / self.damps
+
             if exponent < 1000:  #TODO: Solve more neatly
                 self.sigma = self.sigma * exp(exponent)
             else:
                 self.sigma = self.sigma_mean
+
         self.sigma_mean = self.sigma
 
         ### Update BD ###

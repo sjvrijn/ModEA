@@ -70,7 +70,7 @@ def weighted(pop, param):
 
     param.wcm_old = param.wcm
 
-    offspring = np.column_stack((ind.genotype for ind in pop))
+    offspring = np.column_stack([ind.genotype for ind in pop])
     param.offspring = offspring
     param.wcm = dot(offspring, param.weights)
 

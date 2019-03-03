@@ -48,8 +48,8 @@ def best(population, new_population, param):
     new_population.sort(key=Utils.getFitness)  # sort ascending
 
     # TODO: REMOVE THESE OPERATIONS FROM THIS FUNCTION, UNEXPECTED/UNDOCUMENTED FUNCTIONALITY
-    offspring = np.column_stack((ind.genotype for ind in new_population))  # Update to use the actual mutations
-    offset = np.column_stack((ind.mutation_vector for ind in new_population))
+    offspring = np.column_stack([ind.genotype for ind in new_population])  # Update to use the actual mutations
+    offset = np.column_stack([ind.mutation_vector for ind in new_population])
     param.all_offspring = offspring
     param.offset = offset
 
