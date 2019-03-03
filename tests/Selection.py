@@ -6,7 +6,8 @@ import unittest
 import numpy as np
 from mock import Mock
 from modea.Selection import bestGA, best, pairwise, roulette, onePlusOneSelection
-from modea.Utils import chunkListByLength, getFitness
+from modea.Utils import getFitness
+from more_itertools import chunked
 
 
 
@@ -64,12 +65,12 @@ class BestTest(SelectionTest):
 class PairwiseTest(SelectionTest):
 
     def test_non_elitist(self):
-        pairwise_filtered = [min(pair, key=getFitness) for pair in chunkListByLength(self.npop, length=2)]
+        pairwise_filtered = [min(pair, key=getFitness) for pair in chunked(self.npop, n=2)]
         result = sorted(pairwise_filtered, key=getFitness)[:self.param.mu_int]
         self.assertListEqual(pairwise(self.pop, self.npop, self.param), result)
 
     def test_elitist(self):
-        pairwise_filtered = [min(pair, key=getFitness) for pair in chunkListByLength(self.npop, length=2)]
+        pairwise_filtered = [min(pair, key=getFitness) for pair in chunked(self.npop, n=2)]
         result = sorted(pairwise_filtered + self.pop, key=getFitness)[:self.param.mu_int]
         self.param.elitist = True
         self.assertListEqual(pairwise(self.pop, self.npop, self.param), result)
