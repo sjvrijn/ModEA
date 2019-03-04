@@ -98,13 +98,13 @@ class GaussianSamplingTest(SamplingTest):
 
     def test_column_vector(self):
         sampler = self.Sampling(self.size, shape='col')
-        vector1 = next(sampler)
+        vector1 = sampler.next()
         vector2 = self.vector2.reshape((-1, 1))
         np.testing.assert_array_almost_equal(vector1, vector2)
 
     def test_row_vector(self):
         sampler = self.Sampling(self.size, shape='row')
-        vector1 = next(sampler)
+        vector1 = sampler.next()
         vector2 = self.vector2.reshape((1, -1))
         np.testing.assert_array_almost_equal(vector1, vector2)
 
@@ -124,13 +124,13 @@ class HaltonSamplingTest(SamplingTest):
 
     def test_column_vector(self):
         sampler = self.Sampling(self.size, shape='col')
-        vector1 = next(sampler)
+        vector1 = sampler.next()
         vector2 = self.vector2.reshape((-1, 1))
         np.testing.assert_array_almost_equal(vector1, vector2)
 
     def test_row_vector(self):
         sampler = self.Sampling(self.medium_n, shape='row')
-        vector1 = next(sampler)
+        vector1 = sampler.next()
         vector2 = self.vector2.reshape((1, -1))
         np.testing.assert_array_almost_equal(vector1, vector2)
 
@@ -150,19 +150,19 @@ class SobolSamplingTest(SamplingTest):
 
     def test_column_vector(self):
         sampler = self.Sampling(self.size, shape='col')
-        vector1 = next(sampler)
+        vector1 = sampler.next()
         vector2 = self.vector2.reshape((-1, 1))
         np.testing.assert_array_almost_equal(vector1, vector2)
 
     def test_row_vector(self):
         sampler = self.Sampling(self.size, shape='row')
-        vector1 = next(sampler)
+        vector1 = sampler.next()
         vector2 = self.vector2.reshape((1, -1))
         np.testing.assert_array_almost_equal(vector1, vector2)
 
     def test_different_seed(self):
         sampler = self.Sampling(self.size, shape='row', seed=42)
-        vector1 = next(sampler)
+        vector1 = sampler.next()
         vector2 = np.array([
             [2.153875, -0.445097, -1.67594 , -0.27769 ,  1.229859,  0.946782,
              0.197099, -1.229859,  1.229859,  1.077516,  0.724514, -0.830511,
@@ -186,14 +186,14 @@ class MirroredSamplingTest(SamplingTest):
 
     def test_mirroring_column(self):
         sampler = self.Sampling(self.size, shape='col', base_sampler=self.base_sampler)
-        vector1 = next(sampler)
-        vector2 = next(sampler)
+        vector1 = sampler.next()
+        vector2 = sampler.next()
         np.testing.assert_array_almost_equal(vector1, vector2*-1)
 
     def test_mirroring_row(self):
         sampler = self.Sampling(self.size, shape='row', base_sampler=self.base_sampler)
-        vector1 = next(sampler)
-        vector2 = next(sampler)
+        vector1 = sampler.next()
+        vector2 = sampler.next()
         np.testing.assert_array_almost_equal(vector1, vector2*-1)
 
     mirror_setUp = setUp
@@ -213,14 +213,14 @@ class OrthogonalSamplingTest(SamplingTest):
 
     def test_orthogonal_column(self):
         sampler = self.Sampling(self.size, lambda_=5, shape='col', base_sampler=self.base_sampler)
-        vector1 = next(sampler)
-        vector2 = next(sampler)
+        vector1 = sampler.next()
+        vector2 = sampler.next()
         self.assertAlmostEqual(np.dot(vector1.flatten(), vector2.flatten()), 0)
 
     def test_orthogonal_row(self):
         sampler = self.Sampling(self.size, lambda_=5, shape='row', base_sampler=self.base_sampler)
-        vector1 = next(sampler)
-        vector2 = next(sampler)
+        vector1 = sampler.next()
+        vector2 = sampler.next()
         self.assertAlmostEqual(np.dot(vector1.flatten(), vector2.flatten()), 0)
 
     orthogonal_setUp = setUp
@@ -239,28 +239,28 @@ class MirroredOrthogonalSamplingTest(OrthogonalSamplingTest):
 
     def test_mirroring_column(self):
         sampler = self.Sampling(self.size, lambda_=5, shape='col', base_sampler=self.base_sampler)
-        vector1 = next(sampler)
-        vector2 = next(sampler)
+        vector1 = sampler.next()
+        vector2 = sampler.next()
         np.testing.assert_array_almost_equal(vector1, vector2*-1)
 
     def test_mirroring_row(self):
         sampler = self.Sampling(self.size, lambda_=5, shape='row', base_sampler=self.base_sampler)
-        vector1 = next(sampler)
-        vector2 = next(sampler)
+        vector1 = sampler.next()
+        vector2 = sampler.next()
         np.testing.assert_array_almost_equal(vector1, vector2*-1)
 
     def test_orthogonal_column(self):
         sampler = self.Sampling(self.size, lambda_=5, shape='col', base_sampler=self.base_sampler)
-        vector1 = next(sampler)
-        next(sampler)  # Take out one mirrored vector to arrive at the next orthogonal one
-        vector2 = next(sampler)
+        vector1 = sampler.next()
+        sampler.next()  # Take out one mirrored vector to arrive at the next orthogonal one
+        vector2 = sampler.next()
         self.assertAlmostEqual(np.dot(vector1.flatten(), vector2.flatten()), 0)
 
     def test_orthogonal_row(self):
         sampler = self.Sampling(self.size, lambda_=5, shape='row', base_sampler=self.base_sampler)
-        vector1 = next(sampler)
-        next(sampler)  # Take out one mirrored vector to arrive at the next orthogonal one
-        vector2 = next(sampler)
+        vector1 = sampler.next()
+        sampler.next()  # Take out one mirrored vector to arrive at the next orthogonal one
+        vector2 = sampler.next()
         self.assertAlmostEqual(np.dot(vector1.flatten(), vector2.flatten()), 0)
 
 
