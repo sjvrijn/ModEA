@@ -6,6 +6,7 @@ import unittest
 import random as rand
 import mock
 import numpy as np
+import six
 from modea.Recombination import onePointCrossover, random, onePlusOne, weighted, MIES_recombine
 
 
@@ -30,7 +31,11 @@ class randomTest(unittest.TestCase):
         rand.seed(42)
 
         result = random(pop, param)
-        expected_ids = [3, 0, 1, 1, 3, 3, 4, 0, 2, 0, 1, 2]
+        if six.PY2:
+            expected_ids = [3, 0, 1, 1, 3, 3, 4, 0, 2, 0, 1, 2]
+        elif six.PY3:
+            expected_ids = [0, 0, 2, 1, 1, 1, 0, 4, 0, 4, 3, 0]
+
         self.assertListEqual([x.id for x in result], expected_ids)
 
         for obj in result:

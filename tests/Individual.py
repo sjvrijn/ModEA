@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import unittest
+import unittest2
 import copy
 import numpy as np
 from modea.Individual import FloatIndividual, MixedIntIndividual, MixedIntIndividualError
 
-class FloatIndividualTest(unittest.TestCase):
+
+class FloatIndividualTest(unittest2.TestCase):
     def setUp(self):
         self.n = 10
         self.individual = FloatIndividual(n=self.n)
@@ -28,7 +29,7 @@ class FloatIndividualTest(unittest.TestCase):
         self.assertItemsEqual(self.individual.__dict__, new_ind.__dict__)
 
 
-class MixedIntIndividualTest(unittest.TestCase):
+class MixedIntIndividualTest(unittest2.TestCase):
     def setUp(self):
         self.n = 10
         self.individual = MixedIntIndividual(n=self.n, num_discrete=2, num_ints=3)
@@ -58,4 +59,4 @@ class MixedIntIndividualTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest2.main()
