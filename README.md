@@ -2,12 +2,13 @@
 [![Build Status](https://travis-ci.org/sjvrijn/ModEA.svg?branch=master)](https://travis-ci.org/sjvrijn/ModEA)
 [![Coverage Status](https://coveralls.io/repos/github/sjvrijn/ModEA/badge.svg?branch=master)](https://coveralls.io/github/sjvrijn/ModEA?branch=master)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/d784348678ef4fe287c4c3efc184a16f)](https://www.codacy.com/app/sjvrijn/ModEA?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=sjvrijn/ModEA&amp;utm_campaign=Badge_Grade)
+[![Documentation Status](https://readthedocs.org/projects/modea/badge/?version=latest)](https://modea.readthedocs.io/en/latest/?badge=latest)
 
 # Summary #
 This repository contains the code for the Modular EA framework by Sander van Rijn.
 
 # Documentation #
-Some basic documentation is available at [http://www.svrijn.nl/docs/modea](http://www.svrijn.nl/docs/modea)
+Some basic documentation is available at [modea.readthedocs.io](https://modea.readthedocs.io)
 
 To see this framework in action, please refer to [this GitHub repository](https://github.com/sjvrijn/ConfiguringCMAES) which contains the code for all experiments on the Configurable CMA-ES.
 
