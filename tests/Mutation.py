@@ -22,7 +22,9 @@ class keepInBoundsTest(unittest.TestCase):
     def test_in_bounds(self):
         vector = np.array([0, 1, 2, 3, 4])
         result = vector
-        np.testing.assert_array_almost_equal(_keepInBounds(vector, self.lbound, self.ubound), result)
+        np.testing.assert_array_almost_equal(
+            _keepInBounds(result, self.lbound, self.ubound), result
+        )
 
     def test_out_of_bounds(self):
         vector = np.array([10,11,12,13,14])
@@ -157,13 +159,13 @@ class mutateFloatListTest(unittest.TestCase):
 class mutateMixedIntegerTest(unittest.TestCase):
 
     def test_call_throughs(self):
-        ind = object()
-        param = object()
-        opts = object()
-        nopm = object()
         with patch('modea.Mutation.adaptStepSize') as adaptStepSize:
             with patch('modea.Mutation.mutateIntList') as mutateIntList:
                 with patch('modea.Mutation.mutateFloatList') as mutateFloatList:
+                    ind = object()
+                    param = object()
+                    opts = object()
+                    nopm = object()
                     mutateMixedInteger(ind, param, opts, nopm)
 
                     adaptStepSize.assert_called_with(ind)

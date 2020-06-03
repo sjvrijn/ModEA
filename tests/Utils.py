@@ -45,14 +45,14 @@ class GetOptsTest(unittest.TestCase):
             getOpts([3]*self.length)
 
     def test_input_too_long(self):
-        expected_output = dict(((opt[0], opt[1][0]) for opt in options))
+        expected_output = {opt[0]: opt[1][0] for opt in options}
         self.assertDictEqual(getOpts([0]*(self.length+1)), expected_output)
 
 
 class GetBitStringTest(unittest.TestCase):
 
     def setUp(self):
-        self.default = dict(((opt[0], opt[1][0]) for opt in options))
+        self.default = {opt[0]: opt[1][0] for opt in options}
         self.length = len(options)
 
     def test_base_case(self):
@@ -66,7 +66,7 @@ class GetFullOptsTest(unittest.TestCase):
 
     def setUp(self):
         self.foo = {'foo': 1, 'bar': 2, 'spam': 3, 'eggs': 4}
-        self.default = dict(((opt[0], opt[1][0]) for opt in options))
+        self.default = {opt[0]: opt[1][0] for opt in options}
         self.length = len(options)
         self.maxDiff = None
 
@@ -82,7 +82,7 @@ class GetFullOptsTest(unittest.TestCase):
 
     def test_alternative(self):
         import copy
-        default = dict(((opt[0], opt[1][1]) for opt in options))
+        default = {opt[0]: opt[1][1] for opt in options}
         modified_in_place = copy.copy(default)
         getFullOpts(modified_in_place)
         self.assertDictEqual(modified_in_place, default)
@@ -98,11 +98,11 @@ class GetFullOptsTest(unittest.TestCase):
 class GetPrintNameTest(unittest.TestCase):
 
     def test_default_case(self):
-        case = dict(((opt[0], opt[1][0]) for opt in options))
+        case = {opt[0]: opt[1][0] for opt in options}
         self.assertEqual(getPrintName(case), '(mu,lambda)-CMA-ES')
 
     def test_alternative_case(self):
-        case = dict(((opt[0], opt[1][1]) for opt in options))
+        case = {opt[0]: opt[1][1] for opt in options}
         self.assertEqual(getPrintName(case),
                          'Sequential Threshold $1/n$-weighted Mirrored-Orthogonal-Active-'
                          '(mu+lambda)-TPA-IPOP-CMA-ES with Pairwise selection and a quasi-sobol sampler')

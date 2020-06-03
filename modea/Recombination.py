@@ -41,8 +41,7 @@ def random(pop, param):
         :returns:       A list of lambda individuals, each a copy of a randomly chosen individual from the population
     """
 
-    new_population = [copy(choice(pop)) for _ in range(param.lambda_)]
-    return new_population
+    return [copy(choice(pop)) for _ in range(param.lambda_)]
 
 
 def onePlusOne(pop, param):

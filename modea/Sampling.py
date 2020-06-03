@@ -162,7 +162,7 @@ class OrthogonalSampling(object):
         """ Draw <num_samples> new samples from the base_sampler, orthonormalize them and store to be drawn from """
         samples = []
         lengths = []
-        for i in range(self.num_samples):
+        for _ in range(self.num_samples):
             sample = self.base_sampler.next()
             samples.append(sample)
             lengths.append(norm(sample))

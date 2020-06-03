@@ -125,10 +125,7 @@ class EvolutionaryOptimizer(object):
             self.used_budget = self.budget
 
         # Is the ideal step size larger (True) or smaller (False)? None if TPA is not used
-        if tpa_fitness_plus < tpa_fitness_min:
-            self.parameters.tpa_result = 1
-        else:
-            self.parameters.tpa_result = -1
+        self.parameters.tpa_result = 1 if tpa_fitness_plus < tpa_fitness_min else -1
 
 
     def recordStatistics(self):
@@ -251,14 +248,10 @@ class EvolutionaryOptimizer(object):
     def determineRegime(self):
         large = self.budgets['large']
         small = self.budgets['small']
-        if large <= 0:
+        if large <= 0 or small > 0 and large <= small:
             self.regime = 'small'
-        elif small <= 0:
-            self.regime = 'large'
-        elif large > small:
-            self.regime = 'large'
         else:
-            self.regime = 'small'
+            self.regime = 'large'
 
 
 class OnePlusOneOptimizer(EvolutionaryOptimizer):

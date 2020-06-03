@@ -275,12 +275,10 @@ def MIES_MutateDiscrete(individual, begin, end, u, num_options, options):
             threshold = np.random.random_sample()
             # change discrete
             if threshold < individual.stepSizeMIES(x):
-                temparray = []
-                for i in range(num_options[x]):
-                    temparray.append(i)
+                temparray = [i for i in range(num_options[x])]
                 temparray.remove(individual.genotype[x])
                 individual.genotype[x] = random.choice(temparray)
-            for i in range(options[x][2]):
+            for _ in range(options[x][2]):
                 conditional_mask.append(individual.genotype[x])
 
     return conditional_mask

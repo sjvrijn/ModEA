@@ -9,7 +9,7 @@ from modea.Algorithms import _onePlusOneES, _customizedES
 
 
 def sphere(X):
-    return sum([x**2 for x in X])
+    return sum(x**2 for x in X)
 
 
 class OnePlusOneTest(unittest.TestCase):

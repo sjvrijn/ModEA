@@ -47,8 +47,11 @@ def getVals(init_values):
         :return:            Dictionary containing name-indexed initial parameter values
     """
 
-    values = {initializable_parameters[i]: val for i, val in enumerate(init_values) if val is not None}
-    return values
+    return {
+        initializable_parameters[i]: val
+        for i, val in enumerate(init_values)
+        if val is not None
+    }
 
 def getOpts(bitstring):
     """
@@ -58,8 +61,10 @@ def getOpts(bitstring):
         :return:            Dictionary with all option names and the chosen option
     """
 
-    opts = {option[0]: option[1][int(bitstring[i])] for i, option in enumerate(options)}
-    return opts
+    return {
+        option[0]: option[1][int(bitstring[i])]
+        for i, option in enumerate(options)
+    }
 
 def getBitString(opts):
     """
@@ -71,14 +76,10 @@ def getBitString(opts):
     bitstring = []
     for i, option in enumerate(options):
         name, choices, _ = option
-        if name in opts:
-            if opts[name] in choices:
-                bitstring.append(choices.index(opts[name]))
-            else:
-                bitstring.append(0)
+        if name in opts and opts[name] in choices:
+            bitstring.append(choices.index(opts[name]))
         else:
             bitstring.append(0)
-
     return bitstring
 
 def getFullOpts(opts):
@@ -133,10 +134,18 @@ def getPrintName(opts):
 
     base_string = "{seq}{thres}{weight}{mirror}{ortho}{active}(mu{elitist}lambda)-{tpa}{ipop}CMA-ES{append}"
 
-    name = base_string.format(elitist=elitist, active=active, thres=thres, mirror=mirror, ortho=ortho,
-                              tpa=tpa, seq=seq, ipop=ipop, weight=weight, append=append)
-
-    return name
+    return base_string.format(
+        elitist=elitist,
+        active=active,
+        thres=thres,
+        mirror=mirror,
+        ortho=ortho,
+        tpa=tpa,
+        seq=seq,
+        ipop=ipop,
+        weight=weight,
+        append=append,
+    )
 
 
 # TODO: make function of Individual base-class
@@ -178,11 +187,7 @@ def reprToInt(representation):
     # TODO FIXME Hardcoded
     max_length = 11
     factors = [2304, 1152, 576, 288, 144, 72, 36, 18, 9, 3, 1]
-    integer = 0
-    for i in range(max_length):
-        integer += representation[i] * factors[i]
-
-    return integer
+    return sum(representation[i] * factors[i] for i in range(max_length))
 
 
 def intToRepr(integer):
@@ -306,7 +311,7 @@ class ESFitness(object):
     def __lt__(self, other):  # Assuming minimalization problems, so A < B means A is better than B
         if self.ERT is not None and other.ERT is None:
             return True  # If only one has an ERT, it is better by default
-        elif self.ERT is not None and other.ERT is not None and self.ERT < other.ERT:
+        elif self.ERT is not None and self.ERT < other.ERT:
             return True  # If both have an ERT, we want the better one
         elif self.ERT is None and other.ERT is None and self.FCE < other.FCE:
             return True  # If neither have an ERT, we want the better FCE
