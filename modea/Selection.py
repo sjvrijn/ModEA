@@ -77,7 +77,7 @@ def pairwise(population, new_population, param):
         pairwise_filtered.append(new_population[-1])  # TODO FIXME: TEMP FIX, OFTEN INCORRECT
 
     # Select the best (=lowest) fitness for each consecutive pair of individuals
-    for i in range(0, num_pairs):
+    for i in range(num_pairs):
         index = i*2
         if new_population[index].fitness < new_population[index+1].fitness:
             pairwise_filtered.append(new_population[index])
@@ -102,7 +102,7 @@ def roulette(population, new_population, param, force_unique=False):
         new_population.extend(population)
 
     new_population.sort(key=Utils.getFitness)  # sort descending
-    offspring = np.column_stack((ind.genotype for ind in new_population))
+    offspring = np.column_stack([ind.genotype for ind in new_population])
     param.all_offspring = offspring
 
     # TODO: warning with negative fitness values?

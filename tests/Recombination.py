@@ -65,7 +65,7 @@ class weightedTest(unittest.TestCase):
             mock.Mock(genotype=np.array([1, 3, 5]).reshape((3,1))),
             mock.Mock(genotype=np.array([2, 4, 6]).reshape((3,1)))
         ]
-        offspring = np.column_stack((ind.genotype for ind in pop))
+        offspring = np.column_stack([ind.genotype for ind in pop])
         new_pop = weighted(pop, param)
 
         self.assertEqual(id(param.wcm_old), id(wcm))
