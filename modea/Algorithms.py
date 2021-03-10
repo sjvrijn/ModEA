@@ -249,12 +249,10 @@ class EvolutionaryOptimizer(object):
     def determineRegime(self):
         large = self.budgets['large']
         small = self.budgets['small']
-        if large <= 0:
+        if large <= 0 or small > 0 and large <= small:
             self.regime = 'small'
-        elif small <= 0 or large > small:
-            self.regime = 'large'
         else:
-            self.regime = 'small'
+            self.regime = 'large'
 
 
 class OnePlusOneOptimizer(EvolutionaryOptimizer):
