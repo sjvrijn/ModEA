@@ -181,8 +181,7 @@ class EvolutionaryOptimizer(object):
     def initializePopulation(self):
         self.population = [FloatIndividual(self.parameters.n) for _ in range(self.parameters.mu_int)]
         # Init all individuals of the first population at the same random point in the search space
-        wcm = (np.random.randn(self.parameters.n, 1) * (self.parameters.u_bound - self.parameters.l_bound)) + self.parameters.l_bound
-        wcm = Mut._keepInBounds(wcm, self.parameters.l_bound, self.parameters.u_bound)
+        wcm = (np.random.rand(self.parameters.n, 1) * (self.parameters.u_bound - self.parameters.l_bound)) + self.parameters.l_bound
         for individual in self.population:
             individual.genotype = copy(wcm)
 
@@ -474,8 +473,7 @@ class CustomizedES(EvolutionaryOptimizer):
         population = [FloatIndividual(n) for _ in range(mu_int)]
 
         # Init all individuals of the first population at the same random point in the search space
-        wcm = (np.random.randn(n, 1) * (u_bound - l_bound)) + l_bound
-        wcm = Mut._keepInBounds(wcm, l_bound, u_bound)
+        wcm = (np.random.rand(n, 1) * (u_bound - l_bound)) + l_bound
         parameter_opts['wcm'] = wcm
         for individual in population:
             individual.genotype = copy(wcm)
