@@ -102,7 +102,7 @@ def roulette(population, new_population, param, force_unique=False):
         new_population.extend(population)
 
     new_population.sort(key=Utils.getFitness)  # sort descending
-    offspring = np.column_stack((ind.genotype for ind in new_population))
+    offspring = np.column_stack([ind.genotype for ind in new_population])
     param.all_offspring = offspring
 
     # TODO: warning with negative fitness values?
