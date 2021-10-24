@@ -17,7 +17,8 @@ To see this framework in action, please refer to [this GitHub repository](https:
 
 # Citation #
 To cite this framework, please use the following reference:
-* [Evolving the Structure of Evolution Strategies. Sander van Rijn, Hao Wang, Matthijs van Leeuwen, Thomas Bäck. IEEE SSCI December 6-9 2016, Athens, Greece.](https://ieeexplore.ieee.org/document/7850138) -- Experiments and analysis code available [here](https://github.com/sjvrijn/ConfiguringCMAES)
+* [Evolving the Structure of Evolution Strategies. Sander van Rijn, Hao Wang, Matthijs van Leeuwen, Thomas Bäck. IEEE SSCI December 6-9 2016, Athens, Greece.](https://ieeexplore.ieee.org/document/7850138)
+  - Experiments and analysis code available [here](https://github.com/sjvrijn/ConfiguringCMAES)
 ```
 @INPROCEEDINGS{vanrijn2016,
     author={S. {van Rijn} and H. {Wang} and M. {van Leeuwen} and T. {Bäck}},
