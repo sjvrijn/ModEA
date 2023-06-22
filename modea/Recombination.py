@@ -41,8 +41,7 @@ def random(pop, param):
         :returns:       A list of lambda individuals, each a copy of a randomly chosen individual from the population
     """
 
-    new_population = [copy(choice(pop)) for _ in range(param.lambda_)]
-    return new_population
+    return [copy(choice(pop)) for _ in range(param.lambda_)]
 
 
 def onePlusOne(pop, param):
@@ -77,9 +76,7 @@ def weighted(pop, param):
     new_ind = copy(pop[0])
     new_ind.genotype = param.wcm
     new_population = [new_ind]
-    for _ in range(int(param.lambda_-1)):
-        new_population.append(copy(new_ind))
-
+    new_population.extend(copy(new_ind) for _ in range(int(param.lambda_-1)))
     return new_population
 
 

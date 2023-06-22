@@ -105,10 +105,7 @@ def _getXi():
         Randomly returns 5/7 or 7/5 with equal probability
         :return: float Xi
     """
-    if bool(random.getrandbits(1)):
-        return 5/7
-    else:
-        return 7/5
+    return 5/7 if bool(random.getrandbits(1)) else 7/5
 
 
 '''-----------------------------------------------------------------------------
@@ -275,14 +272,10 @@ def MIES_MutateDiscrete(individual, begin, end, u, num_options, options):
             threshold = np.random.random_sample()
             # change discrete
             if threshold < individual.stepSizeMIES(x):
-                temparray = []
-                for i in range(num_options[x]):
-                    temparray.append(i)
+                temparray = list(range(num_options[x]))
                 temparray.remove(individual.genotype[x])
                 individual.genotype[x] = random.choice(temparray)
-            for i in range(options[x][2]):
-                conditional_mask.append(individual.genotype[x])
-
+            conditional_mask.extend(individual.genotype[x] for _ in range(options[x][2]))
     return conditional_mask
 
 

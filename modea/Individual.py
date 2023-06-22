@@ -51,10 +51,7 @@ class FloatIndividual(object):
         return return_copy
 
     def __repr__(self):
-        return "<FloatIndividual [{}]: {}>".format(
-            str(np.round_(self.fitness,2)),
-            str(np.round_(self.genotype.flatten(), 2)),
-        )
+        return f"<FloatIndividual [{str(np.round_(self.fitness, 2))}]: {str(np.round_(self.genotype.flatten(), 2))}>"
 
     def __str__(self):
         return self.__repr__()
@@ -96,11 +93,7 @@ class MixedIntIndividual(object):
         self.maxStepSize = 0.5
         self.initStepSize = 0.2
 
-        if n > 5:
-            self.baseStepSize = 1 / n
-        else:
-            self.baseStepSize = 0.175  # Random guess value, may need to be updated
-
+        self.baseStepSize = 1 / n if n > 5 else 0.175
         for x in range(self.n):
             # self.baseStepSizeMIES[x] = 1/(3 * num_options[x])
             self.stepSizeOffsetMIES[x] = self.initStepSize - self.baseStepSize

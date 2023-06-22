@@ -22,7 +22,9 @@ class keepInBoundsTest(unittest.TestCase):
     def test_in_bounds(self):
         vector = np.array([0, 1, 2, 3, 4])
         result = vector
-        np.testing.assert_array_almost_equal(_keepInBounds(vector, self.lbound, self.ubound), result)
+        np.testing.assert_array_almost_equal(
+            _keepInBounds(result, self.lbound, self.ubound), result
+        )
 
     def test_out_of_bounds(self):
         vector = np.array([10,11,12,13,14])
