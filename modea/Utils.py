@@ -47,8 +47,11 @@ def getVals(init_values):
         :return:            Dictionary containing name-indexed initial parameter values
     """
 
-    values = {initializable_parameters[i]: val for i, val in enumerate(init_values) if val is not None}
-    return values
+    return {
+        initializable_parameters[i]: val
+        for i, val in enumerate(init_values)
+        if val is not None
+    }
 
 def getOpts(bitstring):
     """
@@ -58,8 +61,10 @@ def getOpts(bitstring):
         :return:            Dictionary with all option names and the chosen option
     """
 
-    opts = {option[0]: option[1][int(bitstring[i])] for i, option in enumerate(options)}
-    return opts
+    return {
+        option[0]: option[1][int(bitstring[i])]
+        for i, option in enumerate(options)
+    }
 
 def getBitString(opts):
     """
@@ -69,16 +74,12 @@ def getBitString(opts):
         :return:        A list of integers that serve as index for the options tuple
     """
     bitstring = []
-    for i, option in enumerate(options):
+    for option in options:
         name, choices, _ = option
-        if name in opts:
-            if opts[name] in choices:
-                bitstring.append(choices.index(opts[name]))
-            else:
-                bitstring.append(0)
+        if name in opts and opts[name] in choices:
+            bitstring.append(choices.index(opts[name]))
         else:
             bitstring.append(0)
-
     return bitstring
 
 def getFullOpts(opts):
@@ -115,28 +116,44 @@ def getPrintName(opts):
     ortho = 'Orthogonal-' if opts['orthogonal'] else ''
     tpa = 'TPA-' if opts['tpa'] else ''
     seq = 'Sequential ' if opts['sequential'] else ''
-    ipop = '{}-'.format(opts['ipop']) if opts['ipop'] is not None else ''
-    weight = '${}$-weighted '.format(opts['weights_option']) if opts['weights_option'] is not None else ''
+    ipop = f"{opts['ipop']}-" if opts['ipop'] is not None else ''
+    weight = (
+        f"${opts['weights_option']}$-weighted "
+        if opts['weights_option'] is not None
+        else ''
+    )
 
     sel = 'Pairwise selection' if opts['selection'] == 'pairwise' else ''
-    sampler = 'a {} sampler'.format(opts['base-sampler']) if opts['base-sampler'] is not None else ''
+    sampler = (
+        f"a {opts['base-sampler']} sampler"
+        if opts['base-sampler'] is not None
+        else ''
+    )
 
     if len(sel) + len(sampler) > 0:
         append = ' with {}'
-        if len(sel) > 0 and len(sampler) > 0:
-            temp = '{} and {}'.format(sel, sampler)
+        if not sel or sampler == "":
+            temp = f'{sel}{sampler}'
         else:
-            temp = '{}{}'.format(sel, sampler)
+            temp = f'{sel} and {sampler}'
         append = append.format(temp)
     else:
         append = ''
 
     base_string = "{seq}{thres}{weight}{mirror}{ortho}{active}(mu{elitist}lambda)-{tpa}{ipop}CMA-ES{append}"
 
-    name = base_string.format(elitist=elitist, active=active, thres=thres, mirror=mirror, ortho=ortho,
-                              tpa=tpa, seq=seq, ipop=ipop, weight=weight, append=append)
-
-    return name
+    return base_string.format(
+        elitist=elitist,
+        active=active,
+        thres=thres,
+        mirror=mirror,
+        ortho=ortho,
+        tpa=tpa,
+        seq=seq,
+        ipop=ipop,
+        weight=weight,
+        append=append,
+    )
 
 
 # TODO: make function of Individual base-class
@@ -178,11 +195,7 @@ def reprToInt(representation):
     # TODO FIXME Hardcoded
     max_length = 11
     factors = [2304, 1152, 576, 288, 144, 72, 36, 18, 9, 3, 1]
-    integer = 0
-    for i in range(max_length):
-        integer += representation[i] * factors[i]
-
-    return integer
+    return sum(representation[i] * factors[i] for i in range(max_length))
 
 
 def intToRepr(integer):
@@ -286,7 +299,7 @@ class ESFitness(object):
 
         # The interesting values to display or use as comparison
         self.ERT = ERT                              # Expected Running Time
-        self.FCE = FCE if FCE > target else target  # Fixed Cost Error
+        self.FCE = max(FCE, target)
         self.std_dev_ERT = std_dev_ERT              # Standard deviation of ERT
         self.std_dev_FCE = std_dev_FCE              # Standard deviation of FCE
         # Summary/memory values to use for reproducability
@@ -306,7 +319,7 @@ class ESFitness(object):
     def __lt__(self, other):  # Assuming minimalization problems, so A < B means A is better than B
         if self.ERT is not None and other.ERT is None:
             return True  # If only one has an ERT, it is better by default
-        elif self.ERT is not None and other.ERT is not None and self.ERT < other.ERT:
+        elif self.ERT is not None and self.ERT < other.ERT:
             return True  # If both have an ERT, we want the better one
         elif self.ERT is None and other.ERT is None and self.FCE < other.FCE:
             return True  # If neither have an ERT, we want the better FCE
@@ -315,14 +328,10 @@ class ESFitness(object):
 
     def __repr__(self):
         if self.min_fitnesses is not None:
-            kwargs = "target={},min_fitnesses={},min_indices={},num_successful={}".format(
-                self.target, self.min_fitnesses, self.min_indices, self.num_successful
-            )
+            kwargs = f"target={self.target},min_fitnesses={self.min_fitnesses},min_indices={self.min_indices},num_successful={self.num_successful}"
         else:
-            kwargs = "target={},ERT={},FCE={},std_dev_ERT={},std_dev_FCE={}".format(
-                self.target, self.ERT, self.FCE, self.std_dev_ERT, self.std_dev_FCE
-            )
-        return "ESFitness({})".format(kwargs)
+            kwargs = f"target={self.target},ERT={self.ERT},FCE={self.FCE},std_dev_ERT={self.std_dev_ERT},std_dev_FCE={self.std_dev_FCE}"
+        return f"ESFitness({kwargs})"
 
     def __unicode__(self):
         # TODO: pretty-print-ify

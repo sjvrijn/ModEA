@@ -68,10 +68,7 @@ class QuasiGaussianSobolSampling(object):
     def __init__(self, n, shape='col', seed=None):
         self.n = n
         self.shape = (n,1) if shape == 'col' else (1,n)
-        if seed is None or seed < 2:
-            self.seed = np.random.randint(2, n**2)  # seed=1 will give a null-vector as first result
-        else:
-            self.seed = seed
+        self.seed = np.random.randint(2, n**2) if seed is None or seed < 2 else seed
 
     def next(self):
         """
@@ -131,7 +128,7 @@ class OrthogonalSampling(object):
     """
     def __init__(self, n, lambda_, shape='col', base_sampler=None):
         if n == 0 or lambda_ == 0:
-            raise ValueError("'n' ({}) and 'lambda_' ({}) cannot be zero".format(n, lambda_))
+            raise ValueError(f"'n' ({n}) and 'lambda_' ({lambda_}) cannot be zero")
 
         self.n = n
         self.shape = (n,1) if shape == 'col' else (1,n)
@@ -162,7 +159,7 @@ class OrthogonalSampling(object):
         """ Draw <num_samples> new samples from the base_sampler, orthonormalize them and store to be drawn from """
         samples = []
         lengths = []
-        for i in range(self.num_samples):
+        for _ in range(self.num_samples):
             sample = self.base_sampler.next()
             samples.append(sample)
             lengths.append(norm(sample))
@@ -184,8 +181,8 @@ class OrthogonalSampling(object):
         for i in range(1, num_vectors):
             for j in range(i):
                 vec_i = vectors[i]
-                vec_j = vectors[j]
                 if lengths[j]: # This will prevent Runtimewarning (Division over zero) 
+                    vec_j = vectors[j]
                     vectors[i] = vec_i - vec_j * (dot(vec_i.T, vec_j) / lengths[j] ** 2)
             lengths[i] = norm(vectors[i])
 

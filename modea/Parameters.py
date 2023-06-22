@@ -72,7 +72,7 @@ class Parameters(BaseParameters):
         if mu is None:
             mu = 0.5
         elif mu > lambda_:
-            raise Exception("mu ({}) cannot be greater than lambda ({})".format(mu, lambda_))
+            raise Exception(f"mu ({mu}) cannot be greater than lambda ({lambda_})")
         elif mu >= 1:
             mu /= lambda_
         if sigma is None:
@@ -208,7 +208,7 @@ class Parameters(BaseParameters):
     def mu_int(self):
         """Integer value of mu"""
         if self.eff_lambda < 1:
-            raise Exception("Effective lambda ({}) should be at least 1!".format(self.eff_lambda))
+            raise Exception(f"Effective lambda ({self.eff_lambda}) should be at least 1!")
         return int(1 + floor((self.eff_lambda-1) * self.mu))
 
 
@@ -272,7 +272,7 @@ class Parameters(BaseParameters):
         lambda_ = self.lambda_
 
         self.p_sigma = (1-cs) * self.p_sigma + \
-                       sqrt(cs*(2-cs)*mueff) * dot(invsqrt_C, (wcm - wcm_old) / self.sigma)
+                           sqrt(cs*(2-cs)*mueff) * dot(invsqrt_C, (wcm - wcm_old) / self.sigma)
         power = (2*evalcount/lambda_)
         if power < 1000:  #TODO: Solve more neatly
             hsig = sum(self.p_sigma**2)/(1-(1-cs)**power)/n < 2 + 4/(n+1)
@@ -284,8 +284,8 @@ class Parameters(BaseParameters):
 
         # Regular update of C
         self.C = (1 - c_1 - c_mu) * self.C \
-                  + c_1 * (outer(self.p_c, self.p_c) + (1-hsig) * cc * (2-cc) * self.C) \
-                  + c_mu * dot(offset, self.weights*offset.T)
+                      + c_1 * (outer(self.p_c, self.p_c) + (1-hsig) * cc * (2-cc) * self.C) \
+                      + c_mu * dot(offset, self.weights*offset.T)
         if self.active and len(self.all_offspring) >= 2*self.mu_int:  # Active update of C
             offset_bad = self.offset[:, -self.mu_int:]
             self.C -= c_mu * dot(offset_bad, self.weights*offset_bad.T)
@@ -298,10 +298,7 @@ class Parameters(BaseParameters):
             self.sigma *= exp(self.alpha_s)
         else:
             exponent = (norm(self.p_sigma) / self.chiN - 1) * self.c_sigma / self.damps
-            if exponent < 1000:  #TODO: Solve more neatly
-                self.sigma = self.sigma * exp(exponent)
-            else:
-                self.sigma = self.sigma_mean
+            self.sigma = self.sigma * exp(exponent) if exponent < 1000 else self.sigma_mean
         self.sigma_mean = self.sigma
 
         ### Update BD ###
@@ -330,7 +327,7 @@ class Parameters(BaseParameters):
                     self.sqrt_C = dot(e_vector, e_value**-1 * e_vector.T)
             except LinAlgError as e:
                 # raise Exception(e)
-                print("Restarting, degeneration detected: {}".format(e))
+                print(f"Restarting, degeneration detected: {e}")
                 degenerated = True
 
         if degenerated:
